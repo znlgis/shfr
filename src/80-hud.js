@@ -55,7 +55,7 @@
     D.el.comboL = $('span', 'hud-combo-l', D.el.combo);
     D.el.feed = $('div', 'hud-feed', right);
 
-    // ---- 左下：训练家 ----
+    // ---- 左下：行者 ----
     const player = $('div', 'hud-player', hud);
     const pcard = $('div', 'hud-pcard', player);
     D.el.avatar = $('div', 'hud-avatar', pcard);
@@ -143,7 +143,7 @@
     D.el.tReload = mk('t-reload', '装填');
     D.el.tDash = mk('t-dash', '冲刺');
     D.el.tJump = mk('t-jump', '跳跃');
-    D.el.tUlt = mk('t-ult', '伙伴技');
+    D.el.tUlt = mk('t-ult', '灵兽技');
 
     const st = (ui.touchState = { mx: 0, mz: 0, fire: false, lookDx: 0, lookDy: 0, dash: false, jump: false, reload: false, ult: false });
     let stickId = null, stickCx = 0, stickCy = 0;
@@ -489,6 +489,20 @@
   ui.isTouch = function () { return D.isTouch || isTouchDevice(); };
 
   ui.setAmmoWarnVisible = function (v) { ensureDom(); if (D.ready) D.el.ammoWarn.classList.toggle('on', !!v); };
+
+  // 玩家卡：行者名 / 头像 / 灵兽标签（90-main.js 在开局时调用）
+  ui.setPlayerCard = function (card) {
+    ensureDom();
+    if (!D.ready || !card || typeof card !== 'object') return;
+    try {
+      if (D.el.pname && card.cn) D.el.pname.textContent = card.cn;
+      if (D.el.partner) D.el.partner.textContent = card.partnerCn ? '灵兽 ' + card.partnerCn : '';
+      if (D.el.avatar && card.portrait && typeof card.portrait.toDataURL === 'function') {
+        D.el.avatar.style.backgroundImage = 'url(' + card.portrait.toDataURL() + ')';
+      }
+      if (D.el.weapon && card.weapon) D.el.weapon.textContent = card.weapon;
+    } catch (e) {}
+  };
 
   // 隐藏 HUD（标题/选角时）
   ui.hudVisible = function (v) {

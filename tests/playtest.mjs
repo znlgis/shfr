@@ -9,7 +9,7 @@
  *   · 渲染指标：rAF 帧时间 p50 / p95（换算 FPS）、每帧最大 draw call / 三角形数
  *   · 界面可达性：各屏 DOM 可见性（软检查）+ 截图存证 _shots/playtest-*.png
  *
- * 用法（在 poke3d 目录）：
+ * 用法（在项目根目录）：
  *   node tests/playtest.mjs --build                 # 先构建 _playtest.html 再验收
  *   node tests/playtest.mjs                         # 直接跑已有 _playtest.html
  *   node tests/playtest.mjs --url=file:///... --no-shots --verbose
@@ -794,7 +794,7 @@ async function main() {
   });
   await screenshot('title');
 
-  /* ------------------------- 阶段 2：选择训练家 ------------------------- */
+  /* ------------------------- 阶段 2：选择行者 ------------------------- */
   await step('select', async () => {
     const beforeScreen = await evaluate('__PGT.screenName()', 8000);
     const trusted = await pressKeyTrusted('Enter', 'Enter', 13);
@@ -825,10 +825,10 @@ async function main() {
     const scr = await evaluateJson('JSON.stringify(__PGT.visibleScreen("select"))');
     const selectVisible = !!(scr && scr.visible);
     R.metrics.select = { snap: { mode: snap.mode }, ui, screen: scr, reachedByKey: reached, keyDiag, beforeScreen, selectVisible };
-    check('select-reached', '可从标题进入选择训练家（界面可见且状态同步）', snap.mode === 'select' && selectVisible, true,
+    check('select-reached', '可从标题进入选择行者（界面可见且状态同步）', snap.mode === 'select' && selectVisible, true,
       'mode=' + snap.mode + ' visible=' + selectVisible + ' ' + keyDiag);
     check('select-keyboard', 'Enter 键可从标题进入选角', reached, false, keyDiag);
-    check('select-cards', '选角界面存在训练家卡片 / 按钮', ui.cards >= 4 || ui.buttons >= 5, false, 'cards=' + ui.cards + ' buttons=' + ui.buttons);
+    check('select-cards', '选角界面存在行者卡片 / 按钮', ui.cards >= 4 || ui.buttons >= 5, false, 'cards=' + ui.cards + ' buttons=' + ui.buttons);
     return { mode: snap.mode, ui, screenVisible: scr.visible };
   });
   await screenshot('select');

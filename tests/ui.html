@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>UI 自测 · 全屏界面</title>
 <link rel="stylesheet" href="../src/70-ui.css">
+<link rel="stylesheet" href="../src/75-hud.css">
 <style>
-  /* 测试页专用：模拟 three.js 森林画面（标题/选角屏底下本来是 3D 实时背景） */
-  .mock-scene { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: linear-gradient(180deg, #3aa0e8 0%, #9fe0ff 34%, #dff3d0 58%, #a9e072 78%, #6fae4a 100%); }
+  /* 测试页专用：模拟 three.js 古林画面（标题/选角屏底下本来是 3D 实时背景） */
+  .mock-scene { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: linear-gradient(180deg, #2f6fae 0%, #9fe0ff 38%, #dff3d0 60%, #a9e072 80%, #6fae4a 100%); }
   .mock-sun { position: absolute; left: 16%; top: 10%; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(circle, rgba(255, 246, 200, .95), rgba(255, 246, 200, 0) 68%); }
   .mock-hill { position: absolute; bottom: 18%; border-radius: 50% 50% 0 0; background: linear-gradient(180deg, #8ed36a, #4e9c3f); }
   .mock-hill.h1 { left: -8%; width: 70%; height: 34%; opacity: .9; }
@@ -23,10 +24,10 @@
   .mock-tree.t4 { right: 15%; bottom: 27%; transform: scale(.58); opacity: .85; }
   .mock-figures { position: absolute; left: 50%; bottom: 17%; transform: translateX(-50%); display: flex; gap: 74px; }
   .mock-fig { position: relative; width: 66px; height: 128px; }
-  .mock-fig .body { position: absolute; left: 50%; bottom: 0; width: 52px; height: 76px; margin-left: -26px; border-radius: 26px 26px 14px 14px; background: linear-gradient(180deg, #3aa0e8, #2b6fd6); box-shadow: 0 10px 22px rgba(20, 50, 80, .25); }
+  .mock-fig .body { position: absolute; left: 50%; bottom: 0; width: 52px; height: 76px; margin-left: -26px; border-radius: 26px 26px 14px 14px; background: linear-gradient(180deg, #2f6fae, #255a8f); box-shadow: 0 10px 22px rgba(20, 50, 80, .25); }
   .mock-fig .head { position: absolute; left: 50%; top: 4px; width: 54px; height: 54px; margin-left: -27px; border-radius: 50%; background: #ffe2c4; box-shadow: inset 0 -6px 0 rgba(200, 150, 110, .28); }
   .mock-fig .hair { position: absolute; left: 50%; top: 0; width: 58px; height: 34px; margin-left: -29px; border-radius: 29px 29px 8px 8px; background: #3b2a20; }
-  .mock-fig.f1 .body { background: linear-gradient(180deg, #ffe27a, #ffcb05); }
+  .mock-fig.f1 .body { background: linear-gradient(180deg, #f6d97e, #e8b33a); }
   .mock-fig.f2 .body { background: linear-gradient(180deg, #9ee06f, #4e9c3f); }
   .mock-fig.f3 .body { background: linear-gradient(180deg, #ffa76b, #ff7a2f); }
   .mock-fig.f4 .body { background: linear-gradient(180deg, #7fd0ff, #2b8fd0); }
@@ -58,7 +59,7 @@
     font: 800 11.5px/1 inherit;
     cursor: pointer;
   }
-  .test-nav button.on { background: #ffcb05; color: #3a2a00; }
+  .test-nav button.on { background: #e8b33a; color: #3d2c0e; }
   .test-nav span { opacity: .6; font-size: 11px; margin-left: 4px; }
   .test-err {
     position: fixed;
@@ -115,8 +116,8 @@
   <canvas id="view" style="display:none"></canvas>
   <div id="ui"></div>
   <div id="boot">
-    <div class="boot-mark">宝可梦</div>
-    <div class="boot-sub" id="boot-msg">正在进入森之秘境…</div>
+    <div class="boot-mark">山海</div>
+    <div class="boot-sub" id="boot-msg">正在进入山海秘境…</div>
     <div class="boot-bar"><i id="boot-fill" style="width:62%"></i></div>
   </div>
   <div id="fatal"></div>
@@ -130,6 +131,7 @@
   <button data-s="pause">暂停</button>
   <button data-s="dead">失败</button>
   <button data-s="win">胜利</button>
+  <button data-s="hud">HUD</button>
   <span id="now">—</span>
 </nav>
 <pre class="test-err" id="err" hidden></pre>
@@ -171,7 +173,7 @@
   };
 
   // ---------------- 假头像 / 假伙伴图标（真实游戏里来自 PG.models） ----------------
-  var TYPE_COLOR = { electric: '#ffd93d', grass: '#8ed36a', fire: '#ff8a3d', water: '#5ab8f0' };
+  var TYPE_COLOR = { lei: '#ffd93d', mu: '#8ed36a', huo: '#ff8a3d', shui: '#5ab8f0' };
   function makePortrait(id, color, skin, hairColor, outfit, size) {
     var c = document.createElement('canvas');
     c.width = c.height = size;
@@ -249,39 +251,39 @@
     return c;
   }
 
-  // ---------------- 与 90-main.js 完全一致的 4 位训练家 mock 数据 ----------------
+  // ---------------- 与 90-main.js 完全一致的 4 位行者 mock 数据 ----------------
   var CHARS = [
     {
-      id: 't_bolt', cn: '雷恩', en: 'RAIDEN', type: 'electric', color: '#ffd93d',
-      partner: 'pikachu', partnerCn: '皮卡丘',
-      weapon: '电光弹发射器', passive: '静电场：命中累积电荷，满 5 层下一发必定暴击',
-      ult: '十万伏特：连锁闪电，命中 8 米内最多 6 只宝可梦',
+      id: 't_bolt', cn: '雷公', en: 'LEIGONG', type: 'lei', color: '#ffd93d',
+      partner: 'kui', partnerCn: '夔牛',
+      weapon: '雷光锤', passive: '聚雷：命中累积雷气，满 5 层下一发必定暴击',
+      ult: '天雷引：连锁闪电，劈中 8 米内最多 6 只妖物',
       stats: { hp: 0.83, dmg: 0.3, rate: 1, spd: 0.89 },
-      skin: '#ffe2c4', hair: '#3b2a20', outfit: '#3a2a00'
+      skin: '#ffe2c4', hair: '#1d2a44', outfit: '#1f3358'
     },
     {
-      id: 't_leaf', cn: '芽衣', en: 'MAY', type: 'grass', color: '#8ed36a',
-      partner: 'bulbasaur', partnerCn: '妙蛙种子',
-      weapon: '种子散弹枪', passive: '光合作用：脱战 4 秒后缓慢回血',
-      ult: '飞叶风暴：种子暴雨护体，回血并减速周围敌人',
+      id: 't_leaf', cn: '句芒', en: 'GOUMANG', type: 'mu', color: '#8ed36a',
+      partner: 'qilin', partnerCn: '麒麟',
+      weapon: '灵种杖', passive: '春生：脱战 4 秒后缓慢回复体力',
+      ult: '万物生：灵雨护体，回血并减速周围妖物',
       stats: { hp: 0.92, dmg: 1, rate: 0.52, spd: 0.56 },
-      skin: '#ffdfc0', hair: '#5a3b1e', outfit: '#2f6b2a'
+      skin: '#ffdfc0', hair: '#3f2a16', outfit: '#2f6b4a'
     },
     {
-      id: 't_ember', cn: '炎武', en: 'BLAZE', type: 'fire', color: '#ff8a3d',
-      partner: 'charmander', partnerCn: '小火龙',
-      weapon: '火花榴弹炮', passive: '余烬：击杀后 2 秒内伤害 +40%',
-      ult: '火焰漩涡：以自身为中心的爆炎新星，范围灼烧',
+      id: 't_ember', cn: '祝融', en: 'ZHURONG', type: 'huo', color: '#ff8a3d',
+      partner: 'bifang', partnerCn: '毕方',
+      weapon: '离火铳', passive: '余烬：击杀后 2 秒内伤害 +40%',
+      ult: '焚天业火：以自身为中心的爆炎新星，范围灼烧',
       stats: { hp: 1, dmg: 0.92, rate: 0.73, spd: 0.22 },
-      skin: '#f9d3ae', hair: '#1f1a16', outfit: '#8a2f14'
+      skin: '#f9d3ae', hair: '#8a1f14', outfit: '#8a2f14'
     },
     {
-      id: 't_tide', cn: '波琳', en: 'MARINA', type: 'water', color: '#5ab8f0',
-      partner: 'squirtle', partnerCn: '杰尼龟',
-      weapon: '水压穿刺枪', passive: '潮汐：每第 5 发伤害翻倍并回复 2 点体力',
-      ult: '海潮护盾：3 秒无敌，冲开周围所有敌人',
+      id: 't_tide', cn: '玄冥', en: 'XUANMING', type: 'shui', color: '#5ab8f0',
+      partner: 'xuanwu', partnerCn: '玄武',
+      weapon: '玄水枪', passive: '潮汐：每第 5 发伤害翻倍并回复 2 点体力',
+      ult: '玄冥水盾：3 秒无敌，冲开周围所有敌人',
       stats: { hp: 0.875, dmg: 0.38, rate: 1, spd: 0.72 },
-      skin: '#ffe2c4', hair: '#2b4a6b', outfit: '#1f4d73'
+      skin: '#ffe2c4', hair: '#1f3a52', outfit: '#25405c'
     }
   ];
   var list = CHARS.map(function (c) {
@@ -294,6 +296,7 @@
     };
   });
 </script>
+<script src="../src/80-hud.js"></script>
 <script src="../src/85-ui.js"></script>
 <script>
   // ---------------- 首次用户手势后初始化 audio（与真实入口一致） ----------------
@@ -304,6 +307,22 @@
   var scr = (q.get('screen') || 'title').toLowerCase();
   var nav = document.getElementById('nav');
   var nowEl = document.getElementById('now');
+
+  // ---------------- 铜钱图标放大检查：?coin=1 ----------------
+  if (q.get('coin') === '1') {
+    var bar = document.createElement('div');
+    bar.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:999;display:flex;align-items:center;' +
+      'justify-content:center;gap:40px;padding:26px;background:rgba(20,34,48,.86)';
+    [24, 48, 96].forEach(function (px) {
+      var c = document.createElement('i');
+      c.className = 'ui-coin';
+      c.style.width = px + 'px';
+      c.style.height = px + 'px';
+      c.style.borderWidth = Math.max(2, px * 0.125) + 'px';
+      bar.appendChild(c);
+    });
+    document.body.appendChild(bar);
+  }
 
   function fillResult(win) {
     var wave = Number(q.get('wave') || (win ? 8 : 3));
@@ -326,14 +345,45 @@
     }
     if (name === 'dead') fillResult(false);
     if (name === 'win') fillResult(true);
-    PG.ui.screen(name === 'game' ? 'game' : name);
+    PG.ui.screen(name === 'hud' ? 'game' : name);
+    // 80-hud.js 在加载后 30ms 会强制隐藏一次 HUD，这里晚于它再填充
+    if (name === 'hud') setTimeout(fillHud, 260);
+    else if (PG.ui.hudVisible) PG.ui.hudVisible(false);
     nowEl.textContent = name + ' · ' + (PG.ui.getScreen ? PG.ui.getScreen() : '?');
     var btns = nav.querySelectorAll('button');
     for (var i = 0; i < btns.length; i++) btns[i].classList.toggle('on', btns[i].getAttribute('data-s') === name);
     if (first) {
-      // 选中第 2 位，验证 .sel 状态与底部伙伴技联动
+      // 选中第 2 位，验证 .sel 状态与底部灵兽技联动
       try { if (name === 'select') PG.ui && PG.ui.screen('select'); } catch (e) {}
     }
+  }
+
+  // ---------------- HUD 预览（真实 80-hud.js + 75-hud.css） ----------------
+  function fillHud() {
+    var c = list[0];
+    try { PG.ui.hudVisible(true); } catch (e) { showErr('hudVisible: ' + e); }
+    try { PG.ui.setPlayerCard && PG.ui.setPlayerCard(c); } catch (e) { showErr('setPlayerCard: ' + e); }
+    try {
+      PG.ui.hud({
+        hp: 78, hpMax: 100, wave: 7, waveTotal: 8, enemiesLeft: 6,
+        score: 12480, combo: 12, comboMax: 12, ammo: 9, ammoMax: 12,
+        reserve: 48, weaponName: c.weapon, weaponColor: c.color,
+        reloading: false, reloadT: 0, dashCd: 0, dashMax: 1.6,
+        boss: { name: '混沌', hp: 6200, hpMax: 9000 },
+        charge: 0.6, time: 418, fps: 60
+      });
+      PG.ui.setObjectives([{ text: '清剿第 7 波妖物' }, { text: '击败混沌' }, { text: '守住山海祭坛', done: true }]);
+      // ?hold=1 时常驻，便于截图核对样式（真实游戏里它们会自动消失）
+      var hold = q.get('hold') === '1' ? 600000 : 0;
+      PG.ui.banner('第 7 波 · 凶兽镇守', '两只凶兽守在祭坛前', hold || undefined);
+      PG.ui.subtitle(c.partnerCn, '那……那是混沌？它竟没有面目！', hold || undefined);
+      PG.ui.toast('鲛人的歌声让你脚步沉滞…', hold || undefined);
+      PG.ui.killfeed('击败 九尾狐  +120', 'elite');
+      PG.ui.killfeed('击败 混沌  +900', 'boss');
+      PG.ui.setCrosshair(1, 0.3);
+      PG.ui.damageNumber(window.innerWidth * 0.5, window.innerHeight * 0.44, '248', 'crit');
+      PG.ui.hitmarker('crit');
+    } catch (e) { showErr('hud: ' + e); }
   }
 
   PG.ui.mount(document.getElementById('ui'));

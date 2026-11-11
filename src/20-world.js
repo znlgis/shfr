@@ -1,12 +1,13 @@
 /* ============================================================
- * 20-world.js — 宝可梦森林场景（PG.world）
+ * 20-world.js — 山海古林场景（PG.world）
  * ------------------------------------------------------------
- * 白天阳光斜射的森林空地：
+ * 白天阳光斜射的山海古林空地：
  *   · 起伏草丘地形（正弦叠加，groundY 与网格严格一致）
- *   · 环形卡通森林：多球树冠、深浅两档绿 + 顶部黄绿受光
+ *   · 环形卡通古林：多球树冠、深浅两档绿 + 顶部黄绿受光
  *   · 成片白 / 粉小花、红白斑点蘑菇圈、圆润岩石
  *   · 清澈水塘：半透明水面 shader + 波纹 + 睡莲 + 岸石 + 木栈桥
- *   · 木制鸟居 + 石灯笼神龛（发光宝珠）、石阶参道
+ *   · 中式牌坊（朱漆方柱 + 横梁 + 起翘檐口）、祭坛（石台 / 石碑 / 玉璧）、
+ *     石鼎香炉（烟气 / 微光）、石阶
  *   · 丁达尔光柱、萤火虫、蒲公英、薄雾与渐变天空
  * 全部程序化生成（CanvasTexture + 基础几何），不依赖外部资源。
  * 性能：树 / 草 / 花 / 蘑菇 / 石块 / 睡莲全部 InstancedMesh，
@@ -60,7 +61,7 @@
   const LAYOUT = {
     radius: 62, // 玩家活动半径
     pond: { x: -27, z: -19, r: 8.8 }, // 水塘
-    shrine: { x: 0, z: -36 }, // 神龛
+    altar: { x: 0, z: -36 }, // 祭坛（牌坊 + 石台 + 石碑 + 玉璧）
     ring: { x: 18.5, z: -21 }, // 蘑菇圈
     rocks: { x: 34, z: -31 }, // 岩石群（右）
     rocks2: { x: -40, z: -34 }, // 岩石群（左）
@@ -239,19 +240,33 @@
     });
   }
 
-  /** 鸟居中央牌匾「森」 */
-  function makePlaqueTexture() {
+  /** 牌坊匾额 / 祭坛石碑的题字（竖排两字，Canvas 绘制） */
+  function makeInscriptionTexture(text, opt) {
+    const o = opt || {};
+    const bg = o.bg || '#f6ecd2';
+    const edge = o.edge || '#c8432a';
+    const ink = o.ink || '#24313f';
     return makeTexture(128, 160, (c, w, h) => {
-      c.fillStyle = '#f6ecd2';
+      c.fillStyle = bg;
       c.fillRect(0, 0, w, h);
-      c.strokeStyle = '#c8432a';
+      c.strokeStyle = edge;
       c.lineWidth = 10;
       c.strokeRect(5, 5, w - 10, h - 10);
-      c.fillStyle = '#24313f';
-      c.font = '900 96px "PingFang SC","Microsoft YaHei","YouYuan",sans-serif';
+      c.strokeStyle = o.inner || edge;
+      c.lineWidth = 3;
+      c.strokeRect(15, 15, w - 30, h - 30);
+      c.fillStyle = ink;
+      c.font = '900 66px "PingFang SC","Microsoft YaHei","YouYuan",sans-serif';
       c.textAlign = 'center';
       c.textBaseline = 'middle';
-      c.fillText('森', w / 2, h / 2 + 6);
+      const chars = String(text).slice(0, 2);
+      if (chars.length === 2) {
+        c.fillText(chars[0], w / 2, h * 0.31 + 4);
+        c.fillText(chars[1], w / 2, h * 0.72 + 4);
+      } else {
+        c.font = '900 92px "PingFang SC","Microsoft YaHei","YouYuan",sans-serif';
+        c.fillText(chars || '山', w / 2, h / 2 + 6);
+      }
     });
   }
 
@@ -700,10 +715,10 @@
 
   function buildTrees(ctx) {
     const rnd = ctx.rnd;
-    const P = LAYOUT.pond, S = LAYOUT.shrine, R = LAYOUT.ring, RK = LAYOUT.rocks, RK2 = LAYOUT.rocks2;
+    const P = LAYOUT.pond, S = LAYOUT.altar, R = LAYOUT.ring, RK = LAYOUT.rocks, RK2 = LAYOUT.rocks2;
     const trees = [];
 
-    const shrineAng = Math.atan2(S.z, S.x);
+    const altarAng = Math.atan2(S.z, S.x);
     const angGap = (a, b) => {
       let d = a - b;
       while (d > Math.PI) d -= TAU;
@@ -749,7 +764,7 @@
 
     // 手工摆位：构图锚点（相机默认 (0,1.7,20) 朝 -Z 时形成天然画框）
     const anchors = [
-      [0, -50, 1.8], // 神龛背后的巨树
+      [0, -50, 1.8], // 祭坛背后的巨树
       [-24, 11, 1.16],
       [24, 8, 1.12],
       [-33, -9, 1.06],
@@ -771,8 +786,8 @@
       const rr = 29 + rnd() * 27.5;
       const x = Math.cos(a) * rr;
       const z = Math.sin(a) * rr;
-      // 神龛视线走廊留空
-      if (rr < 48 && angGap(a, shrineAng) < 0.2) continue;
+      // 祭坛视线走廊留空
+      if (rr < 48 && angGap(a, altarAng) < 0.2) continue;
       addTree(x, z, 0.82 + rnd() * 0.44, false, false);
     }
 
@@ -996,7 +1011,7 @@
 
   function buildFlowers(ctx) {
     const rnd = ctx.rnd;
-    const P = LAYOUT.pond, S = LAYOUT.shrine, R = LAYOUT.ring;
+    const P = LAYOUT.pond, S = LAYOUT.altar, R = LAYOUT.ring;
     const clusters = [];
     // 先在空地正面放几片花丛（保证默认机位能看到成片小花）
     const featured = [
@@ -1134,7 +1149,7 @@
   function buildMushrooms(ctx) {
     const rnd = ctx.rnd;
     const { capGeo, stemGeo } = makeMushroomGeos();
-    const P = LAYOUT.pond, S = LAYOUT.shrine, R = LAYOUT.ring;
+    const P = LAYOUT.pond, S = LAYOUT.altar, R = LAYOUT.ring;
     const list = [];
     // 蘑菇圈（妖精环）：15 朵，大一些
     for (let i = 0; i < 15; i++) {
@@ -1495,97 +1510,297 @@
   }
 
   // ============================================================
-  // 13. 神龛：木制鸟居 + 石灯笼 + 发光宝珠 + 参道石
+  // 13. 祭坛：中式牌坊 + 石台 + 石碑 + 玉璧 + 石鼎香炉 + 石阶
   // ============================================================
-  function buildShrine(ctx) {
-    const S = LAYOUT.shrine;
+  function buildAltar(ctx) {
+    const S = LAYOUT.altar;
     const gy = ctx.ground.groundY(S.x, S.z);
     const root = new T.Group();
-    root.name = 'shrine';
+    root.name = 'altar';
     root.position.set(S.x, gy, S.z);
     ctx.group.add(root);
 
-    const woodRed = [];
-    const woodDark = [];
-    const stone = [];
-    const paper = [];
-    const lampGlow = [];
+    const lacquer = []; // 朱漆构件（方柱 / 横梁 / 楹联板）
+    const timber = []; // 深色木构（斗拱 / 雀替 / 椽头 / 匾框）
+    const stone = []; // 青石（柱础 / 台基 / 石碑 / 石鼎 / 香案 / 石阶）
+    const gold = []; // 鎏金饰件（柱箍 / 鸱吻 / 鼎耳）
+    const roofTiles = []; // 青瓦屋面（两坡 / 瓦垄 / 正脊 / 垂脊 / 翘角）
+    const ember = []; // 石鼎内的香火
 
-    // ---- 鸟居立柱 ----
-    const pillarH = 5.4;
+    // ---- 牌坊：三间四柱三楼（两坡瓦顶 + 正脊 / 垂脊 / 鸱吻 + 飞檐翘角）----
+    const colX = 2.5; // 主柱（中开间）
+    const colW = 0.62;
+    const colBaseH = 0.42;
+    const colH = 5.0;
+    const colTop = colBaseH + colH;
+    const sideX = 4.3; // 侧柱（外移、矮柱）
+    const sideW = 0.5;
+    const sideBaseH = 0.34;
+    const sideH = 3.06;
+    const sideTop = sideBaseH + sideH;
+
+    /** 两坡瓦顶：坡面 + 瓦垄 + 正脊 + 垂脊 + 四角飞檐翘起；outerDir 非空时只在该端做鸱吻 */
+    const addRoof = (cx, width, eaveY, ridgeY, halfDepth, tileStep, outerDir) => {
+      const rise = ridgeY - eaveY;
+      const len = Math.sqrt(rise * rise + halfDepth * halfDepth);
+      const ang = Math.atan2(rise, halfDepth);
+      const midY = (eaveY + ridgeY) / 2;
+      const off = 0.1; // 瓦垄抬离坡面
+      for (const s of [-1, 1]) {
+        // 坡面（前 / 后）
+        const slope = boxGeo(width, 0.13, len);
+        slope.rotateX(s * ang);
+        slope.translate(cx, midY, (s * halfDepth) / 2);
+        roofTiles.push(slope);
+        // 瓦垄细条
+        const n = Math.max(3, Math.round(width / tileStep));
+        for (let i = 0; i <= n; i++) {
+          const tx = cx - width / 2 + (width * i) / n;
+          const tile = boxGeo(0.09, 0.07, len * 1.02);
+          tile.rotateX(s * ang);
+          tile.translate(tx, midY + (off * halfDepth) / len, s * (halfDepth / 2 + (off * rise) / len));
+          roofTiles.push(tile);
+        }
+        // 两端垂脊 + 飞檐翘角
+        for (const e of [-1, 1]) {
+          const hip = boxGeo(0.16, 0.11, len * 1.02);
+          hip.rotateX(s * ang);
+          hip.translate(cx + (e * width) / 2, midY + 0.04, (s * halfDepth) / 2);
+          roofTiles.push(hip);
+          const tip = boxGeo(0.58, 0.1, 0.52);
+          tip.rotateZ(e * 0.42);
+          tip.rotateX(s * 0.1);
+          tip.translate(cx + e * (width / 2 + 0.1), eaveY + 0.05, s * halfDepth);
+          roofTiles.push(tip);
+          const horn = new T.ConeGeometry(0.11, 0.26, 4);
+          horn.rotateZ(e * 0.85);
+          horn.translate(cx + e * (width / 2 + 0.42), eaveY + 0.22, s * halfDepth);
+          gold.push(horn);
+        }
+      }
+      // 正脊 + 鸱吻（小 box + 锥体）
+      const ridge = boxGeo(width + 0.24, 0.24, 0.34);
+      ridge.translate(cx, ridgeY + 0.1, 0);
+      roofTiles.push(ridge);
+      for (const e of [-1, 1]) {
+        if (outerDir != null && e !== outerDir) continue;
+        const chiwen = boxGeo(0.3, 0.46, 0.3);
+        chiwen.rotateZ(e * 0.18);
+        chiwen.translate(cx + e * (width / 2 + 0.12), ridgeY + 0.36, 0);
+        timber.push(chiwen);
+        const beak = new T.ConeGeometry(0.13, 0.3, 4);
+        beak.rotateZ(e * 0.55);
+        beak.translate(cx + e * (width / 2 + 0.2), ridgeY + 0.62, 0);
+        gold.push(beak);
+      }
+    };
+
     for (const side of [-1, 1]) {
-      const p = cylGeo(0.3, 0.38, pillarH, 10, false);
-      p.rotateZ(-side * 0.022); // 顶端略向中心收
-      p.translate(side * 2.5, pillarH / 2 + 0.1, 0);
-      woodRed.push(p);
-      const baseStone = cylGeo(0.5, 0.58, 0.38, 10, false);
-      baseStone.translate(side * 2.5, 0.19, 0);
-      stone.push(baseStone);
-      const collar = boxGeo(0.82, 0.22, 0.82);
-      collar.translate(side * 2.5, 0.46, 0);
-      woodDark.push(collar);
-    }
-    // 笠木（顶梁）+ 两端上翘
-    const topY = 5.44;
-    const kasagi = boxGeo(7.6, 0.46, 0.78);
-    kasagi.translate(0, topY, 0);
-    woodRed.push(kasagi);
-    for (const side of [-1, 1]) {
-      const e = boxGeo(1.5, 0.5, 0.82);
-      e.rotateZ(side * 0.16);
-      e.translate(side * 4.18, topY + 0.14, 0);
-      woodRed.push(e);
-    }
-    const shimaki = boxGeo(6.6, 0.34, 0.62);
-    shimaki.translate(0, topY - 0.52, 0);
-    woodRed.push(shimaki);
-    const nuki = boxGeo(5.6, 0.3, 0.46);
-    nuki.translate(0, 4.06, 0);
-    woodRed.push(nuki);
-    const midPost = boxGeo(0.26, 1.02, 0.26);
-    midPost.translate(0, 3.52, 0);
-    woodRed.push(midPost);
-    // 牌匾木框
-    const frame = boxGeo(1.16, 1.4, 0.16);
-    frame.translate(0, 4.72, 0.2);
-    woodDark.push(frame);
-    // 御币（白纸垂）
-    for (const side of [-1, 1]) {
-      const sh = boxGeo(0.3, 0.8, 0.02);
-      sh.rotateZ(side * 0.09);
-      sh.translate(side * 1.72, 4.32, 0.34);
-      paper.push(sh);
+      const x = side * colX;
+      // 青石柱础
+      const footing = boxGeo(colW + 0.5, colBaseH, colW + 0.5);
+      footing.translate(x, colBaseH / 2, 0);
+      stone.push(footing);
+      // 朱漆方柱（上端略向中心收）
+      const col = boxGeo(colW, colH, colW);
+      col.rotateZ(-side * 0.012);
+      col.translate(x, colBaseH + colH / 2, 0);
+      lacquer.push(col);
+      // 鎏金柱箍（上下两道）
+      for (const cy of [colBaseH + 0.36, colTop - 0.48]) {
+        const band = boxGeo(colW + 0.1, 0.12, colW + 0.1);
+        band.translate(x, cy, 0);
+        gold.push(band);
+      }
+      // 楹联板：鎏金外框 + 朱漆板面
+      const coupletFrame = boxGeo(0.5, 1.52, 0.06);
+      coupletFrame.translate(x, 2.5, colW / 2 + 0.03);
+      gold.push(coupletFrame);
+      const coupletFace = boxGeo(0.38, 1.4, 0.05);
+      coupletFace.translate(x, 2.5, colW / 2 + 0.09);
+      lacquer.push(coupletFace);
+
+      // 侧柱（矮柱，外移）
+      const sx = side * sideX;
+      const sideFoot = boxGeo(sideW + 0.36, sideBaseH, sideW + 0.36);
+      sideFoot.translate(sx, sideBaseH / 2, 0);
+      stone.push(sideFoot);
+      const sideCol = boxGeo(sideW, sideH, sideW);
+      sideCol.translate(sx, sideBaseH + sideH / 2, 0);
+      lacquer.push(sideCol);
+      const sideBand = boxGeo(sideW + 0.08, 0.1, sideW + 0.08);
+      sideBand.translate(sx, sideTop - 0.3, 0);
+      gold.push(sideBand);
+      // 侧额枋（连接主柱与侧柱）
+      const sideBeam = boxGeo(sideX - colX + 0.32, 0.3, 0.5);
+      sideBeam.translate(side * ((colX + sideX) / 2), 2.95, 0);
+      lacquer.push(sideBeam);
+      // 次间花板 + 鎏金镂条
+      const panel = boxGeo(1.7, 0.5, 0.12);
+      panel.translate(side * 3.4, 3.3, 0);
+      timber.push(panel);
+      for (const px of [-0.55, 0, 0.55]) {
+        const slat = boxGeo(0.06, 0.36, 0.05);
+        slat.translate(side * 3.4 + px, 3.3, 0.09);
+        gold.push(slat);
+      }
+      // 侧柱雀替
+      const sideBrace = boxGeo(0.42, 0.16, 0.34);
+      sideBrace.rotateZ(-side * 0.7);
+      sideBrace.translate(side * (sideX - sideW / 2 - 0.18), 2.62, 0);
+      timber.push(sideBrace);
+
+      // 次楼两坡瓦顶（楼高低于主楼）
+      addRoof(side * 3.9, 2.1, 3.75, 4.72, 0.9, 0.62, side);
     }
 
-    // ---- 石灯笼 ×2 ----
+    // 小额枋（下横梁，贯通中柱）
+    const lowerBeam = boxGeo(colX * 2 + 0.7, 0.28, 0.5);
+    lowerBeam.translate(0, 3.28, 0);
+    lacquer.push(lowerBeam);
+    // 匾上小额枋
+    const upperSubBeam = boxGeo(3.5, 0.16, 0.52);
+    upperSubBeam.translate(0, 4.74, 0);
+    lacquer.push(upperSubBeam);
+    // 大额枋（主横梁）
+    const beamY = 5.02;
+    const beam = boxGeo(6.9, 0.44, 0.64);
+    beam.translate(0, beamY, 0);
+    lacquer.push(beam);
+    const beamTrim = boxGeo(6.4, 0.09, 0.72);
+    beamTrim.translate(0, beamY - 0.25, 0);
+    gold.push(beamTrim);
+    // 斗拱（五攒两层叠斗）
+    for (const dx of [-2.4, -1.2, 0, 1.2, 2.4]) {
+      const b1 = boxGeo(0.6, 0.2, 0.66);
+      b1.translate(dx, 5.3, 0);
+      timber.push(b1);
+      const b2 = boxGeo(0.42, 0.18, 0.54);
+      b2.translate(dx, 5.5, 0);
+      timber.push(b2);
+      const cap = boxGeo(0.72, 0.08, 0.74);
+      cap.translate(dx, 5.62, 0);
+      timber.push(cap);
+    }
+    // 柱头雀替（中柱两侧角撑）
+    for (const side of [-1, 1]) {
+      for (const e of [-1, 1]) {
+        const brace = boxGeo(0.5, 0.16, 0.36);
+        brace.rotateZ(e * 0.78);
+        brace.translate(side * colX + e * 0.4, 4.78, 0);
+        timber.push(brace);
+      }
+    }
+    // 椽头（主楼 / 次楼檐下小方块）
+    for (const s of [-1, 1]) {
+      for (let i = 0; i <= 8; i++) {
+        const rafter = boxGeo(0.12, 0.14, 0.16);
+        rafter.translate(-3.9 + i * 0.975, 5.5, s * 1.02);
+        timber.push(rafter);
+      }
+      for (const side of [-1, 1]) {
+        for (let i = 0; i < 4; i++) {
+          const rafter = boxGeo(0.1, 0.12, 0.14);
+          rafter.translate(side * (2.5 + i * 0.6), 3.42, s * 0.86);
+          timber.push(rafter);
+        }
+      }
+    }
+    // 主楼两坡瓦顶（占满牌坊宽度）
+    addRoof(0, 8.8, 5.68, 6.62, 1.15, 0.78, null);
+    // 匾额木框（题字贴图另贴在框前）
+    const plaqueFrame = boxGeo(1.16, 1.3, 0.16);
+    plaqueFrame.translate(0, 4.0, 0.2);
+    timber.push(plaqueFrame);
+
+    // ---- 石鼎香炉 ×2（香火微光 + 青烟）----
+    const censers = [];
     for (const side of [-1, 1]) {
       const lx = side * 5.7;
       const lz = 1.5;
-      const b = cylGeo(0.4, 0.48, 0.3, 10, false);
-      b.translate(lx, 0.15, lz);
-      stone.push(b);
-      const shaft = cylGeo(0.15, 0.19, 1.02, 8, false);
-      shaft.translate(lx, 0.81, lz);
-      stone.push(shaft);
-      const mid = cylGeo(0.32, 0.32, 0.1, 8, false);
-      mid.translate(lx, 1.36, lz);
-      stone.push(mid);
-      const box = boxGeo(0.44, 0.46, 0.44);
-      box.translate(lx, 1.64, lz);
-      lampGlow.push(box);
-      const roof = new T.ConeGeometry(0.62, 0.34, 4, 1);
-      roof.rotateY(Math.PI / 4);
-      roof.translate(lx, 2.0, lz);
-      stone.push(roof);
-      const top = sphereGeo(0.09, 8, 6);
-      top.translate(lx, 2.24, lz);
-      stone.push(top);
+      // 三足（石鼎）：向外撇开，鼎足立于地面
+      for (let k = 0; k < 3; k++) {
+        const a = (k / 3) * TAU + Math.PI * 0.5;
+        const leg = cylGeo(0.085, 0.115, 0.56, 7, false);
+        leg.rotateX(Math.cos(a) * 0.3);
+        leg.rotateZ(-Math.sin(a) * 0.3);
+        leg.translate(lx + Math.cos(a) * 0.34, 0.29, lz + Math.sin(a) * 0.34);
+        stone.push(leg);
+      }
+      // 鼎身（鼓腹）
+      const belly = cylGeo(0.44, 0.34, 0.46, 12, false);
+      belly.translate(lx, 0.79, lz);
+      stone.push(belly);
+      // 鼎口沿
+      const rim = cylGeo(0.52, 0.46, 0.16, 12, false);
+      rim.translate(lx, 1.1, lz);
+      stone.push(rim);
+      // 双耳（鎏金）
+      for (const ex of [-1, 1]) {
+        const ear = boxGeo(0.12, 0.3, 0.16);
+        ear.rotateZ(ex * 0.12);
+        ear.translate(lx + ex * 0.42, 1.28, lz);
+        gold.push(ear);
+      }
+      // 香火（鼎口内的微光）
+      const coals = new T.SphereGeometry(0.3, 12, 8);
+      coals.scale(1, 0.24, 1);
+      coals.translate(lx, 1.12, lz);
+      ember.push(coals);
+      censers.push({ x: lx, z: lz });
     }
 
-    // ---- 供石 / 参道石阶 ----
-    const offering = boxGeo(1.9, 0.32, 0.95);
-    offering.translate(0, 0.16, 2.6);
-    stone.push(offering);
+    // ---- 祭坛石台：三层青石台基 ----
+    const az = -2.45;
+    for (const t of [
+      [4.4, 0.24, 2.9, 0.12],
+      [3.6, 0.22, 2.3, 0.35],
+      [2.8, 0.2, 1.8, 0.56],
+    ]) {
+      const tier = boxGeo(t[0], t[1], t[2]);
+      tier.translate(0, t[3], az);
+      stone.push(tier);
+    }
+    // 台前踏跺（三级）
+    for (let i = 0; i < 3; i++) {
+      const st = boxGeo(1.9 - i * 0.12, 0.16, 0.34);
+      st.translate(0, 0.14 + i * 0.17, az + 2.26 - i * 0.32);
+      stone.push(st);
+    }
+    // ---- 石碑：碑座 + 碑身 + 云头碑首 ----
+    const stepTop = 0.66;
+    const steleBase = boxGeo(1.5, 0.16, 0.62);
+    steleBase.translate(0, stepTop + 0.08, az);
+    stone.push(steleBase);
+    const stele = boxGeo(1.16, 2.0, 0.3);
+    stele.translate(0, stepTop + 1.16, az);
+    stone.push(stele);
+    for (const side of [-1, 1]) {
+      const horn = boxGeo(0.3, 0.52, 0.34);
+      horn.rotateZ(side * 0.42);
+      horn.translate(side * 0.6, stepTop + 2.32, az);
+      stone.push(horn);
+    }
+    const steleFace = new T.Mesh(
+      new T.PlaneGeometry(0.74, 1.3),
+      new T.MeshStandardMaterial({ map: ctx.tex.stele, roughness: 0.9, metalness: 0, side: T.DoubleSide })
+    );
+    steleFace.position.set(0, stepTop + 1.34, az + 0.17);
+    root.add(steleFace);
+
+    // ---- 香案（祭坛前的供桌）----
+    const tableTop = boxGeo(2.0, 0.2, 0.92);
+    tableTop.translate(0, 0.56, 2.6);
+    stone.push(tableTop);
+    const tableTrim = boxGeo(2.08, 0.06, 1.0);
+    tableTrim.translate(0, 0.67, 2.6);
+    gold.push(tableTrim);
+    for (const side of [-1, 1]) {
+      const leg = boxGeo(0.34, 0.52, 0.72);
+      leg.translate(side * 0.74, 0.26, 2.6);
+      stone.push(leg);
+    }
+    // ---- 石阶（香案前三级踏跺，通向牌坊）----
     for (let i = 0; i < 3; i++) {
       const st = boxGeo(4.2 - i * 0.45, 0.16, 0.72);
       st.translate(0, 0.08 - i * 0.005, 3.55 + i * 0.82);
@@ -1602,28 +1817,40 @@
       root.add(mesh);
       return mesh;
     };
-    addMerged(woodRed, ctx.mats.woodRed, 'shrine-wood-red');
-    addMerged(woodDark, ctx.mats.woodDark, 'shrine-wood-dark');
-    addMerged(stone, ctx.mats.shrineStone, 'shrine-stone');
-    addMerged(paper, ctx.mats.paper, 'shrine-paper');
-    const lampMesh = addMerged(lampGlow, ctx.mats.lanternGlow, 'shrine-lantern-glow');
-    if (lampMesh) lampMesh.castShadow = false;
+    addMerged(lacquer, ctx.mats.woodRed, 'altar-lacquer');
+    addMerged(timber, ctx.mats.woodDark, 'altar-timber');
+    addMerged(stone, ctx.mats.altarStone, 'altar-stone');
+    addMerged(gold, ctx.mats.gold, 'altar-gold');
+    addMerged(roofTiles, ctx.mats.roofTile, 'altar-roof');
+    const emberMesh = addMerged(ember, ctx.mats.censerGlow, 'altar-censer-glow');
+    if (emberMesh) emberMesh.castShadow = false;
 
-    // ---- 牌匾 ----
+    // ---- 牌坊匾额（题字「山海」）----
     const plaque = new T.Mesh(
-      new T.PlaneGeometry(0.94, 1.16),
+      new T.PlaneGeometry(0.92, 1.06),
       new T.MeshStandardMaterial({ map: ctx.tex.plaque, roughness: 0.85, side: T.DoubleSide })
     );
-    plaque.position.set(0, 4.72, 0.3);
+    plaque.position.set(0, 4.0, 0.29);
     root.add(plaque);
 
-    // ---- 发光宝珠 + 光晕 ----
-    const orbGroup = new T.Group();
-    orbGroup.position.set(0, 3.3, 0);
-    root.add(orbGroup);
-    const orb = new T.Mesh(sphereGeo(0.42, 16, 12), ctx.mats.orb);
-    orb.castShadow = false;
-    orbGroup.add(orb);
+    // ---- 青玉璧：悬在香案上方的发光玉环 + 光晕 ----
+    const biGroup = new T.Group();
+    biGroup.position.set(0, 2.25, 2.55);
+    root.add(biGroup);
+    const bi = new T.Mesh(new T.TorusGeometry(0.58, 0.15, 10, 30), ctx.mats.jadeGlow);
+    bi.castShadow = false;
+    biGroup.add(bi);
+    // 璧面三颗鎏金粟纹（转动时可见）
+    const studParts = [];
+    for (let k = 0; k < 3; k++) {
+      const a = (k / 3) * TAU;
+      const stud = sphereGeo(0.085, 8, 6);
+      stud.translate(Math.cos(a) * 0.58, Math.sin(a) * 0.58, 0);
+      studParts.push(stud);
+    }
+    const studs = new T.Mesh(mergeGeoms(studParts), ctx.mats.gold);
+    studs.castShadow = false;
+    biGroup.add(studs);
     const haloMat = (opacity, tint) =>
       new T.SpriteMaterial({
         map: ctx.tex.glowWhite,
@@ -1634,24 +1861,43 @@
         depthWrite: false,
         fog: false,
       });
-    const haloBig = new T.Sprite(haloMat(0.2, 0xb9ffe8));
-    haloBig.scale.set(4.6, 4.6, 1);
-    orbGroup.add(haloBig);
-    const haloSmall = new T.Sprite(haloMat(0.6, 0xdcfff4));
-    haloSmall.scale.set(1.9, 1.9, 1);
-    orbGroup.add(haloSmall);
+    const haloBig = new T.Sprite(haloMat(0.2, 0x9dffe4));
+    haloBig.scale.set(4.2, 4.2, 1);
+    biGroup.add(haloBig);
+    const haloSmall = new T.Sprite(haloMat(0.55, 0xd8fff2));
+    haloSmall.scale.set(1.8, 1.8, 1);
+    biGroup.add(haloSmall);
 
-    // 灯笼光晕
-    const lanternHalos = [];
-    for (const side of [-1, 1]) {
-      const sp = new T.Sprite(haloMat(0.5, 0xffd98a));
+    // ---- 石鼎香炉的微光 ----
+    const censerHalos = [];
+    for (const c of censers) {
+      const sp = new T.Sprite(haloMat(0.46, 0xffc97a));
       sp.scale.set(1.7, 1.7, 1);
-      sp.position.set(side * 5.7, gy * 0 + 1.64, 1.5);
+      sp.position.set(c.x, 1.5, c.z);
       root.add(sp);
-      lanternHalos.push(sp);
+      censerHalos.push(sp);
+    }
+    // ---- 青烟：石鼎上方缓缓上升、放大、渐隐的柔光 ----
+    const smoke = [];
+    for (const c of censers) {
+      const sway = c.x < 0 ? -0.18 : 0.18;
+      for (let k = 0; k < 3; k++) {
+        const mat = new T.SpriteMaterial({
+          map: ctx.tex.glowWhite,
+          color: 0xdfeae2,
+          transparent: true,
+          opacity: 0.2,
+          depthWrite: false,
+          fog: true,
+        });
+        const sp = new T.Sprite(mat);
+        sp.scale.set(0.72, 0.72, 1);
+        root.add(sp);
+        smoke.push({ sprite: sp, x: c.x, z: c.z, phase: k / 3, sway: sway });
+      }
     }
 
-    // ---- 参道石板（从空地方向一路铺到神龛）----
+    // ---- 石阶石板（从空地方向一路铺到祭坛）----
     const slabGeo = cylGeo(1, 1, 0.16, 9, false);
     slabGeo.translate(0, -0.02, 0);
     paintVerts(slabGeo, (c, x, y) => {
@@ -1659,7 +1905,7 @@
     });
     const slabCount = 12;
     const slabs = new T.InstancedMesh(slabGeo, ctx.mats.slab, slabCount);
-    slabs.name = 'shrine-path';
+    slabs.name = 'altar-path';
     const dummy = new T.Object3D();
     const slabCol = new T.Color();
     for (let i = 0; i < slabCount; i++) {
@@ -1679,31 +1925,48 @@
     slabs.receiveShadow = true;
     ctx.group.add(slabs);
 
-    // ---- 神龛碰撞体（柱子 / 灯笼 / 供石）----
+    // ---- 祭坛碰撞体（方柱 / 石鼎 / 香案）——位置与旧版一致 ----
     ctx.colliders.push({ x: S.x - 2.5, z: S.z, r: 0.62 });
     ctx.colliders.push({ x: S.x + 2.5, z: S.z, r: 0.62 });
     ctx.colliders.push({ x: S.x - 5.7, z: S.z + 1.5, r: 0.55 });
     ctx.colliders.push({ x: S.x + 5.7, z: S.z + 1.5, r: 0.55 });
     ctx.colliders.push({ x: S.x, z: S.z + 2.6, r: 0.95 });
 
-    ctx.dyn.shrine = {
-      orbGroup,
-      orb,
+    ctx.dyn.altar = {
+      biGroup,
+      bi,
       haloBig,
       haloSmall,
-      lanternHalos,
-      lanternMat: ctx.mats.lanternGlow,
+      censerHalos,
+      smoke,
+      jadeMat: ctx.mats.jadeGlow,
+      censerMat: ctx.mats.censerGlow,
     };
     ctx.dyn.updaters.push((dt, time) => {
-      const bob = Math.sin(time * 1.25) * 0.14;
-      orbGroup.position.y = 3.3 + bob;
-      orb.rotation.y = time * 0.7;
+      // 玉璧悬浮 + 缓转
+      biGroup.position.y = 2.25 + Math.sin(time * 1.15) * 0.12;
+      biGroup.rotation.z = time * 0.35;
       const pulse = 1 + Math.sin(time * 1.6) * 0.08;
-      haloSmall.scale.set(1.9 * pulse, 1.9 * pulse, 1);
-      const hb = 4.6 * (1 + Math.sin(time * 0.9 + 1.2) * 0.06);
+      haloSmall.scale.set(1.8 * pulse, 1.8 * pulse, 1);
+      const hb = 4.2 * (1 + Math.sin(time * 0.9 + 1.2) * 0.06);
       haloBig.scale.set(hb, hb, 1);
-      for (const sp of lanternHalos) sp.material.opacity = 0.42 + Math.sin(time * 3.1) * 0.1;
-      ctx.mats.lanternGlow.emissiveIntensity = 1.9 + Math.sin(time * 3.1) * 0.22 + Math.sin(time * 7.7) * 0.1;
+      // 青玉与香火的呼吸微光
+      ctx.mats.jadeGlow.emissiveIntensity = 2.2 + Math.sin(time * 1.5) * 0.25;
+      for (const sp of censerHalos) sp.material.opacity = 0.4 + Math.sin(time * 3.1) * 0.1;
+      ctx.mats.censerGlow.emissiveIntensity = 1.7 + Math.sin(time * 3.1) * 0.22 + Math.sin(time * 7.7) * 0.1;
+      // 青烟：循环上升 + 放大 + 渐隐
+      for (const s of smoke) {
+        const k = fract(time * 0.16 + s.phase);
+        const sway = Math.sin(time * 0.9 + s.phase * 6.0) * 0.16;
+        s.sprite.position.set(
+          s.x + sway + s.sway * k,
+          1.15 + k * 2.2,
+          s.z + Math.cos(time * 0.75 + s.phase * 5.0) * 0.14
+        );
+        const sc = 0.72 + k * 1.15;
+        s.sprite.scale.set(sc, sc, 1);
+        s.sprite.material.opacity = Math.sin(k * Math.PI) * 0.26;
+      }
     });
   }
 
@@ -2016,7 +2279,9 @@
       ]),
       seed: makeSeedTexture(),
       sun: makeSunTexture(),
-      plaque: makePlaqueTexture(),
+      // 牌坊匾额「山海」 / 祭坛石碑「古林」
+      plaque: makeInscriptionTexture('山海', { bg: '#f6ecd2', edge: '#c8432a', inner: '#e0b25a', ink: '#24313f' }),
+      stele: makeInscriptionTexture('古林', { bg: '#9aa79c', edge: '#e8b33a', inner: '#c3ccb9', ink: '#26302c' }),
     };
 
     // 材质（标准卡通材质，明亮、无金属感）
@@ -2047,31 +2312,31 @@
       mushroomStem: new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, metalness: 0 }),
       rock: new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.92, metalness: 0, flatShading: true }),
       lily: new T.MeshStandardMaterial({ color: 0xffffff, roughness: 0.65, metalness: 0 }),
-      woodRed: new T.MeshStandardMaterial({ color: 0xd8503a, roughness: 0.72, metalness: 0 }),
-      woodDark: new T.MeshStandardMaterial({ color: 0x6d4a33, roughness: 0.85, metalness: 0 }),
+      // 朱漆 / 深色木构 / 栈桥木
+      woodRed: new T.MeshStandardMaterial({ color: 0xd0432e, roughness: 0.7, metalness: 0 }),
+      woodDark: new T.MeshStandardMaterial({ color: 0x5f3d2b, roughness: 0.85, metalness: 0 }),
       woodLight: new T.MeshStandardMaterial({ color: 0xb98a55, roughness: 0.85, metalness: 0 }),
-      shrineStone: new T.MeshStandardMaterial({ color: 0xa9b3a5, roughness: 0.95, metalness: 0 }),
+      // 青石（柱础 / 台基 / 石碑 / 石鼎 / 香案 / 石阶）
+      altarStone: new T.MeshStandardMaterial({ color: 0x93a49b, roughness: 0.95, metalness: 0 }),
       slab: new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.95, metalness: 0 }),
-      paper: new T.MeshStandardMaterial({
-        color: 0xfffdf2,
-        roughness: 0.6,
-        metalness: 0,
-        side: T.DoubleSide,
-        emissive: 0x222018,
-        emissiveIntensity: 0.3,
-      }),
-      lanternGlow: new T.MeshStandardMaterial({
-        color: 0xffd07a,
-        emissive: 0xffb64a,
-        emissiveIntensity: 2.0,
+      // 鎏金饰件
+      gold: new T.MeshStandardMaterial({ color: 0xe8b33a, roughness: 0.42, metalness: 0.3 }),
+      // 青瓦屋面（两坡 / 瓦垄 / 正脊 / 垂脊）
+      roofTile: new T.MeshStandardMaterial({ color: 0x4f5a56, roughness: 0.86, metalness: 0.06 }),
+      // 石鼎内的香火
+      censerGlow: new T.MeshStandardMaterial({
+        color: 0xffc070,
+        emissive: 0xff9a3c,
+        emissiveIntensity: 1.8,
         roughness: 0.4,
         metalness: 0,
       }),
-      orb: new T.MeshStandardMaterial({
-        color: 0x9bffdc,
-        emissive: 0x5dffc8,
-        emissiveIntensity: 2.4,
-        roughness: 0.25,
+      // 青玉璧
+      jadeGlow: new T.MeshStandardMaterial({
+        color: 0x9dffe4,
+        emissive: 0x3fd9b0,
+        emissiveIntensity: 2.3,
+        roughness: 0.22,
         metalness: 0,
       }),
     };
@@ -2108,12 +2373,12 @@
     buildMushrooms(ctx);
     buildRocks(ctx);
     buildPond(ctx);
-    buildShrine(ctx);
+    buildAltar(ctx);
     buildGodRays(ctx);
     buildParticles(ctx);
 
     ctx.landmarks = [
-      { x: LAYOUT.shrine.x, z: LAYOUT.shrine.z, type: 'shrine' },
+      { x: LAYOUT.altar.x, z: LAYOUT.altar.z, type: 'altar' },
       { x: LAYOUT.pond.x, z: LAYOUT.pond.z, type: 'pond' },
       { x: LAYOUT.ring.x, z: LAYOUT.ring.z, type: 'ring' },
       { x: LAYOUT.rocks.x, z: LAYOUT.rocks.z, type: 'rock' },
@@ -2160,10 +2425,10 @@
       windUniform.value = 0;
       if (ctx.waterUniform) ctx.waterUniform.uTime.value = 0;
       if (ctx.dyn.particleTime) ctx.dyn.particleTime.value = 0;
-      const sh = ctx.dyn.shrine;
-      if (sh) {
-        sh.orbGroup.position.y = 3.3;
-        sh.orb.rotation.y = 0;
+      const al = ctx.dyn.altar;
+      if (al) {
+        al.biGroup.position.y = 2.25;
+        al.biGroup.rotation.z = 0;
       }
     }
 

@@ -8,11 +8,11 @@
  * 示例：
  *   node tests/shot.mjs dev.html
  *   node tests/shot.mjs dev.html _shots/home.png 1600 900 9000
- *   node tests/shot.mjs "file:///D:/self/ai-work/dsh-work/poke3d/tests/audio.html?auto=1" _shots/audio.png
+ *   node tests/shot.mjs "file:///D:/self/code/zgshsj/tests/audio.html?auto=1" _shots/audio.png
  *   node tests/shot.mjs "https://example.com" out.png 1280 800 5000 --json
  *
  * 参数：
- *   <url-or-input.html>  http(s):// 或 file:/// URL；也接受本地文件路径（相对当前目录或相对 poke3d 根目录）
+ *   <url-or-input.html>  http(s):// 或 file:/// URL；也接受本地文件路径（相对当前目录或相对项目根目录）
  *   [out.png]            输出 PNG 路径；缺省 _shots/<页面名>.png（绝对路径会打印出来）
  *   [w] [h]              视口宽高，缺省 1280 x 800
  *   [waitMs]             虚拟时间预算，缺省 8000（给页面加载 / 异步自检留时间）
@@ -34,7 +34,7 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-// poke3d 工程根（本文件位于 <root>/tests/shot.mjs）
+// 工程根（本文件位于 <root>/tests/shot.mjs）
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const USAGE = [
@@ -100,7 +100,7 @@ function resolveTarget(arg) {
     }
     return { url: arg, label: 'url' };
   }
-  // 本地路径：绝对路径 / 当前目录相对 / poke3d 根目录相对
+  // 本地路径：绝对路径 / 当前目录相对 / 项目根目录相对
   const candidates = [
     path.isAbsolute(arg) ? arg : path.resolve(process.cwd(), arg),
     path.resolve(ROOT, arg),
@@ -146,7 +146,7 @@ function defaultOutName() {
 }
 
 let outPath = positional[1] ? path.resolve(process.cwd(), positional[1]) : defaultOutName();
-// 允许传相对 poke3d 根的路径（当 cwd 不在 poke3d 时）
+// 允许传相对项目根的路径（当 cwd 不在项目根时）
 if (positional[1] && !path.isAbsolute(positional[1]) && !fs.existsSync(path.dirname(outPath))) {
   const alt = path.resolve(ROOT, positional[1]);
   if (fs.existsSync(path.dirname(alt))) outPath = alt;

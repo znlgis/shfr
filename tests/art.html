@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>2D 美术自测 · 山海 · 森之突袭</title>
+<style>
+  :root {
+    --ink: #24313f; --gold: #e8b33a; --gold-d: #a87a10; --cinnabar: #d0432e;
+    --jade: #2f9e8f; --moss: #4e9c3f; --sky: #9fe0ff; --card: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; min-height: 100%; }
+  body {
+    background:
+      radial-gradient(1100px 520px at 50% -8%, #d8f3ff 0%, rgba(216,243,255,0) 62%),
+      radial-gradient(900px 460px at 12% 108%, #e8f5d8 0%, rgba(232,245,216,0) 60%),
+      linear-gradient(180deg, #eef8ff 0%, #eaf6ec 58%, #e4eed8 100%);
+    color: var(--ink);
+    font-family: 'PingFang SC', 'Microsoft YaHei', 'YouYuan', '幼圆', system-ui, sans-serif;
+    padding: 10px 18px 14px;
+  }
+  #err { position: fixed; z-index: 99; left: 0; right: 0; top: 0; display: none;
+    padding: 9px 16px; background: rgba(208,67,46,.96); color: #fff;
+    font-size: 13px; font-weight: 700; white-space: pre-wrap; }
+  header { display: flex; align-items: baseline; gap: 14px; padding: 0 6px 5px;
+    border-bottom: 3px solid var(--gold); }
+  header h1 { margin: 0; font-size: 19px; letter-spacing: 2px; font-weight: 900; }
+  header h1 b { color: var(--cinnabar); }
+  header h1 em { font-style: normal; color: var(--jade); }
+  header .sub { font-size: 12px; color: #6b7a8a; font-weight: 600; letter-spacing: .5px; }
+  #status { margin-left: auto; font-size: 12px; font-weight: 800; color: var(--moss);
+    background: #fff; border: 2px solid var(--gold); border-radius: 999px; padding: 3px 12px; }
+  #status.bad { color: var(--cinnabar); border-color: var(--cinnabar); }
+  main { max-width: 1180px; margin: 6px auto 0; }
+  section { margin-bottom: 6px; }
+  h2 { margin: 0 0 4px; font-size: 12.5px; font-weight: 900; letter-spacing: 1.4px; color: var(--ink); }
+  h2 small { font-size: 10.5px; font-weight: 700; color: #8493a3; letter-spacing: .4px; margin-left: 6px; }
+  h2::before { content: '◈'; color: var(--cinnabar); margin-right: 6px; font-size: 11px; }
+  .grid { display: grid; grid-template-columns: repeat(9, 88px); gap: 6px 12px; justify-content: center; }
+  .row { display: flex; gap: 12px; justify-content: center; align-items: flex-end; flex-wrap: wrap; }
+  .card { display: flex; flex-direction: column; align-items: center; gap: 1px;
+    background: var(--card); border: 2px solid var(--gold); border-radius: 12px;
+    padding: 4px 4px 3px; box-shadow: 0 3px 9px rgba(36,49,63,.13); }
+  .card.sm { border-radius: 9px; padding: 3px; }
+  .card canvas { display: block; border-radius: 8px; }
+  .card .name { font-size: 10px; font-weight: 900; line-height: 1.2; letter-spacing: .3px; }
+  .card .tag { font-size: 8.5px; font-weight: 600; color: #8493a3; line-height: 1.15; }
+  .card .tag i { font-style: normal; color: var(--cinnabar); font-weight: 800; }
+  .checks { display: flex; flex-wrap: wrap; gap: 4px 7px; justify-content: center; margin-top: 4px; }
+  .ck { font-size: 10px; font-weight: 800; border-radius: 999px; padding: 1px 8px;
+    background: #fff; border: 2px solid #cfd8e0; color: #5b6a7a; }
+  .ck.ok { border-color: #6fbf5a; color: #2f7a2c; background: #f2fbe9; }
+  .ck.bad { border-color: var(--cinnabar); color: var(--cinnabar); background: #fff1ef; }
+  footer { margin: 4px auto 0; max-width: 1180px; display: flex; justify-content: space-between;
+    font-size: 10.5px; color: #7a8a9a; font-weight: 600; }
+  footer b { color: var(--gold-d); }
+</style>
+</head>
+<body>
+<div id="err"></div>
+<header>
+  <h1>山海 · <b>森之突袭</b> <em>2D 美术自测</em></h1>
+  <div class="sub">35-art.js · 18 异兽图标 + 4 行者头像 · 0..1 单位空间 Canvas2D</div>
+  <div id="status">加载中…</div>
+</header>
+<main>
+  <section>
+    <h2>十八异兽圆形图标<small>icon(id, 88) · 面板 88px</small></h2>
+    <div class="grid" id="icons"></div>
+  </section>
+  <section>
+    <h2>四位行者半身头像<small>portrait(id, 140) · 按第 2 节服饰配色</small></h2>
+    <div class="row" id="portraits"></div>
+  </section>
+  <section>
+    <h2>多尺寸缩放 · 缓存与容错<small>icon 24 / 32 / 48 / 64 / 88 · portrait 56 / 84 / 120</small></h2>
+    <div class="row" id="scales"></div>
+    <div class="checks" id="checks"></div>
+  </section>
+</main>
+<footer>
+  <span>属性徽章：<b>雷纹 bolt</b> · <b>叶 leaf</b> · <b>火焰 flame</b> · <b>水滴 drop</b></span>
+  <span>验收：<b>node --check src/35-art.js</b> · <b>node build.mjs --dev</b> · 无头 Edge 截图</span>
+</footer>
+
+<script>
+  // 页面内所有错误 / Promise 拒绝都显示在顶部红条
+  window.__ERRORS__ = [];
+  function __showErr(msg) {
+    window.__ERRORS__.push(String(msg));
+    var el = document.getElementById('err');
+    el.style.display = 'block';
+    el.textContent = 'JS 错误：' + window.__ERRORS__.join(' | ');
+  }
+  window.addEventListener('error', function (e) {
+    __showErr((e && e.message) || '资源/脚本加载失败');
+  });
+  window.addEventListener('unhandledrejection', function (e) {
+    __showErr((e && e.reason && (e.reason.message || e.reason)) || 'Promise 拒绝');
+  });
+</script>
+<script src="../vendor/three.min.js" onerror="window.__noThree = 1"></script>
+<script src="../src/30-models.js" onerror="window.__noModels = 1"></script>
+<script src="../src/35-art.js" onerror="window.__noArt = 1"></script>
+<script>
+(function () {
+  'use strict';
+
+  var BEASTS = [
+    ['kui', '夔牛', 'lei'], ['qilin', '麒麟', 'mu'], ['bifang', '毕方', 'huo'], ['xuanwu', '玄武', 'shui'],
+    ['lushu', '鹿蜀', 'shou'], ['wugong', '蜈蚣精', 'du'], ['zhen', '鸩鸟', 'du'], ['mumei', '木魅', 'mu'],
+    ['xuanfeng', '玄蜂', 'du'], ['zheng', '狰', 'shou'], ['jiuwei', '九尾狐', 'yao'], ['jiaoren', '鲛人', 'shui'],
+    ['chimei', '魑魅', 'gui'], ['wangliang', '魍魉', 'gui'], ['chiru', '赤鱬', 'shui'], ['taotie', '饕餮', 'shou'],
+    ['bashe', '巴蛇', 'shou'], ['hundun', '混沌', 'ling']
+  ];
+  var TRAINERS = [
+    ['t_bolt', '雷公', 'lei'], ['t_leaf', '句芒', 'mu'], ['t_ember', '祝融', 'huo'], ['t_tide', '玄冥', 'shui']
+  ];
+  var REPORT = { checks: [], errors: window.__ERRORS__ };
+  window.__ART_REPORT__ = REPORT;
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  function card(canvas, cn, id, type, small) {
+    var d = el('div', 'card' + (small ? ' sm' : ''));
+    if (canvas) {
+      // 缓存的 canvas 只能挂在一处，展示时拷贝像素，避免同尺寸复用把上一张挪走
+      var c2 = document.createElement('canvas');
+      c2.width = canvas.width;
+      c2.height = canvas.height;
+      c2.getContext('2d').drawImage(canvas, 0, 0);
+      d.appendChild(c2);
+    }
+    d.appendChild(el('div', 'name', cn));
+    var tag = el('div', 'tag');
+    tag.innerHTML = id + ' · <i>' + type + '</i>';
+    d.appendChild(tag);
+    return d;
+  }
+  function check(name, ok, detail) {
+    REPORT.checks.push({ name: name, ok: !!ok, detail: detail || '' });
+    var e = el('span', 'ck ' + (ok ? 'ok' : 'bad'), (ok ? '✓ ' : '✕ ') + name + (detail ? '（' + detail + '）' : ''));
+    document.getElementById('checks').appendChild(e);
+  }
+
+  var PG = window.PG || {};
+  var M = PG.models || null;
+  var ART = (M && M.art) || PG.art || null;
+  var statusEl = document.getElementById('status');
+
+  if (!ART) {
+    statusEl.textContent = '未找到 2D 美术接口：35-art.js 未加载成功';
+    statusEl.className = 'bad';
+    check('35-art.js 已挂载 PG.models.art / PG.art', false);
+    return;
+  }
+  statusEl.textContent = (M && M.art)
+    ? '已挂载 PG.models.art' + (M.info && M.info('kui') && M.info('kui').cn ? '（models 就绪）' : '')
+    : '独立模式 PG.art（30-models 未就绪，安全降级）';
+  if (!(M && M.art)) statusEl.className = 'bad';
+
+  // ---- 18 图标 ----
+  var iconOk = 0;
+  BEASTS.forEach(function (b) {
+    var c = null;
+    try { c = ART.icon(b[0], 88); } catch (e) { __showErr('icon(' + b[0] + ') 抛错：' + e.message); }
+    if (c) iconOk++;
+    document.getElementById('icons').appendChild(card(c, b[1], b[0], b[2]));
+  });
+
+  // ---- 4 行者头像 ----
+  var portraitOk = 0;
+  TRAINERS.forEach(function (t) {
+    var c = null;
+    try { c = ART.portrait(t[0], 140); } catch (e) { __showErr('portrait(' + t[0] + ') 抛错：' + e.message); }
+    if (c) portraitOk++;
+    document.getElementById('portraits').appendChild(card(c, t[1], t[0], t[2]));
+  });
+
+  // ---- 多尺寸缩放 ----
+  var scaleRow = document.getElementById('scales');
+  var sizes = [24, 32, 48, 64, 88];
+  sizes.forEach(function (s) {
+    var c = ART.icon('kui', s);
+    scaleRow.appendChild(card(c, '夔牛', 'kui', 'lei', true));
+  });
+  [56, 84, 120].forEach(function (s) {
+    var c = ART.portrait('t_bolt', s);
+    scaleRow.appendChild(card(c, '雷公', 't_bolt', 'lei', true));
+  });
+
+  // ---- 自检 ----
+  check('18 个异兽图标全部渲染', iconOk === 18, iconOk + '/18');
+  check('4 位行者头像全部渲染', portraitOk === 4, portraitOk + '/4');
+
+  var hasOk = true;
+  BEASTS.forEach(function (b) { if (!ART.has(b[0])) hasOk = false; });
+  TRAINERS.forEach(function (t) { if (!ART.has(t[0])) hasOk = false; });
+  check('has() 对 18+4 个 id 均返回 true', hasOk);
+
+  var cacheA = ART.icon('kui', 88);
+  var cacheB = ART.icon('kui', 88);
+  check('同 id 同尺寸命中缓存', cacheA === cacheB);
+
+  var minI = ART.icon('kui', 4);
+  check('icon 最小尺寸钳制到 16px', minI && minI.width === 16, minI ? minI.width + 'px' : 'null');
+  var minP = ART.portrait('t_bolt', 4);
+  check('portrait 最小尺寸钳制到 32px', minP && minP.width === 32, minP ? minP.width + 'px' : 'null');
+
+  var unknownNull = false;
+  try { unknownNull = ART.icon('__not_a_beast__', 64) === null && ART.has('__not_a_beast__') === false; }
+  catch (e) { unknownNull = false; __showErr('未知 id 抛错：' + e.message); }
+  check('未知 id 返回 null 且不抛错', unknownNull);
+
+  var infoOk = true;
+  if (M && M.info) {
+    BEASTS.forEach(function (b) {
+      var i = null;
+      try { i = M.info(b[0]); } catch (e) { infoOk = false; }
+      if (i && i.cn && i.cn !== b[1]) infoOk = false;
+    });
+  }
+  check('与 PG.models.info(id) 中文名一致', infoOk, M && M.info ? '' : 'models 未加载，跳过');
+
+  var delegateOk = false;
+  if (M && typeof M.icon === 'function' && typeof M.portrait === 'function') {
+    try {
+      var di = M.icon('kui', 64);
+      var dp = M.portrait('t_bolt', 128);
+      delegateOk = !!di && !!dp && di.width === 64 && dp.width === 128;
+    } catch (e) { delegateOk = false; __showErr('models 2D 委托抛错：' + e.message); }
+  }
+  check('PG.models.icon/portrait 2D 委托生效', delegateOk, M ? '' : 'models 未加载，跳过');
+
+  // 结束状态
+  var bad = REPORT.checks.filter(function (c) { return !c.ok; }).length;
+  if (bad) statusEl.className = 'bad';
+  var total = REPORT.checks.length;
+  REPORT.summary = { passed: total - bad, total: total, iconOk: iconOk, portraitOk: portraitOk, errors: window.__ERRORS__.length };
+  console.log('ART 自测：' + JSON.stringify(REPORT.summary));
+})();
+</script>
+</body>
+</html>

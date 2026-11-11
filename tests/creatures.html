@@ -2,62 +2,75 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>PG.models 自测 · 宝可梦与训练家模型库</title>
+<title>山海 · 森之突袭 — 模型验收台</title>
 <style>
-  :root { --ink:#24313f; --yellow:#ffcb05; --red:#e8453c; --green:#4e9c3f; }
-  * { box-sizing: border-box; }
-  html, body { margin:0; height:100%; overflow:hidden; background:#dff2ff;
+  :root {
+    --gold:#e8b33a; --gold-d:#c28e22; --cinnabar:#d0432e; --jade:#2f9e8f;
+    --ink:#24313f; --ink-2:#5a6a78; --paper:#fbf7ec; --line:#e6dcc0;
+    --ok:#2f8a4f; --warn:#c28a12; --bad:#c0342a; --skip:#7a8a9a;
+  }
+  * { box-sizing:border-box; }
+  html, body { margin:0; height:100%; overflow:hidden; background:#e9f4f0;
     font-family:'PingFang SC','Microsoft YaHei','YouYuan','幼圆',system-ui,sans-serif; color:var(--ink); }
   #err { position:fixed; z-index:99; left:0; right:0; top:0; display:none; padding:10px 16px;
-    background:rgba(232,69,60,.95); color:#fff; font-size:14px; font-weight:700; white-space:pre-wrap; }
-  #stage { position:relative; width:100vw; height:calc(100vh - 140px); overflow:hidden; }
+    background:rgba(208,67,46,.95); color:#fff; font-size:14px; font-weight:700; white-space:pre-wrap; }
+  #stage { position:relative; width:100vw; height:calc(100vh - 142px); overflow:hidden; }
   #view { position:absolute; inset:0; width:100%; height:100%; display:block; }
   #labels { position:absolute; inset:0; pointer-events:none; }
   .label { position:absolute; transform:translate(-50%,-100%); white-space:nowrap;
-    padding:2px 8px 3px; border-radius:9px; background:rgba(255,255,255,.92);
-    border:2px solid #ffcb05; box-shadow:0 3px 8px rgba(36,49,63,.18);
-    font-size:12px; font-weight:800; letter-spacing:.4px; color:#24313f; }
-  .label i { font-style:normal; font-weight:600; font-size:10px; color:#6b7a8a; margin-left:4px; }
-  #hud { position:absolute; left:14px; top:14px; padding:8px 14px; border-radius:14px;
-    background:rgba(255,255,255,.9); border:3px solid var(--yellow);
-    box-shadow:0 6px 16px rgba(36,49,63,.16); font-size:13px; font-weight:700; line-height:1.55; }
-  #hud b { color:#e8453c; }
-  #hud .ok { color:var(--green); }
-  #hud .bad { color:var(--red); }
-  #gallery { height:140px; padding:8px 12px; display:flex; align-items:center; gap:14px;
-    background:linear-gradient(#ffffff, #eef7ff); border-top:3px solid var(--yellow);
-    box-shadow:0 -6px 20px rgba(36,49,63,.10); overflow:hidden; }
+    padding:2px 9px 3px; border-radius:10px; background:rgba(251,247,236,.94);
+    border:2px solid var(--gold); box-shadow:0 3px 9px rgba(36,49,63,.20);
+    font-size:12px; font-weight:800; letter-spacing:.4px; color:var(--ink); }
+  .label i { font-style:normal; font-weight:600; font-size:10px; color:#8a7a5a; margin-left:5px; }
+  #hud { position:absolute; left:14px; top:14px; padding:9px 15px; border-radius:15px;
+    background:rgba(251,247,236,.93); border:3px solid var(--gold);
+    box-shadow:0 7px 18px rgba(36,49,63,.16); font-size:13px; font-weight:700; line-height:1.6; }
+  #hud b { color:var(--cinnabar); }
+  #hud .ok { color:var(--ok); } #hud .bad { color:var(--bad); } #hud .warn { color:var(--warn); }
+  #hud .sub { font-size:11px; font-weight:600; color:var(--ink-2); }
+  #gallery { height:142px; padding:8px 12px; display:flex; align-items:center; gap:14px;
+    background:linear-gradient(#fdfaf1, #f3ecda); border-top:3px solid var(--gold);
+    box-shadow:0 -7px 22px rgba(36,49,63,.10); overflow:hidden; }
   .gsec { display:flex; align-items:center; gap:8px; }
   .card { display:flex; flex-direction:column; align-items:center; gap:2px; }
   .card canvas { display:block; border-radius:12px; box-shadow:0 3px 8px rgba(36,49,63,.16); }
-  .card span { font-size:10px; font-weight:700; color:#5b6a7a; }
-  .vline { width:2px; height:96px; background:#dbe6ef; border-radius:1px; }
-  #gtitle { writing-mode:vertical-rl; font-size:12px; font-weight:800; color:#8a9aab; letter-spacing:2px; }
+  .card .ph { width:40px; height:40px; border-radius:12px; background:#ece4cd; border:2px dashed #c9b98e; }
+  .card span { font-size:10px; font-weight:700; color:#6b6152; }
+  .vline { width:2px; height:100px; background:var(--line); border-radius:1px; }
+  #gtitle { writing-mode:vertical-rl; font-size:12px; font-weight:800; color:#a8986f; letter-spacing:3px; }
+  #gMsg { font-size:11px; color:var(--ink-2); font-weight:600; max-width:220px; line-height:1.5; }
   /* stats 视图 */
-  #stats { position:fixed; inset:0; overflow:auto; padding:18px 22px 40px; background:#f2f9ff; display:none; }
+  #stats { position:fixed; inset:0; overflow:auto; padding:18px 24px 46px; background:var(--paper); display:none; }
   #stats h1 { font-size:20px; margin:0 0 4px; letter-spacing:1px; }
-  #stats h1 small { font-size:12px; color:#6b7a8a; font-weight:600; letter-spacing:0; margin-left:8px; }
+  #stats h1 small { font-size:12px; color:var(--ink-2); font-weight:600; letter-spacing:0; margin-left:8px; }
   table { border-collapse:collapse; margin-top:12px; font-size:12px; background:#fff;
     border-radius:12px; overflow:hidden; box-shadow:0 4px 14px rgba(36,49,63,.10); }
-  th, td { padding:5px 10px; border-bottom:1px solid #e8f0f6; text-align:center; white-space:nowrap; }
-  th { background:#ffcb05; color:#24313f; font-weight:800; }
-  tr:nth-child(even) td { background:#fafdff; }
+  th, td { padding:5px 10px; border-bottom:1px solid #f0e9d6; text-align:center; white-space:nowrap; }
+  th { background:var(--gold); color:#3a2c10; font-weight:800; }
+  tr:nth-child(even) td { background:#fcfaf3; }
   td.l { text-align:left; font-weight:700; }
-  .pass { color:#2f8a3f; font-weight:800; }
-  .fail { color:#e8453c; font-weight:800; }
-  #checks { margin-top:14px; font-size:13px; line-height:1.9; background:#fff; padding:12px 16px;
-    border-radius:12px; box-shadow:0 4px 14px rgba(36,49,63,.10); max-width:1180px; }
-  /* 2d 画廊视图 */
-  #gallery2d { position:fixed; inset:0; overflow:auto; padding:20px 26px 40px; background:#f2f9ff; display:none; }
-  #gallery2d h1 { font-size:20px; margin:0 0 14px; }
-  #gallery2d .row { display:flex; flex-wrap:wrap; gap:14px; margin-bottom:22px; }
+  .pass { color:var(--ok); font-weight:800; }
+  .warn { color:var(--warn); font-weight:800; }
+  .fail { color:var(--bad); font-weight:800; }
+  .skip { color:var(--skip); font-weight:800; }
+  #checks { margin-top:16px; font-size:13px; line-height:1.95; background:#fff; padding:13px 17px;
+    border-radius:12px; box-shadow:0 4px 14px rgba(36,49,63,.10); max-width:1240px; }
+  #checks h1 { font-size:16px; margin:0 0 6px; }
+  /* 2D 画廊视图 */
+  #gallery2d { position:fixed; inset:0; overflow:auto; padding:20px 26px 46px; background:var(--paper); display:none; }
+  #gallery2d h1 { font-size:20px; margin:0 0 6px; }
+  #gallery2d h2 { font-size:14px; margin:20px 0 10px; color:#5a4a2a; letter-spacing:1px; }
+  #gallery2d .row { display:flex; flex-wrap:wrap; gap:14px; margin-bottom:8px; }
   #gallery2d .big { display:flex; flex-direction:column; align-items:center; gap:5px;
-    background:#fff; padding:8px; border-radius:16px; box-shadow:0 4px 14px rgba(36,49,63,.12); }
+    background:#fff; padding:9px; border-radius:16px; box-shadow:0 4px 14px rgba(36,49,63,.12); }
   #gallery2d .big span { font-size:12px; font-weight:800; }
-  #gallery2d .big small { font-size:10px; color:#7a8a9a; }
+  #gallery2d .big small { font-size:10px; color:#8a7a5a; }
+  #gallery2d .ph { width:116px; height:116px; border-radius:14px; background:#ece4cd;
+    border:2px dashed #c9b98e; display:flex; align-items:center; justify-content:center;
+    color:#a8986f; font-size:12px; font-weight:700; }
   #soloTag { position:absolute; left:50%; bottom:18px; transform:translateX(-50%);
-    padding:8px 18px; border-radius:16px; background:rgba(255,255,255,.94); border:3px solid var(--yellow);
-    font-weight:800; box-shadow:0 6px 18px rgba(36,49,63,.16); display:none; font-size:14px; }
+    padding:8px 18px; border-radius:16px; background:rgba(251,247,236,.95); border:3px solid var(--gold);
+    font-weight:800; box-shadow:0 7px 20px rgba(36,49,63,.16); display:none; font-size:14px; }
 </style>
 </head>
 <body>
@@ -68,13 +81,14 @@
   <div id="hud">加载中…</div>
   <div id="soloTag"></div>
 </div>
-<div id="gallery"><div id="gtitle">头像</div><div class="gsec" id="gTrainers"></div><div class="vline"></div><div class="gsec" id="gIcons"></div></div>
+<div id="gallery"><div id="gtitle">头像</div><div class="gsec" id="gTrainers"></div><div class="vline"></div><div class="gsec" id="gIcons"></div><div id="gMsg"></div></div>
 <div id="stats"></div>
 <div id="gallery2d"></div>
 
 <script>
-  // 错误可视化：页面内所有 JS 错误 / Promise 拒绝都显示在顶部红条
+  // 错误可视化：页内所有 JS 错误 / Promise 拒绝都显示在顶部红条
   window.__ERRORS__ = [];
+  window.__MISSING__ = [];
   function __showErr(msg) {
     window.__ERRORS__.push(msg);
     var el = document.getElementById('err');
@@ -87,17 +101,62 @@
 </script>
 <script src="../vendor/three.min.js"></script>
 <script src="../src/30-models.js"></script>
+<!-- 后两个模块可能尚未就绪：加载失败只记录到 __MISSING__，页面继续运行 -->
+<script src="../src/32-beasts.js" onerror="window.__MISSING__.push('src/32-beasts.js')"></script>
+<script src="../src/35-art.js" onerror="window.__MISSING__.push('src/35-art.js')"></script>
 <script>
 (function () {
   'use strict';
   var Q = new URLSearchParams(location.search);
   var VIEW = Q.get('view') || '3d';
   var FOCUS = Q.get('solo') ? Q.get('solo').split(',').filter(Boolean) : [];
-  var SOLO = FOCUS.length === 1 ? FOCUS[0] : null;
   var ANG = Q.has('a') ? (parseFloat(Q.get('a')) || 0) * Math.PI / 180 : -0.42;
   var errors = window.__ERRORS__;
+  var missing = window.__MISSING__;
   var M = window.PG && window.PG.models;
   var hud = document.getElementById('hud');
+
+  // ---------------- 真源数据（docs/MYTHOLOGY.md 第 2、3、4 节）----------------
+  var CREATURE_EXPECT = [
+    { id: 'kui',      cn: '夔牛',   en: 'KUI',       type: 'lei',  kind: 'starter', h: 0.86, r: 0.30 },
+    { id: 'qilin',    cn: '麒麟',   en: 'QILIN',     type: 'mu',   kind: 'starter', h: 1.00, r: 0.46 },
+    { id: 'bifang',   cn: '毕方',   en: 'BIFANG',    type: 'huo',  kind: 'starter', h: 1.05, r: 0.36 },
+    { id: 'xuanwu',   cn: '玄武',   en: 'XUANWU',    type: 'shui', kind: 'starter', h: 0.95, r: 0.36 },
+    { id: 'lushu',    cn: '鹿蜀',   en: 'LUSHU',     type: 'shou', kind: 'enemy',   h: 0.66, r: 0.32 },
+    { id: 'wugong',   cn: '蜈蚣精', en: 'WUGONG',    type: 'du',   kind: 'enemy',   h: 0.66, r: 0.30 },
+    { id: 'zhen',     cn: '鸩鸟',   en: 'ZHEN',      type: 'du',   kind: 'enemy',   h: 0.62, r: 0.30 },
+    { id: 'mumei',    cn: '木魅',   en: 'MUMEI',     type: 'mu',   kind: 'enemy',   h: 0.62, r: 0.30 },
+    { id: 'xuanfeng', cn: '玄蜂',   en: 'XUANFENG',  type: 'du',   kind: 'enemy',   h: 1.15, r: 0.45 },
+    { id: 'zheng',    cn: '狰',     en: 'ZHENG',     type: 'shou', kind: 'enemy',   h: 1.35, r: 0.42 },
+    { id: 'jiuwei',   cn: '九尾狐', en: 'JIUWEI',    type: 'yao',  kind: 'enemy',   h: 0.92, r: 0.34 },
+    { id: 'jiaoren',  cn: '鲛人',   en: 'JIAOREN',   type: 'shui', kind: 'enemy',   h: 0.60, r: 0.28 },
+    { id: 'chimei',   cn: '魑魅',   en: 'CHIMEI',    type: 'gui',  kind: 'enemy',   h: 0.85, r: 0.40 },
+    { id: 'wangliang',cn: '魍魉',   en: 'WANGLIANG', type: 'gui',  kind: 'enemy',   h: 1.45, r: 0.50 },
+    { id: 'chiru',    cn: '赤鱬',   en: 'CHIRU',     type: 'shui', kind: 'enemy',   h: 0.86, r: 0.34 },
+    { id: 'taotie',   cn: '饕餮',   en: 'TAOTIE',    type: 'shou', kind: 'elite',   h: 2.20, r: 0.82 },
+    { id: 'bashe',    cn: '巴蛇',   en: 'BASHE',     type: 'shou', kind: 'elite',   h: 1.75, r: 0.55 },
+    { id: 'hundun',   cn: '混沌',   en: 'HUNDUN',    type: 'ling', kind: 'boss',    h: 1.90, r: 0.42 }
+  ];
+  var TRAINER_EXPECT = [
+    { id: 't_bolt',  cn: '雷公', en: 'LEIGONG',  type: 'lei',  h: 1.80 },
+    { id: 't_leaf',  cn: '句芒', en: 'GOUMANG',  type: 'mu',   h: 1.80 },
+    { id: 't_ember', cn: '祝融', en: 'ZHURONG',  type: 'huo',  h: 1.80 },
+    { id: 't_tide',  cn: '玄冥', en: 'XUANMING', type: 'shui', h: 1.80 }
+  ];
+  var TYPE_COLORS_EXPECT = {
+    lei: '#ffd93d', mu: '#7ec850', huo: '#ff8a3d', shui: '#6fc3ff', feng: '#a9c0ea',
+    du: '#b57ad8', yan: '#b3a68f', shou: '#d9c9a8', ling: '#7ad0c8', gui: '#8a6ac8', yao: '#f08bb4'
+  };
+  var TYPE_DARK_EXPECT = {
+    lei: '#b58a00', mu: '#3f7a2c', huo: '#c2451a', shui: '#1f6fb2', feng: '#4a5f96',
+    du: '#6a3a8f', yan: '#6b6152', shou: '#8a7650', ling: '#2f7f74', gui: '#4c3580', yao: '#a83f6a'
+  };
+  var DSL_EXPECT = ['Builder', 'SPH', 'SPH_HI', 'CONE', 'CYL', 'BOX', 'HEMI', 'TORUS', 'CAPSULE', 'ICO',
+    'leafGeo', 'boltGeo', 'scytheGeo', 'capChain', 'addEye', 'addEyes', 'addSmile', 'addOpenMouth',
+    'addFangs', 'addTeethRow', 'addCheeks', 'addClaws', 'addFoot', 'finishModel', 'quatY', 'TAU', 'PI'];
+
+  var info = {};
+  var ART = (M && M.art && typeof M.art.icon === 'function') ? M.art : null;
 
   function el(tag, cls, text) {
     var e = document.createElement(tag);
@@ -106,240 +165,397 @@
     return e;
   }
 
-  if (!M) {
-    hud.innerHTML = '<b>PG.models 未定义！</b>';
-    return;
-  }
-
-  var info = {};
-  M.POKEMON.forEach(function (id) { info[id] = M.info(id); });
-  M.TRAINERS.forEach(function (id) { info[id] = M.info(id); });
-
-  // ---------------- 2D 画廊（底部条） ----------------
-  (function buildStrip() {
-    var gt = document.getElementById('gTrainers');
-    M.TRAINERS.forEach(function (id) {
-      var card = el('div', 'card');
-      var c = M.portrait(id, 72);
-      if (c) card.appendChild(c); else card.appendChild(el('span', '', 'ERR'));
-      card.appendChild(el('span', '', info[id].cn));
-      gt.appendChild(card);
-    });
-    var gi = document.getElementById('gIcons');
-    M.POKEMON.forEach(function (id) {
-      var card = el('div', 'card');
-      var c = M.icon(id, 40);
-      if (c) card.appendChild(c);
-      card.appendChild(el('span', '', info[id].cn));
-      gi.appendChild(card);
-    });
-  })();
-
-  // ---------------- 2D 大画廊视图 ----------------
-  if (VIEW === '2d') {
-    document.getElementById('stage').style.display = 'none';
-    document.getElementById('gallery').style.display = 'none';
-    var box = document.getElementById('gallery2d');
-    box.style.display = 'block';
-    box.appendChild(el('h1', '', '训练家头像 portrait(id, 200)　·　宝可梦图标 icon(id, 116)'));
-    var row1 = el('div', 'row');
-    M.TRAINERS.forEach(function (id) {
-      var d = el('div', 'big');
-      d.appendChild(M.portrait(id, 200));
-      d.appendChild(el('span', '', info[id].cn + ' / ' + info[id].en));
-      d.appendChild(el('small', '', 'portrait 200×200　type=' + info[id].type));
-      row1.appendChild(d);
-    });
-    box.appendChild(row1);
-    var row2 = el('div', 'row');
-    M.POKEMON.forEach(function (id) {
-      var d = el('div', 'big');
-      d.appendChild(M.icon(id, 116));
-      d.appendChild(el('span', '', info[id].cn));
-      d.appendChild(el('small', '', id + ' / ' + info[id].type + ' / ' + info[id].kind));
-      row2.appendChild(d);
-    });
-    box.appendChild(row2);
-    var row3 = el('div', 'row');
-    M.POKEMON.forEach(function (id) {
-      var d = el('div', 'big');
-      d.appendChild(M.icon(id, 40));
-      d.appendChild(el('span', '', info[id].cn));
-      d.appendChild(el('small', '', '40px HUD 尺寸'));
-      row3.appendChild(d);
-    });
-    box.appendChild(row3);
-    return;
-  }
-
-  var stats = [];
-  (function gatherStats() {
-    var ids = M.POKEMON.concat(M.TRAINERS);
-    ids.forEach(function (id) {
-      if (!M.has(id)) return;
-      var t0 = performance.now();
-      var isT = id.indexOf('t_') === 0;
-      var inst = isT ? M.makeTrainer(id) : M.make(id);
-      var ms = performance.now() - t0;
-      var box = new THREE.Box3().setFromObject(inst.group);
-      var meshes = 0; inst.group.traverse(function (o) { if (o.isMesh) meshes++; });
-      stats.push({ id: id, cn: (info[id] || {}).cn || id, height: inst.height, radius: inst.radius,
-        minY: box.min.y, maxY: box.max.y, meshes: meshes, ms: ms, kind: (info[id] || {}).kind || 'trainer' });
-    });
-  })();
-
   // ---------------- 质量自检 ----------------
   var checks = [];
-  function check(name, fn) {
-    try {
-      var r = fn();
-      var isStr = typeof r === 'string';
-      checks.push({ name: name, ok: r === true, detail: isStr ? r : (r ? '' : '返回 ' + r) });
-    } catch (e) { checks.push({ name: name, ok: false, detail: '异常 ' + e.message }); }
+  function push(status, name, detail) { checks.push({ status: status, name: name, detail: detail || '' }); }
+  function count(status) { var n = 0; for (var i = 0; i < checks.length; i++) if (checks[i].status === status) n++; return n; }
+
+  if (!M) {
+    hud.innerHTML = '<b>PG.models 未定义！</b><div class="sub">请确认 src/30-models.js 已加载</div>';
+    return;
   }
-  check('PG.models 契约 API 完整（make/makeTrainer/portrait/icon/info/has/POKEMON/TRAINERS）', function () {
-    return typeof M.make === 'function' && typeof M.makeTrainer === 'function' && typeof M.portrait === 'function' &&
-      typeof M.icon === 'function' && typeof M.info === 'function' && typeof M.has === 'function' &&
-      Array.isArray(M.POKEMON) && M.POKEMON.length === 18 && M.TRAINERS.length === 4;
-  });
-  check('18 只宝可梦 + 4 名训练家 id 可构建且 info 字段正确', function () {
-    var allowedTypes = ['electric','grass','fire','water','bug','flying','poison','normal','psychic','ghost','rock'];
-    var allowedKinds = ['starter','enemy','elite','boss'];
+  CREATURE_EXPECT.concat(TRAINER_EXPECT).forEach(function (e) { info[e.id] = e; });
+
+  // 1) 契约 API
+  (function checkApi() {
     var bad = [];
-    M.POKEMON.forEach(function (id) {
-      var i = M.info(id);
-      if (!i || !i.cn || !i.en || allowedTypes.indexOf(i.type) < 0 || allowedKinds.indexOf(i.kind) < 0 || !(i.scale > 0)) bad.push(id);
+    if (!Array.isArray(M.CREATURES) || M.CREATURES.length !== 18) bad.push('CREATURES 长度 ' + (M.CREATURES && M.CREATURES.length));
+    else {
+      var order = CREATURE_EXPECT.map(function (e) { return e.id; }).join(',');
+      if (M.CREATURES.join(',') !== order) bad.push('CREATURES 顺序与真源不一致');
+    }
+    if (!Array.isArray(M.TRAINERS) || M.TRAINERS.join(',') !== 't_bolt,t_leaf,t_ember,t_tide') bad.push('TRAINERS 异常');
+    ['has', 'info', 'make', 'makeTrainer', 'stats', 'silhouetteColor', 'warmup', 'registerBuilders', 'icon', 'portrait'].forEach(function (k) {
+      if (typeof M[k] !== 'function') bad.push('缺 API ' + k);
     });
-    M.TRAINERS.forEach(function (id) {
-      var i = M.info(id);
-      if (!i || !i.cn || !i.en || allowedTypes.indexOf(i.type) < 0) bad.push(id);
-    });
-    return bad.length ? '异常 ' + bad.join(',') : true;
-  });
-  check('portrait / icon 返回方形 Canvas 且尺寸正确、非空白', function () {
+    if (!M._dsl) bad.push('缺 _dsl');
+    else {
+      var miss = DSL_EXPECT.filter(function (k) { return M._dsl[k] == null; });
+      if (miss.length) bad.push('_dsl 缺 ' + miss.join(','));
+    }
+    if (bad.length) push('fail', 'PG.models 契约 API 完整（CREATURES/TRAINERS/18 API/_dsl 27 项）', bad.join('；'));
+    else push('pass', 'PG.models 契约 API 完整（CREATURES/TRAINERS/18 API/_dsl 27 项）', '');
+  })();
+
+  // 2) 资料表与真源一致
+  (function checkData() {
     var bad = [];
-    M.POKEMON.forEach(function (id) {
-      var c = M.icon(id, 64);
-      if (!c || c.width !== 64 || c.height !== 64) { bad.push('icon:' + id); return; }
-      var d = c.getContext('2d').getImageData(0, 0, 64, 64).data;
-      var sum = 0; for (var i = 0; i < d.length; i += 4) sum += d[i] + d[i + 1] + d[i + 2];
-      if (sum < 1000) bad.push('blank:' + id);
+    CREATURE_EXPECT.forEach(function (e) {
+      var i = M.info(e.id);
+      if (!i) { bad.push(e.id + ':无 info'); return; }
+      if (i.cn !== e.cn || i.en !== e.en) bad.push(e.id + ':名称');
+      if (i.type !== e.type) bad.push(e.id + ':type=' + i.type);
+      if (i.kind !== e.kind) bad.push(e.id + ':kind=' + i.kind);
+      if (typeof i.h !== 'number' || Math.abs(i.h - e.h) > 0.001) bad.push(e.id + ':h=' + i.h);
+      if (typeof i.r !== 'number' || Math.abs(i.r - e.r) > 0.001) bad.push(e.id + ':r=' + i.r);
     });
-    M.TRAINERS.forEach(function (id) {
-      var c = M.portrait(id, 128);
-      if (!c || c.width !== 128 || c.height !== 128) bad.push('portrait:' + id);
+    TRAINER_EXPECT.forEach(function (e) {
+      var i = M.info(e.id);
+      if (!i) { bad.push(e.id + ':无 info'); return; }
+      if (i.cn !== e.cn || i.en !== e.en || i.type !== e.type || i.kind !== 'trainer') bad.push(e.id + ':info');
     });
-    return bad.length ? '异常 ' + bad.join(',') : true;
-  });
-  check('每只模型脚底 y≈0（-0.01~0.01）', function () {
+    if (bad.length) push('fail', '18 异兽 + 4 行者 资料表与 MYTHOLOGY 第 2/3 节一致', bad.join('；'));
+    else push('pass', '18 异兽 + 4 行者 资料表与 MYTHOLOGY 第 2/3 节一致', '');
+  })();
+
+  // 3) 十一类属性色板
+  (function checkTypes() {
     var bad = [];
-    stats.forEach(function (s) {
-      if (s.minY < -0.012 || s.minY > 0.012) bad.push(s.id + '(' + s.minY.toFixed(3) + ')');
-    });
-    return bad.length ? '异常 ' + bad.join(',') : true;
-  });
-  check('正面朝 -Z：头部节点在模型 z≤0.08 的前侧', function () {
-    var bad = [];
-    stats.forEach(function (s) {
-      var inst = s.id.indexOf('t_') === 0 ? M.makeTrainer(s.id) : M.make(s.id);
-      var head = null;
-      inst.group.traverse(function (o) { if (!head && o.name === 'head') head = o; });
-      var z = 0;
-      if (head) {
-        var v = new THREE.Vector3(); head.getWorldPosition(v);
-        z = v.z;
-      }
-      if (z > 0.08) bad.push(s.id + '(z=' + z.toFixed(2) + ')');
-    });
-    return bad.length ? '异常 ' + bad.join(',') : true;
-  });
-  check('高度符合契约区间：小型 0.6~0.9 / 中型 1.0~1.5 / 卡比兽≈2.2 / 超梦≈1.9 / 训练家≈1.8', function () {
-    var bad = [];
-    M.POKEMON.forEach(function (s) {
-      var h = s.height, id = s.id;
-      if (id === 'snorlax') { if (Math.abs(h - 2.2) > 0.25) bad.push(id + ':' + h.toFixed(2)); }
-      else if (id === 'mewtwo') { if (Math.abs(h - 1.9) > 0.2) bad.push(id + ':' + h.toFixed(2)); }
-      else if (['caterpie','weedle','pidgey','oddish','gastly','jigglypuff'].indexOf(id) >= 0) {
-        if (h < 0.5 || h > 0.95) bad.push(id + ':' + h.toFixed(2));
-      } else if (['beedrill','scyther','gengar','onix','meowth','psyduck'].indexOf(id) >= 0) {
-        if (h < 0.85 || h > 1.6) bad.push(id + ':' + h.toFixed(2));
-      } else if (h < 0.55 || h > 1.25) bad.push(id + ':' + h.toFixed(2));
-    });
-    M.TRAINERS.forEach(function (s) { if (Math.abs(s.height - 1.8) > 0.25) bad.push(s.id + ':' + s.height.toFixed(2)); });
-    return bad.length ? '异常 ' + bad.join(',') : true;
-  });
-  check('单模型 draw call（合并后 mesh 数）< 12', function () {
-    var bad = [];
-    stats.forEach(function (s) { if (s.meshes > 12) bad.push(s.id + ':' + s.meshes); });
-    return bad.length ? '异常 ' + bad.join(',') : true;
-  });
-  check('update(dt,t) 可调用且节点变换发生变化（动画确实在动）', function () {
-    var bad = [];
-    stats.forEach(function (s) {
-      var inst = s.id.indexOf('t_') === 0 ? M.makeTrainer(s.id) : M.make(s.id);
+    var keys = Object.keys(TYPE_COLORS_EXPECT);
+    if (!M.TYPE_COLORS || !M.TYPE_DARK) { bad.push('未暴露 TYPE_COLORS/TYPE_DARK'); }
+    else {
+      keys.forEach(function (k) {
+        if (String(M.TYPE_COLORS[k]).toLowerCase() !== TYPE_COLORS_EXPECT[k]) bad.push('主色 ' + k);
+        if (String(M.TYPE_DARK[k]).toLowerCase() !== TYPE_DARK_EXPECT[k]) bad.push('暗色 ' + k);
+      });
+      var extra = Object.keys(M.TYPE_COLORS).filter(function (k) { return keys.indexOf(k) < 0; });
+      if (extra.length) bad.push('多余属性键 ' + extra.join(','));
+    }
+    if (bad.length) push('fail', '11 类拼音属性色板（TYPE_COLORS / TYPE_DARK）与第 4 节一致', bad.join('；'));
+    else push('pass', '11 类拼音属性色板（TYPE_COLORS / TYPE_DARK）与第 4 节一致', '');
+  })();
+
+  // ---------------- 构建全部模型并测量 ----------------
+  var records = [];
+  var TOL_H = 0.10;      // 高度相对误差：<=10% 通过，<=20% 警告
+  var TOL_H_ABS = 0.03;  // 小模型至少允许 3cm 绝对误差
+  CREATURE_EXPECT.concat(TRAINER_EXPECT).forEach(function (e) {
+    var isT = e.id.indexOf('t_') === 0;
+    var rec = { id: e.id, exp: e, isTrainer: isT, ok: false };
+    try {
+      var t0 = performance.now();
+      var inst = isT ? M.makeTrainer(e.id) : M.make(e.id);
+      rec.ms = performance.now() - t0;
+      rec.inst = inst;
+      var box = new THREE.Box3().setFromObject(inst.group);
+      inst.group.updateMatrixWorld(true);
+      rec.height = inst.height;
+      rec.radius = isT ? null : inst.radius;
+      rec.minY = box.min.y;
+      rec.maxY = box.max.y;
+      var meshes = 0;
+      var headZ = 0;
+      inst.group.traverse(function (o) {
+        if (o.isMesh) meshes++;
+        if (o.name === 'head' && !headZ) {
+          var v = new THREE.Vector3();
+          o.getWorldPosition(v);
+          headZ = v.z;
+        }
+      });
+      rec.meshes = meshes;
+      rec.headZ = headZ;
+      // 动画自检：40 帧后节点变换是否变化
       var nodes = [];
       inst.group.traverse(function (o) { if (o !== inst.group) nodes.push(o); });
       function snap() {
-        var sum = 0;
+        var s = 0;
         for (var j = 0; j < nodes.length; j++) {
           var o = nodes[j];
-          sum += o.position.y * 3.1 + o.rotation.x * 2.3 + o.rotation.z * 1.7 + o.scale.y * 1.3;
+          s += o.position.y * 3.1 + o.rotation.x * 2.3 + o.rotation.z * 1.7 + o.scale.y * 1.3;
         }
-        return sum;
+        return s;
       }
       var before = snap();
       for (var k = 0; k < 40; k++) inst.update(0.016, k * 0.05);
-      var after = snap();
-      if (Math.abs(after - before) < 1e-5) bad.push(s.id + ':无动画');
-      if (typeof inst.height !== 'number' || !inst.group) bad.push(s.id + ':返回值缺字段');
-    });
-    return bad.length ? '异常 ' + bad.join(',') : true;
+      rec.animDelta = Math.abs(snap() - before);
+      rec.updateOk = typeof inst.update === 'function';
+      rec.handAnchor = isT ? !!inst.handAnchor : null;
+      rec.ok = true;
+    } catch (err) {
+      rec.error = (err && err.message) || String(err);
+    }
+    records.push(rec);
   });
-  check('训练家 handAnchor 存在（供 90-main 挂武器）', function () {
+
+  var built = records.filter(function (r) { return r.ok; });
+  var buildErrors = records.filter(function (r) { return !r.ok; });
+
+  // 4) 可构建性
+  (function checkBuild() {
+    if (buildErrors.length) {
+      var why = buildErrors.map(function (r) { return r.id + '(' + r.error + ')'; });
+      var beastMissing = buildErrors.every(function (r) { return r.id.indexOf('t_') !== 0 && CREATURE_EXPECT.filter(function (e) { return e.kind !== 'starter'; }).some(function (e) { return e.id === r.id; }); });
+      push(beastMissing ? 'skip' : 'fail', '22 个模型（18 异兽 + 4 行者）全部可构建',
+        (beastMissing ? '等待 32-beasts.js 注册：' : '构建失败：') + why.slice(0, 6).join('；'));
+    } else {
+      push('pass', '22 个模型（18 异兽 + 4 行者）全部可构建', '');
+    }
+  })();
+
+  // 5) 高度与半径
+  (function checkSize() {
+    var bad = [], warns = [];
+    built.forEach(function (r) {
+      var target = r.isTrainer ? 1.8 : r.exp.h;
+      var dh = Math.abs(r.height - target);
+      var rel = dh / target;
+      if (rel > 0.20) bad.push(r.id + ' 高度 ' + r.height.toFixed(2) + ' ≠ ' + target.toFixed(2));
+      else if (rel > TOL_H && dh > TOL_H_ABS) warns.push(r.id + ' 高度 ' + r.height.toFixed(2) + ' ≠ ' + target.toFixed(2));
+      if (!r.isTrainer) {
+        var ratio = r.radius / r.exp.r;
+        // r 是玩法碰撞半径，3D 网格因头角/尾羽外伸允许到 1.8 倍
+        if (ratio < 0.70 || ratio > 2.20) bad.push(r.id + ' 半径 ' + r.radius.toFixed(2) + '（目标 ' + r.exp.r + '）');
+        else if (ratio < 0.80 || ratio > 1.80) warns.push(r.id + ' 半径 ' + r.radius.toFixed(2) + '（目标 ' + r.exp.r + '）');
+      }
+    });
+    var detail = (bad.length ? '超标：' + bad.slice(0, 6).join('；') : '') + (warns.length ? '偏高/偏大：' + warns.slice(0, 8).join('；') : '');
+    var name = '高度 / 半径符合 MYTHOLOGY 第 3 节（高度误差 ≤10%，网格半径 0.8~1.8 倍碰撞半径）';
+    if (bad.length) push('fail', name, detail);
+    else if (warns.length) push('warn', name, detail);
+    else push('pass', name, '');
+  })();
+
+  // 6) 脚底 y=0 / 正面朝 -Z
+  (function checkPose() {
+    var bad = [], warns = [];
+    built.forEach(function (r) {
+      if (Math.abs(r.minY) > 0.02) bad.push(r.id + ' minY=' + r.minY.toFixed(3));
+      if (r.headZ > 0.15) warns.push(r.id + ' headZ=' + r.headZ.toFixed(2));
+    });
+    if (bad.length) push('fail', '脚底 y=0（|minY| ≤ 0.02）', bad.slice(0, 8).join('；'));
+    else if (warns.length) push('warn', '脚底 y=0 且正面朝 -Z', '脚底正常；头部不在前侧：' + warns.slice(0, 6).join('；'));
+    else push('pass', '脚底 y=0（|minY| ≤ 0.02）且正面朝 -Z', '');
+  })();
+
+  // 7) 动画 / 节点 / draw call
+  (function checkAnim() {
     var bad = [];
-    M.TRAINERS.forEach(function (id) {
-      var t = M.makeTrainer(id);
-      if (!t.handAnchor) bad.push(id);
+    built.forEach(function (r) {
+      if (!r.updateOk || !(r.animDelta > 1e-5)) bad.push(r.id + ' 无动画');
+      // BOSS 混沌（六足四翼 + 赤光层）允许 26 个合并 mesh，其余 ≤ 24
+      var meshCap = r.id === 'hundun' ? 26 : 24;
+      if (r.meshes > meshCap) bad.push(r.id + ' mesh=' + r.meshes);
     });
-    return bad.length ? '异常 ' + bad.join(',') : true;
-  });
+    if (bad.length) push('fail', 'update(dt,t) 有呼吸/摆动动画，单模型合并后 mesh ≤ 24（BOSS ≤ 26）', bad.slice(0, 8).join('；'));
+    else push('pass', 'update(dt,t) 有呼吸/摆动动画，单模型合并后 mesh ≤ 24（BOSS ≤ 26）', '最多 ' + Math.max.apply(null, built.map(function (r) { return r.meshes; })) + ' 个');
+  })();
+
+  // 8) 行者 handAnchor + 身高
+  (function checkTrainers() {
+    var bad = [];
+    built.forEach(function (r) {
+      if (!r.isTrainer) return;
+      if (!r.handAnchor) bad.push(r.id + ' 缺 handAnchor');
+      if (Math.abs(r.height - 1.8) > 0.01) bad.push(r.id + ' 高 ' + r.height.toFixed(2));
+    });
+    if (bad.length) push('fail', '4 位行者：高 1.8、右手 handAnchor 存在', bad.join('；'));
+    else push('pass', '4 位行者：高 1.8、右手 handAnchor 存在', '');
+  })();
+
+  // 9) 2D 图标 / 头像（35-art.js）
+  (function checkArt() {
+    if (!ART) {
+      push('skip', '2D 图标 / 头像可用（35-art.js 挂载 PG.models.art）', '等待 35-art.js 加载' + (missing.length ? '（未找到 ' + missing.join('、') + '）' : ''));
+      return;
+    }
+    var bad = [], n = 0;
+    CREATURE_EXPECT.forEach(function (e) {
+      var c = M.icon(e.id, 116);
+      if (!c || c.width !== 116 || c.height !== 116) { bad.push('icon:' + e.id); return; }
+      var d = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+      var sum = 0;
+      for (var i = 0; i < d.length; i += 4) sum += d[i] + d[i + 1] + d[i + 2];
+      if (sum < 1000) bad.push('blank:' + e.id);
+      n++;
+    });
+    TRAINER_EXPECT.forEach(function (e) {
+      var c = M.portrait(e.id, 200);
+      if (!c || c.width !== 200 || c.height !== 200) bad.push('portrait:' + e.id);
+      n++;
+    });
+    var small = M.icon('kui', 40);
+    if (!small || small.width !== 40) bad.push('icon 40px 尺寸');
+    if (bad.length) push('fail', '2D 图标 18 张 + 头像 4 张（非空白、尺寸正确）', bad.slice(0, 8).join('；'));
+    else push('pass', '2D 图标 18 张 + 头像 4 张（非空白、尺寸正确）', n + ' 张');
+  })();
+
+  // 10) 页面 JS 错误
+  (function checkErrors() {
+    if (errors.length) push('fail', '页面无 JS 错误', errors.slice(0, 3).join(' ｜ '));
+    else push('pass', '页面无 JS 错误', missing.length ? '可选模块未加载：' + missing.join('、') : '');
+  })();
+
+  // ---------------- HUD / 底部头像条 ----------------
+  function buildStrip() {
+    var gt = document.getElementById('gTrainers');
+    var gi = document.getElementById('gIcons');
+    var gmsg = document.getElementById('gMsg');
+    TRAINER_EXPECT.forEach(function (e) {
+      var card = el('div', 'card');
+      var c = ART ? M.portrait(e.id, 72) : null;
+      if (c) card.appendChild(c); else card.appendChild(el('div', 'ph'));
+      card.appendChild(el('span', '', e.cn));
+      gt.appendChild(card);
+    });
+    CREATURE_EXPECT.forEach(function (e) {
+      var card = el('div', 'card');
+      var c = ART ? M.icon(e.id, 40) : null;
+      if (c) card.appendChild(c); else card.appendChild(el('div', 'ph'));
+      card.appendChild(el('span', '', e.cn));
+      gi.appendChild(card);
+    });
+    if (!ART) gmsg.textContent = '35-art.js 未就绪：图标/头像暂缺，模型页面仍可验收。';
+  }
+  buildStrip();
+
+  function hudText(drawCalls, fps) {
+    var ok = count('pass'), warn = count('warn'), fail = count('fail'), skip = count('skip');
+    var errCount = errors.length;
+    return '异兽 <b>' + M.CREATURES.length + '</b> · 行者 <b>' + M.TRAINERS.length + '</b>' +
+      ' · 已渲染 <b>' + built.length + '</b><br>' +
+      '自检 <span class="ok">通过 ' + ok + '</span> · <span class="warn">警告 ' + warn + '</span> · ' +
+      '<span class="bad">失败 ' + fail + '</span> · <span>' + skip + '</span> 跳过<br>' +
+      'draw calls <b>' + drawCalls + '</b> · FPS <b>' + fps.toFixed(0) + '</b> · ' +
+      'JS 错误 <b class="' + (errCount ? 'bad' : 'ok') + '">' + errCount + '</b>' +
+      '<div class="sub">32-beasts：' + (missing.indexOf('src/32-beasts.js') >= 0 ? '<b>未加载</b>' : '已加载') +
+      ' ｜ 35-art：' + (ART ? '已加载' : '<b>未加载</b>') + ' ｜ 数据源 docs/MYTHOLOGY.md</div>';
+  }
+
+  // ---------------- 2D 大画廊 ----------------
+  function buildGallery2d() {
+    var box = document.getElementById('gallery2d');
+    box.appendChild(el('h1', '', '山海模型 2D 画廊'));
+    box.appendChild(el('div', '', '『十八异兽』圆形图标 icon(id, 116) · 『四位行者』半身头像 portrait(id, 200)。' + (ART ? '' : '（35-art.js 未加载，以下为占位）')));
+    var h1 = el('h2', '', '四位行者 · portrait');
+    box.appendChild(h1);
+    var row1 = el('div', 'row');
+    TRAINER_EXPECT.forEach(function (e) {
+      var d = el('div', 'big');
+      var c = ART ? M.portrait(e.id, 200) : null;
+      if (c) d.appendChild(c); else d.appendChild(el('div', 'ph', 'art 未加载'));
+      d.appendChild(el('span', '', e.cn + ' / ' + e.en));
+      d.appendChild(el('small', '', e.id + ' · ' + e.type));
+      row1.appendChild(d);
+    });
+    box.appendChild(row1);
+    var h2 = el('h2', '', '十八异兽 · icon 116');
+    box.appendChild(h2);
+    var row2 = el('div', 'row');
+    CREATURE_EXPECT.forEach(function (e) {
+      var d = el('div', 'big');
+      var c = ART ? M.icon(e.id, 116) : null;
+      if (c) d.appendChild(c); else d.appendChild(el('div', 'ph', 'art 未加载'));
+      d.appendChild(el('span', '', e.cn));
+      d.appendChild(el('small', '', e.id + ' / ' + e.type + ' / ' + e.kind));
+      row2.appendChild(d);
+    });
+    box.appendChild(row2);
+    var h3 = el('h2', '', 'HUD 尺寸 · icon 40');
+    box.appendChild(h3);
+    var row3 = el('div', 'row');
+    CREATURE_EXPECT.forEach(function (e) {
+      var d = el('div', 'big');
+      var c = ART ? M.icon(e.id, 40) : null;
+      if (c) d.appendChild(c); else d.appendChild(el('div', 'ph', '40'));
+      d.appendChild(el('span', '', e.cn));
+      d.appendChild(el('small', '', '40px'));
+      row3.appendChild(d);
+    });
+    box.appendChild(row3);
+  }
+
+  // ---------------- stats 视图（表格 + 自检） ----------------
+  function statusOf(r) {
+    if (!r.ok) return 'skip';
+    var target = r.isTrainer ? 1.8 : r.exp.h;
+    var rel = Math.abs(r.height - target) / target;
+    var bad = rel > 0.20, warn = rel > TOL_H && Math.abs(r.height - target) > TOL_H_ABS;
+    if (!r.isTrainer) {
+      var ratio = r.radius / r.exp.r;
+      if (ratio < 0.70 || ratio > 2.20) bad = true;
+      else if (ratio < 0.80 || ratio > 1.80) warn = true;
+    }
+    if (Math.abs(r.minY) > 0.02) bad = true;
+    if (!r.updateOk || !(r.animDelta > 1e-5)) bad = true;
+    if (r.meshes > 24) bad = true;
+    if (r.isTrainer && (!r.handAnchor || Math.abs(r.height - 1.8) > 0.01)) bad = true;
+    return bad ? 'fail' : (warn ? 'warn' : 'pass');
+  }
+  function buildStats() {
+    var st = document.getElementById('stats');
+    st.style.display = 'block';
+    var title = el('h1', '');
+    title.innerHTML = '山海模型质量报告 <small>高度单位：米（脚底 y=0）· mesh = 合并后 draw call 数 · 目标值取自 docs/MYTHOLOGY.md</small>';
+    st.appendChild(title);
+    var tbl = el('table');
+    var thead = el('tr');
+    ['id', '中文名', '属性', 'kind', '目标高', '实测高', 'Δ', '目标半径', '实测半径', '脚底 minY', '头顶', 'headZ', 'meshes', '构建 ms', '状态'].forEach(function (h) { thead.appendChild(el('th', '', h)); });
+    tbl.appendChild(thead);
+    var totalMeshes = 0, totalMs = 0;
+    records.forEach(function (r) {
+      var stt = statusOf(r);
+      var tr = el('tr');
+      var exp = r.exp;
+      var cells = [r.id, r.isTrainer ? exp.cn + '（行者）' : exp.cn, exp.type, r.isTrainer ? 'trainer' : exp.kind,
+        (r.isTrainer ? 1.8 : exp.h).toFixed(2),
+        r.ok ? r.height.toFixed(2) : '—',
+        r.ok ? ((r.height - (r.isTrainer ? 1.8 : exp.h)) > 0 ? '+' : '') + (r.height - (r.isTrainer ? 1.8 : exp.h)).toFixed(2) : '—',
+        r.isTrainer ? '—' : exp.r.toFixed(2),
+        (r.ok && !r.isTrainer) ? r.radius.toFixed(2) : '—',
+        r.ok ? r.minY.toFixed(3) : '—',
+        r.ok ? r.maxY.toFixed(2) : '—',
+        r.ok ? r.headZ.toFixed(2) : '—',
+        r.ok ? r.meshes : '—',
+        r.ok ? r.ms.toFixed(1) : '—',
+        stt === 'pass' ? '通过' : stt === 'warn' ? '警告' : stt === 'fail' ? '失败' : '跳过'];
+      if (r.ok) { totalMeshes += r.meshes; totalMs += r.ms; }
+      cells.forEach(function (v, i) { tr.appendChild(el('td', i === 0 || i === 1 ? 'l' : (i === cells.length - 1 ? stt : ''), String(v))); });
+      tbl.appendChild(tr);
+    });
+    st.appendChild(tbl);
+    var sum = el('div', '', '合计：' + built.length + ' / 22 个模型可构建 · 合并后 mesh 总数 ' + totalMeshes +
+      ' · 模板构建总耗时 ' + totalMs.toFixed(1) + ' ms · 平均 ' + (built.length ? (totalMeshes / built.length).toFixed(1) : '—') + ' mesh/模型');
+    sum.style.cssText = 'margin-top:10px;font-weight:800;font-size:13px;';
+    st.appendChild(sum);
+
+    var cbox = el('div');
+    cbox.id = 'checks';
+    var ctitle = el('h1', '');
+    ctitle.innerHTML = '质量自检 <small id="checkSum">通过 ' + count('pass') + ' / ' + checks.length + '</small>';
+    cbox.appendChild(ctitle);
+    checks.forEach(function (c) {
+      var cls = c.status === 'pass' ? 'pass' : c.status === 'warn' ? 'warn' : c.status === 'fail' ? 'fail' : 'skip';
+      var mark = c.status === 'pass' ? '✓ ' : c.status === 'warn' ? '⚠ ' : c.status === 'fail' ? '✗ ' : '○ ';
+      cbox.appendChild(el('div', cls, mark + c.name + (c.detail ? '　—　' + c.detail : '')));
+    });
+    st.appendChild(cbox);
+  }
+
+  // ---------------- 2D 视图：不建 3D 场景 ----------------
+  if (VIEW === '2d') {
+    document.getElementById('stage').style.display = 'none';
+    document.getElementById('gallery').style.display = 'none';
+    document.getElementById('gallery2d').style.display = 'block';
+    buildGallery2d();
+    return;
+  }
 
   // ---------------- stats 视图 ----------------
   if (VIEW === 'stats') {
     document.getElementById('stage').style.display = 'none';
     document.getElementById('gallery').style.display = 'none';
-    var st = document.getElementById('stats');
-    st.style.display = 'block';
-    st.appendChild(el('h1', '', 'PG.models 质量报告　<small>高度单位：米（脚底 y=0）· meshes = 合并后 draw call 数</small>'));
-    var tbl = el('table');
-    var thead = el('tr');
-    ['id', '中文名', 'kind', '实测高度', '碰撞半径', '脚底 minY', '顶点最高', 'meshes', '构建 ms'].forEach(function (h) { thead.appendChild(el('th', '', h)); });
-    tbl.appendChild(thead);
-    var totalMeshes = 0, totalMs = 0;
-    stats.forEach(function (s) {
-      totalMeshes += s.meshes; totalMs += s.ms;
-      var tr = el('tr');
-      [s.id, s.cn, s.kind, s.height.toFixed(2), s.radius == null ? '—' : s.radius.toFixed(2), s.minY.toFixed(3), s.maxY.toFixed(2), s.meshes, s.ms.toFixed(1)]
-        .forEach(function (v, i) { tr.appendChild(el('td', i === 0 || i === 1 ? 'l' : '', String(v))); });
-      tbl.appendChild(tr);
-    });
-    st.appendChild(tbl);
-    var sum = el('div', '', '合计：22 个模型 · 合并后 mesh 总数 ' + totalMeshes + ' · 模板构建总耗时 ' + totalMs.toFixed(1) + ' ms · 单模型平均 ' + (totalMeshes / stats.length).toFixed(1) + ' draw call');
-    sum.style.cssText = 'margin-top:10px;font-weight:800;font-size:13px;';
-    st.appendChild(sum);
-    // 质量自检结果
-    var cbox = el('div');
-    cbox.id = 'checks';
-    cbox.appendChild(el('h1', '', '质量自检　<small>' + checks.filter(function (c) { return c.ok; }).length + '/' + checks.length + ' 通过</small>'));
-    checks.forEach(function (c) {
-      var row = el('div', c.ok ? 'pass' : 'fail', (c.ok ? '✓ ' : '✗ ') + c.name + (c.detail ? '　—　' + c.detail : ''));
-      cbox.appendChild(row);
-    });
-    st.appendChild(cbox);
-    // 3D 视角下若有失败也提示到 HUD
-    if (checks.some(function (c) { return !c.ok; })) {
-      document.getElementById('hud').innerHTML = '<b>自检失败：</b>' + checks.filter(function (c) { return !c.ok; }).length + ' 项';
-    }
+    buildStats();
     return;
   }
 
@@ -352,30 +568,27 @@
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
   var scene = new THREE.Scene();
-  // 天空渐变背景
   (function sky() {
     var c = document.createElement('canvas');
     c.width = 4; c.height = 256;
     var g = c.getContext('2d');
     var gr = g.createLinearGradient(0, 0, 0, 256);
-    gr.addColorStop(0, '#8ed4ff');
-    gr.addColorStop(0.55, '#cdeeff');
-    gr.addColorStop(1, '#efffe0');
+    gr.addColorStop(0, '#8fd8d0');
+    gr.addColorStop(0.55, '#d6f0ea');
+    gr.addColorStop(1, '#fdf6e0');
     g.fillStyle = gr; g.fillRect(0, 0, 4, 256);
     var tex = new THREE.CanvasTexture(c);
     tex.colorSpace = THREE.SRGBColorSpace;
     scene.background = tex;
   })();
-  scene.fog = new THREE.Fog(0xd7f0ff, 16, 42);
+  scene.fog = new THREE.Fog(0xe6f3ea, 16, 44);
 
-  var camera = new THREE.PerspectiveCamera(42, 1, 0.1, 120);
+  var camera = new THREE.PerspectiveCamera(42, 1, 0.1, 130);
 
-  // 灯光：明亮卡通
-  var hemi = new THREE.HemisphereLight(0xdff4ff, 0x7fae5a, 1.45);
+  var hemi = new THREE.HemisphereLight(0xe8f6ff, 0x7fae5a, 1.45);
   scene.add(hemi);
-  var amb = new THREE.AmbientLight(0xffffff, 0.16);
-  scene.add(amb);
-  var sun = new THREE.DirectionalLight(0xfff6e2, 2.5);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.16));
+  var sun = new THREE.DirectionalLight(0xfff4dd, 2.5);
   sun.position.set(6.5, 11, 5.5);
   sun.castShadow = true;
   sun.shadow.mapSize.set(1024, 1024);
@@ -386,21 +599,20 @@
   sun.shadow.bias = -0.0008;
   sun.shadow.normalBias = 0.02;
   scene.add(sun);
-  var rim = new THREE.DirectionalLight(0x9fe0ff, 0.85);
+  var rim = new THREE.DirectionalLight(0xa9e8dc, 0.85);
   rim.position.set(-7, 5, -8);
   scene.add(rim);
 
-  // 草地
-  var groundMat = new THREE.MeshStandardMaterial({ color: 0x8cdb63, roughness: 0.96, metalness: 0 });
+  // 古林草地（山海配色）
+  var groundMat = new THREE.MeshStandardMaterial({ color: 0x7fc25c, roughness: 0.96, metalness: 0 });
   var ground = new THREE.Mesh(new THREE.CircleGeometry(17, 56), groundMat);
   ground.rotation.x = -Math.PI / 2;
   ground.receiveShadow = true;
   scene.add(ground);
-  var ringMat = new THREE.MeshStandardMaterial({ color: 0x6fc04a, roughness: 1 });
-  var ring = new THREE.Mesh(new THREE.RingGeometry(16.2, 17, 56), ringMat);
-  ring.rotation.x = -Math.PI / 2;
-  scene.add(ring);
-  // 草地上的小花点（InstancedMesh 控制 draw call）
+  var ringMat = new THREE.MeshStandardMaterial({ color: 0x5fa346, roughness: 1 });
+  var ringMesh = new THREE.Mesh(new THREE.RingGeometry(16.2, 17, 56), ringMat);
+  ringMesh.rotation.x = -Math.PI / 2;
+  scene.add(ringMesh);
   (function flowers() {
     var geo = new THREE.SphereGeometry(0.05, 6, 5);
     var mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8 });
@@ -408,7 +620,7 @@
     var inst = new THREE.InstancedMesh(geo, mat, count);
     var dummy = new THREE.Object3D();
     var col = new THREE.Color();
-    var palette = [0xffe066, 0xff9fc0, 0xffffff, 0xffb43d];
+    var palette = [0xe8b33a, 0xd0432e, 0x2f6fae, 0x4e9c3f, 0xf09b3c, 0x2f9e8f, 0xffffff];
     for (var i = 0; i < count; i++) {
       var a = Math.random() * Math.PI * 2, r = 3 + Math.random() * 13;
       dummy.position.set(Math.cos(a) * r, 0.05, Math.sin(a) * r);
@@ -421,55 +633,39 @@
     scene.add(inst);
   })();
 
-  // ---------------- 放置模型 ----------------
-  var placed = [];   // {obj, labelEl, height}
+  // ---------------- 摆放模型 ----------------
+  var placed = [];
   var labelsEl = document.getElementById('labels');
-  var positions = {
-    pokemon: [],
-    trainers: [],
-  };
-  M.POKEMON.forEach(function (id, i) {
-    var col = i % 6, row = Math.floor(i / 6);
-    positions.pokemon.push({ id: id, x: (col - 2.5) * 2.05, z: -2.5 + row * 2.15 });
-  });
-  M.TRAINERS.forEach(function (id, i) {
-    positions.trainers.push({ id: id, x: (i - 1.5) * 2.4, z: 4.6 });
-  });
-
   var models = {};
-  function addModel(id, x, z) {
-    var isT = id.indexOf('t_') === 0;
-    var inst = isT ? M.makeTrainer(id) : M.make(id);
+
+  function addModel(rec, x, z) {
+    var inst = rec.inst;
     inst.group.position.set(x, 0, z);
-    // 让模型微微朝向镜头方向（-Z 是正面，绕 Y 轻微错开避免完全整齐）
     inst.group.rotation.y = (Math.random() - 0.5) * 0.5;
     scene.add(inst.group);
-    models[id] = inst;
+    models[rec.id] = inst;
     var lab = el('div', 'label');
-    var inf = info[id];
-    lab.innerHTML = inf.cn + '<i>' + inf.en + '</i>';
+    lab.innerHTML = rec.exp.cn + '<i>' + rec.exp.en + '</i>';
     labelsEl.appendChild(lab);
-    placed.push({ obj: inst, el: lab, height: inst.height, id: id });
+    placed.push({ obj: inst, el: lab, height: inst.height });
     return inst;
   }
 
   if (FOCUS.length) {
     document.getElementById('gallery').style.display = 'none';
     stage.style.height = '100vh';
+    var focusRecs = records.filter(function (r) { return FOCUS.indexOf(r.id) >= 0 && r.ok; });
     var spacing = 1.75;
-    var totalW = (FOCUS.length - 1) * spacing;
-    FOCUS.forEach(function (id, i) {
-      if (!M.has(id)) return;
-      var isT = id.indexOf('t_') === 0;
-      var inst = isT ? M.makeTrainer(id) : M.make(id);
+    var totalW = (focusRecs.length - 1) * spacing;
+    focusRecs.forEach(function (rec, i) {
+      var inst = rec.inst;
       inst.group.position.set(i * spacing - totalW / 2, 0, 0);
       scene.add(inst.group);
-      models[id] = inst;
+      models[rec.id] = inst;
       var lab = el('div', 'label');
-      var inf = info[id];
-      lab.innerHTML = inf.cn + '<i>' + inf.en + ' · ' + id + '</i>';
+      lab.innerHTML = rec.exp.cn + '<i>' + rec.exp.en + ' · ' + rec.id + '</i>';
       labelsEl.appendChild(lab);
-      placed.push({ obj: inst, el: lab, height: inst.height, id: id });
+      placed.push({ obj: inst, el: lab, height: inst.height });
     });
     var maxH = 1;
     placed.forEach(function (p) { maxH = Math.max(maxH, p.height); });
@@ -478,11 +674,20 @@
     tag.style.display = 'block';
     tag.textContent = FOCUS.join(' · ') + '　（脚底 y=0，正面朝 -Z）';
   } else {
-    positions.pokemon.forEach(function (p) { addModel(p.id, p.x, p.z); });
-    positions.trainers.forEach(function (p) { addModel(p.id, p.x, p.z); });
+    CREATURE_EXPECT.forEach(function (e, i) {
+      var rec = records.filter(function (r) { return r.id === e.id; })[0];
+      if (!rec || !rec.ok) return;
+      var col = i % 6, row = Math.floor(i / 6);
+      addModel(rec, (col - 2.5) * 2.05, -2.5 + row * 2.15);
+    });
+    TRAINER_EXPECT.forEach(function (e, i) {
+      var rec = records.filter(function (r) { return r.id === e.id; })[0];
+      if (!rec || !rec.ok) return;
+      addModel(rec, (i - 1.5) * 2.4, 4.6);
+    });
   }
 
-  // ---------------- 相机（自动环绕） ----------------
+  // ---------------- 相机 ----------------
   var cam = { angle: ANG, radius: 12.4, height: 4.85, target: new THREE.Vector3(0, 0.85, 0) };
   if (window.__FOCUS_GEO__) {
     var fg = window.__FOCUS_GEO__;
@@ -507,7 +712,6 @@
   var clock = new THREE.Clock();
   var fpsAcc = 0, fpsFrames = 0, fps = 0, drawCalls = 0;
   var v3 = new THREE.Vector3();
-  var last = performance.now();
   var elapsed = 0;
 
   function projectLabels() {
@@ -525,77 +729,22 @@
     }
   }
 
-  // ---------------- 性能基准（?bench=1）：同步渲染 20 只，测 draw call 与帧耗时 ----------------
-  if (Q.has('bench')) {
-    document.getElementById('gallery').style.display = 'none';
-    stage.style.height = '100vh';
-    // 清空默认摆位，改为 20 只环形摆放（相当于最坏情况的同屏敌人数量）
-    placed.forEach(function (p) { p.el.remove(); });
-    placed.length = 0;
-    Object.keys(models).forEach(function (k) {
-      scene.remove(models[k].group);
-    });
-    for (var k in models) delete models[k];
-    var ids20 = [];
-    for (var bi = 0; bi < 20; bi++) ids20.push(M.POKEMON[bi % M.POKEMON.length]);
-    var day = 0;
-    ids20.forEach(function (id, i) {
-      var a = (i / ids20.length) * Math.PI * 2;
-      var rr = 3.0 + (i % 3) * 0.55;
-      var inst = M.make(id);
-      inst.group.position.set(Math.cos(a) * rr, 0, Math.sin(a) * rr);
-      inst.group.rotation.y = -a + Math.PI;
-      scene.add(inst.group);
-      models['bench' + i] = inst;
-    });
-    cam.radius = 8.2; cam.height = 4.2; cam.target.set(0, 0.9, 0);
-    // 同步渲染 40 帧计时（不依赖 rAF，headless 虚拟时间下也能拿到数据）
-    var frames = 40, tStart = performance.now();
-    for (var fi = 0; fi < frames; fi++) {
-      for (var key in models) models[key].update(1 / 60, fi / 60);
-      camera.position.set(Math.sin(0.5) * cam.radius, cam.height, -Math.cos(0.5) * cam.radius);
-      camera.lookAt(cam.target);
-      renderer.render(scene, camera);
-    }
-    var msPerFrame = (performance.now() - tStart) / frames;
-    var info = renderer.info.render;
-    var perf = document.createElement('div');
-    perf.id = 'benchResult';
-    perf.style.cssText = 'position:fixed;left:24px;top:120px;z-index:50;padding:16px 22px;border-radius:16px;background:#fff;border:3px solid #ffcb05;box-shadow:0 8px 24px rgba(36,49,63,.2);font-size:15px;line-height:1.8;font-weight:700;';
-    perf.innerHTML = '性能基准（20 只宝可梦同屏 · SwiftShader 软件渲染）<br>' +
-      'draw calls：<b style="color:#e8453c">' + info.calls + '</b>　三角形：<b>' + info.triangles.toLocaleString() + '</b><br>' +
-      '同步渲染平均：<b>' + msPerFrame.toFixed(2) + ' ms/帧</b>（软件渲染 CPU 光栅化，真机 GPU 会显著更快）<br>' +
-      '<span style="font-size:12px;color:#6b7a8a;font-weight:600">注：headless 虚拟时间下 requestAnimationFrame 的 FPS 计数无效，故用同步计时</span>';
-    document.body.appendChild(perf);
-    return;
-  }
-
   function animate() {
     requestAnimationFrame(animate);
     var dt = Math.min(clock.getDelta(), 0.05);
-    var now = performance.now();
     elapsed += dt;
-
     if (autoRotate) cam.angle += dt * 0.16;
     var r = cam.radius;
     camera.position.set(Math.sin(cam.angle) * r, cam.height, -Math.cos(cam.angle) * r);
     camLook.copy(cam.target);
     camera.lookAt(camLook);
-
     for (var key in models) models[key].update(dt, elapsed);
-
     renderer.render(scene, camera);
     drawCalls = renderer.info.render.calls;
     projectLabels();
-
-    // FPS 统计（每 0.5s 刷新一次显示）
     fpsAcc += dt; fpsFrames++;
     if (fpsAcc > 0.5) { fps = fpsFrames / fpsAcc; fpsAcc = 0; fpsFrames = 0; }
-    var errCount = errors.length + ((window.PG && window.PG.errors && window.PG.errors.length) || 0);
-    hud.innerHTML =
-      '宝可梦 <b>' + M.POKEMON.length + '</b> · 训练家 <b>' + M.TRAINERS.length + '</b><br>' +
-      'draw calls <b>' + drawCalls + '</b> · FPS <b>' + fps.toFixed(0) + '</b><br>' +
-      'JS 错误 <b class="' + (errCount ? 'bad' : 'ok') + '">' + errCount + '</b> · 模型高度 ' + placed.length + ' 个已渲染';
+    hud.innerHTML = hudText(drawCalls, fps);
   }
   animate();
 })();

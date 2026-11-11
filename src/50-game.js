@@ -13,38 +13,38 @@
   // ============================ 角色配置 ============================
   const CHARS = [
     {
-      id: 't_bolt', cn: '雷恩', en: 'RAIDEN', type: 'electric', color: '#ffd93d', colorHex: 0xffd93d,
-      partner: 'pikachu', partnerCn: '皮卡丘',
-      weapon: '电光弹发射器', weaponShort: '电光弹',
-      passive: '静电场：命中累积电荷，满 5 层下一发必定暴击',
-      ult: '十万伏特：连锁闪电，命中 8 米内最多 6 只宝可梦',
+      id: 't_bolt', cn: '雷公', en: 'LEIGONG', type: 'lei', color: '#ffd93d', colorHex: 0xffd93d,
+      partner: 'kui', partnerCn: '夔牛',
+      weapon: '雷光锤', weaponShort: '雷光锤',
+      passive: '聚雷：命中累积雷气，满 5 层下一发必定暴击',
+      ult: '天雷引：连锁闪电，劈中 8 米内最多 6 只妖物',
       hp: 100, speed: 1.06,
       gun: { dmg: 15, rate: 0.115, pellets: 1, spread: 0.008, speed: 108, ammoMax: 30, reload: 1.05, splash: 0, pierce: 0, crit: 2.0, projColor: 0xffe66b },
     },
     {
-      id: 't_leaf', cn: '芽衣', en: 'MAY', type: 'grass', color: '#8ed36a', colorHex: 0x8ed36a,
-      partner: 'bulbasaur', partnerCn: '妙蛙种子',
-      weapon: '种子散弹枪', weaponShort: '种子散弹',
-      passive: '光合作用：脱战 4 秒后缓慢回血',
-      ult: '飞叶风暴：种子暴雨护体，回血并减速周围敌人',
+      id: 't_leaf', cn: '句芒', en: 'GOUMANG', type: 'mu', color: '#8ed36a', colorHex: 0x8ed36a,
+      partner: 'qilin', partnerCn: '麒麟',
+      weapon: '灵种杖', weaponShort: '灵种杖',
+      passive: '春生：脱战 4 秒后缓慢回复体力',
+      ult: '万物生：灵雨护体，回血并减速周围妖物',
       hp: 110, speed: 1.0,
       gun: { dmg: 12, rate: 0.62, pellets: 5, spread: 0.075, speed: 62, ammoMax: 9, reload: 1.45, splash: 0, pierce: 1, crit: 1.8, projColor: 0x9ef06b },
     },
     {
-      id: 't_ember', cn: '炎武', en: 'BLAZE', type: 'fire', color: '#ff8a3d', colorHex: 0xff8a3d,
-      partner: 'charmander', partnerCn: '小火龙',
-      weapon: '火花榴弹炮', weaponShort: '火花炮',
+      id: 't_ember', cn: '祝融', en: 'ZHURONG', type: 'huo', color: '#ff8a3d', colorHex: 0xff8a3d,
+      partner: 'bifang', partnerCn: '毕方',
+      weapon: '离火铳', weaponShort: '离火铳',
       passive: '余烬：击杀后 2 秒内伤害 +40%',
-      ult: '火焰漩涡：以自身为中心的爆炎新星，范围灼烧',
+      ult: '焚天业火：以自身为中心的爆炎新星，范围灼烧',
       hp: 120, speed: 0.94,
       gun: { dmg: 46, rate: 0.44, pellets: 1, spread: 0.012, speed: 58, ammoMax: 8, reload: 1.7, splash: 2.8, pierce: 0, crit: 1.7, projColor: 0xff9a3c },
     },
     {
-      id: 't_tide', cn: '波琳', en: 'MARINA', type: 'water', color: '#5ab8f0', colorHex: 0x5ab8f0,
-      partner: 'squirtle', partnerCn: '杰尼龟',
-      weapon: '水压穿刺枪', weaponShort: '水压枪',
+      id: 't_tide', cn: '玄冥', en: 'XUANMING', type: 'shui', color: '#5ab8f0', colorHex: 0x5ab8f0,
+      partner: 'xuanwu', partnerCn: '玄武',
+      weapon: '玄水枪', weaponShort: '玄水枪',
       passive: '潮汐：每第 5 发伤害翻倍并回复 2 点体力',
-      ult: '海潮护盾：3 秒无敌，冲开周围所有敌人',
+      ult: '玄冥水盾：3 秒无敌，冲开周围所有敌人',
       hp: 105, speed: 1.03,
       gun: { dmg: 19, rate: 0.155, pellets: 1, spread: 0.006, speed: 96, ammoMax: 36, reload: 1.25, splash: 0, pierce: 2, crit: 1.8, projColor: 0x6fd8ff },
     },
@@ -52,37 +52,37 @@
 
   // ============================ 敌人配置 ============================
   const ENEMIES = {
-    caterpie: { hp: 30, spd: 2.0, dmg: 7, cd: 1.5, ai: 'melee', score: 60, y: 0 },
-    weedle: { hp: 28, spd: 2.3, dmg: 6, cd: 2.2, ai: 'ranged', range: 24, projSpd: 17, score: 70 },
-    pidgey: { hp: 24, spd: 3.0, dmg: 6, cd: 1.9, ai: 'flyer', y: 1.4, score: 70 },
-    oddish: { hp: 42, spd: 1.7, dmg: 9, cd: 1.7, ai: 'melee', score: 80 },
-    beedrill: { hp: 46, spd: 3.1, dmg: 9, cd: 1.5, ai: 'ranged', range: 30, projSpd: 26, score: 110 },
-    scyther: { hp: 62, spd: 2.7, dmg: 14, cd: 2.9, ai: 'dash', score: 130 },
-    meowth: { hp: 44, spd: 2.6, dmg: 9, cd: 1.3, ai: 'strafe', score: 100 },
-    jigglypuff: { hp: 58, spd: 1.6, dmg: 5, cd: 2.4, ai: 'sing', score: 120 },
-    gastly: { hp: 34, spd: 2.2, dmg: 9, cd: 2.0, ai: 'float', y: 1.3, score: 120, ghost: true },
-    gengar: { hp: 78, spd: 2.0, dmg: 13, cd: 2.6, ai: 'teleport', score: 190, ghost: true },
-    psyduck: { hp: 50, spd: 1.4, dmg: 8, cd: 1.8, ai: 'ranged', range: 22, projSpd: 19, score: 100 },
-    snorlax: { hp: 300, spd: 1.05, dmg: 22, cd: 2.6, ai: 'heavy', score: 500, kind: 'elite', scale: 1.08 },
-    onix: { hp: 210, spd: 1.3, dmg: 18, cd: 2.2, ai: 'ranged', range: 34, projSpd: 15, score: 450, kind: 'elite', scale: 1.05 },
-    mewtwo: { hp: 1500, spd: 2.1, dmg: 20, cd: 2.0, ai: 'boss', score: 3000, kind: 'boss', scale: 1.15 },
+    lushu: { hp: 30, spd: 2.0, dmg: 7, cd: 1.5, ai: 'melee', score: 60, y: 0 },
+    wugong: { hp: 28, spd: 2.3, dmg: 6, cd: 2.2, ai: 'ranged', range: 24, projSpd: 17, score: 70 },
+    zhen: { hp: 24, spd: 3.0, dmg: 6, cd: 1.9, ai: 'flyer', y: 1.4, score: 70 },
+    mumei: { hp: 42, spd: 1.7, dmg: 9, cd: 1.7, ai: 'melee', score: 80 },
+    xuanfeng: { hp: 46, spd: 3.1, dmg: 9, cd: 1.5, ai: 'ranged', range: 30, projSpd: 26, score: 110 },
+    zheng: { hp: 62, spd: 2.7, dmg: 14, cd: 2.9, ai: 'dash', score: 130 },
+    jiuwei: { hp: 44, spd: 2.6, dmg: 9, cd: 1.3, ai: 'strafe', score: 100 },
+    jiaoren: { hp: 58, spd: 1.6, dmg: 5, cd: 2.4, ai: 'sing', score: 120 },
+    chimei: { hp: 34, spd: 2.2, dmg: 9, cd: 2.0, ai: 'float', y: 1.3, score: 120, ghost: true },
+    wangliang: { hp: 78, spd: 2.0, dmg: 13, cd: 2.6, ai: 'teleport', score: 190, ghost: true },
+    chiru: { hp: 50, spd: 1.4, dmg: 8, cd: 1.8, ai: 'ranged', range: 22, projSpd: 19, score: 100 },
+    taotie: { hp: 300, spd: 1.05, dmg: 22, cd: 2.6, ai: 'heavy', score: 500, kind: 'elite', scale: 1.08 },
+    bashe: { hp: 210, spd: 1.3, dmg: 18, cd: 2.2, ai: 'ranged', range: 34, projSpd: 15, score: 450, kind: 'elite', scale: 1.05 },
+    hundun: { hp: 1500, spd: 2.1, dmg: 20, cd: 2.0, ai: 'boss', score: 3000, kind: 'boss', scale: 1.15 },
   };
   const CN = {
-    caterpie: '绿毛虫', weedle: '独角虫', pidgey: '波波', oddish: '走路草', beedrill: '大针蜂',
-    scyther: '飞天螳螂', meowth: '喵喵', jigglypuff: '胖丁', gastly: '鬼斯', gengar: '耿鬼',
-    psyduck: '可达鸭', snorlax: '卡比兽', onix: '大岩蛇', mewtwo: '超梦',
+    lushu: '鹿蜀', wugong: '蜈蚣精', zhen: '鸩鸟', mumei: '木魅', xuanfeng: '玄蜂',
+    zheng: '狰', jiuwei: '九尾狐', jiaoren: '鲛人', chimei: '魑魅', wangliang: '魍魉',
+    chiru: '赤鱬', taotie: '饕餮', bashe: '巴蛇', hundun: '混沌',
   };
 
   // ============================ 波次 ============================
   const WAVES = [
-    { name: '林中骚动', tip: '森林里全是暴走的宝可梦……小心，有东西在盯着我们！', list: [['caterpie', 5], ['weedle', 3]] },
-    { name: '虫群袭来', tip: '它们被暗影能量控制了，别心软！', list: [['caterpie', 4], ['weedle', 4], ['pidgey', 3]] },
-    { name: '草径伏击', tip: '左侧有动静——走路草在聚能！', list: [['oddish', 4], ['pidgey', 3], ['beedrill', 2]] },
-    { name: '蜂群之刺', tip: '暗影能量越来越浓了，别停下！', list: [['beedrill', 5], ['meowth', 3], ['weedle', 4]] },
-    { name: '夜幕低垂', tip: '雾里……有东西在飘。', list: [['gastly', 4], ['meowth', 3], ['scyther', 2], ['jigglypuff', 2]] },
-    { name: '螳螂突袭', tip: '速度型敌人出现了，试试冲刺闪避！', list: [['scyther', 4], ['beedrill', 4], ['psyduck', 3]] },
-    { name: '精英镇守', tip: '两只大家伙守在神龛前——集中火力！', list: [['snorlax', 1], ['onix', 1], ['gengar', 2], ['oddish', 4]] },
-    { name: '暗影核心', tip: '那……那是超梦？它的眼睛是红色的！', list: [['mewtwo', 1]], boss: true },
+    { name: '林间异动', tip: '山里的灵气乱了……有东西在盯着我们！', list: [['lushu', 5], ['wugong', 3]] },
+    { name: '妖群来袭', tip: '它们被混沌之气侵蚀了，别心软！', list: [['lushu', 4], ['wugong', 4], ['zhen', 3]] },
+    { name: '古木伏击', tip: '左边的古木在动——树魅在聚气！', list: [['mumei', 4], ['zhen', 3], ['xuanfeng', 2]] },
+    { name: '玄蜂之刺', tip: '混沌之气越来越浓，别停下！', list: [['xuanfeng', 5], ['jiuwei', 3], ['wugong', 4]] },
+    { name: '百鬼夜行', tip: '雾里……有东西在飘。', list: [['chimei', 4], ['jiuwei', 3], ['zheng', 2], ['jiaoren', 2]] },
+    { name: '凶兽突袭', tip: '迅捷的凶兽来了，用冲刺闪避！', list: [['zheng', 4], ['xuanfeng', 4], ['chiru', 3]] },
+    { name: '凶兽镇守', tip: '两只凶兽守在祭坛前——集中火力！', list: [['taotie', 1], ['bashe', 1], ['wangliang', 2], ['mumei', 4]] },
+    { name: '混沌之核', tip: '那……那是混沌？它竟没有面目！', list: [['hundun', 1]], boss: true },
   ];
   const WAVE_TOTAL = WAVES.length;
 
@@ -155,57 +155,102 @@
     };
   }
 
-  // ============================ 第一人称手握装置 ============================
-  // 宝可梦风格的"招式发射器"：白/黄配色、圆润造型、能量环 + 精灵球挂件
+  // ============================ 第一人称手持法器 ============================
+  // 山海国风"伏魔法器"：青铜六棱主体 + 鎏金环节 + 朱砂缠绳 + 玉珠核心 + 铜钱挂饰
   function buildViewmodel(char) {
     const root = new THREE.Group();
     root.name = 'viewmodel';
-    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xfff6e2, roughness: 0.45, metalness: 0.02 });
-    const darkMat = new THREE.MeshStandardMaterial({ color: 0x394757, roughness: 0.42, metalness: 0.1 });
-    const yellowMat = new THREE.MeshStandardMaterial({ color: 0xffcb05, roughness: 0.4, metalness: 0.04 });
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x8a7a5a, roughness: 0.42, metalness: 0.35 });
+    const darkMat = new THREE.MeshStandardMaterial({ color: 0x4a4436, roughness: 0.5, metalness: 0.3 });
+    const goldMat = new THREE.MeshStandardMaterial({ color: 0xe8b33a, roughness: 0.35, metalness: 0.55 });
+    const jadeMat = new THREE.MeshStandardMaterial({ color: 0x8fd8c0, roughness: 0.18, metalness: 0.02 });
     const accentMat = new THREE.MeshStandardMaterial({ color: char.colorHex, roughness: 0.28, metalness: 0.06, emissive: char.colorHex, emissiveIntensity: 0.7 });
-    const glassMat = new THREE.MeshStandardMaterial({ color: 0x9fe6ff, roughness: 0.1, metalness: 0, transparent: true, opacity: 0.65, emissive: 0x6fd8ff, emissiveIntensity: 0.5 });
+    const glassMat = new THREE.MeshStandardMaterial({ color: 0xbfead8, roughness: 0.1, metalness: 0, transparent: true, opacity: 0.6, emissive: 0x2f9e8f, emissiveIntensity: 0.4 });
 
-    // 主炮身：扁圆筒（朝 -Z），让侧视轮廓干净
-    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.085, 0.34, 18), bodyMat);
+    // 主身：六棱青铜筒（朝 -Z），仿古礼器握柄
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.082, 0.34, 6), bodyMat);
     body.rotation.x = Math.PI / 2;
     body.position.set(0, 0, -0.08);
     root.add(body);
-    // 黄色腰线
-    const beltA = new THREE.Mesh(new THREE.CylinderGeometry(0.089, 0.089, 0.045, 18), yellowMat);
-    beltA.rotation.x = Math.PI / 2; beltA.position.set(0, 0, 0.03); root.add(beltA);
-    // 前端收口
-    const muzzle = new THREE.Mesh(new THREE.CylinderGeometry(0.062, 0.085, 0.1, 18), darkMat);
+    // 鎏金环节
+    for (const z of [-0.2, 0.02, 0.14]) {
+      const band = new THREE.Mesh(new THREE.CylinderGeometry(0.086, 0.086, 0.028, 12), goldMat);
+      band.rotation.x = Math.PI / 2; band.position.set(0, 0, z); root.add(band);
+    }
+    // 前端吞口
+    const muzzle = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.082, 0.1, 8), darkMat);
     muzzle.rotation.x = Math.PI / 2; muzzle.position.set(0, 0, -0.3); root.add(muzzle);
-    // 枪口发光环
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.062, 0.014, 8, 20), accentMat);
-    ring.position.set(0, 0, -0.35); root.add(ring);
-    // 能量核心（顶部的透明舱）
-    const core = new THREE.Mesh(new THREE.SphereGeometry(0.062, 16, 12), glassMat);
-    core.position.set(0, 0.075, -0.05); root.add(core);
-    const coreBall = new THREE.Mesh(new THREE.SphereGeometry(0.042, 16, 12), accentMat);
-    coreBall.position.set(0, 0.075, -0.05); root.add(coreBall);
-    // 顶部黄色提把
-    const handle = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.012, 6, 16, Math.PI), yellowMat);
-    handle.position.set(0, 0.13, 0.02); handle.rotation.y = Math.PI / 2; root.add(handle);
-    // 后部储能罐
-    const tank = new THREE.Mesh(new THREE.CapsuleGeometry(0.058, 0.09, 6, 14), darkMat);
+    // 前端法环（属性色光）
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.062, 0.012, 8, 24), accentMat);
+    ring.position.set(0, 0, -0.355); root.add(ring);
+    // 法环内三枚玉片（云雷纹意象）
+    for (let i = 0; i < 3; i++) {
+      const a = (i / 3) * TAU;
+      const jade = new THREE.Mesh(new THREE.BoxGeometry(0.028, 0.006, 0.052), jadeMat);
+      jade.position.set(Math.cos(a) * 0.042, Math.sin(a) * 0.042, -0.352);
+      jade.rotation.z = a + Math.PI / 2;
+      root.add(jade);
+    }
+    // 玉珠核心（顶部玉匣）
+    const core = new THREE.Mesh(new THREE.SphereGeometry(0.056, 16, 12), glassMat);
+    core.position.set(0, 0.072, -0.05); root.add(core);
+    const coreBall = new THREE.Mesh(new THREE.SphereGeometry(0.038, 16, 12), accentMat);
+    coreBall.position.set(0, 0.072, -0.05); root.add(coreBall);
+    // 顶部提梁（鎏金）
+    const handle = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.011, 6, 18, Math.PI), goldMat);
+    handle.position.set(0, 0.125, 0.02); handle.rotation.y = Math.PI / 2; root.add(handle);
+    // 后部玉管
+    const tank = new THREE.Mesh(new THREE.CapsuleGeometry(0.052, 0.085, 6, 14), jadeMat);
     tank.rotation.x = Math.PI / 2; tank.position.set(0, 0, 0.17); root.add(tank);
-    // 握把（向下后方）
-    const grip = new THREE.Mesh(new THREE.CapsuleGeometry(0.042, 0.15, 5, 12), darkMat);
+    // 握把 + 朱砂缠绳
+    const grip = new THREE.Mesh(new THREE.CapsuleGeometry(0.038, 0.15, 5, 12), darkMat);
     grip.position.set(0, -0.15, 0.1); grip.rotation.x = 0.3; root.add(grip);
-    // 握把黄色环
-    const gripRing = new THREE.Mesh(new THREE.TorusGeometry(0.046, 0.009, 6, 16), yellowMat);
-    gripRing.position.set(0, -0.115, 0.085); gripRing.rotation.x = 0.3 + Math.PI / 2; root.add(gripRing);
-    // 侧挂精灵球挂饰
-    const ball = new THREE.Group();
-    const topH = new THREE.Mesh(new THREE.SphereGeometry(0.042, 14, 10, 0, TAU, 0, Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0xe8453c, roughness: 0.35 }));
-    const botH = new THREE.Mesh(new THREE.SphereGeometry(0.042, 14, 10, 0, TAU, Math.PI / 2, Math.PI / 2), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.35 }));
-    const band = new THREE.Mesh(new THREE.TorusGeometry(0.042, 0.008, 6, 16), darkMat);
-    band.rotation.x = Math.PI / 2;
-    ball.add(topH, botH, band);
-    ball.position.set(0.075, -0.06, 0.06);
-    root.add(ball);
+    for (let i = 0; i < 4; i++) {
+      const wrap = new THREE.Mesh(new THREE.TorusGeometry(0.041, 0.007, 5, 14), new THREE.MeshStandardMaterial({ color: 0xd0432e, roughness: 0.8 }));
+      wrap.position.set(0, -0.19 + i * 0.038, 0.09 + i * 0.013);
+      wrap.rotation.x = 0.3 + Math.PI / 2; root.add(wrap);
+    }
+    // 属性法器头（四位行者各不相同）
+    if (char.type === 'lei') {
+      // 雷公：雷纹方锤
+      const ham = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.13, 0.16), bodyMat);
+      ham.position.set(0, 0, -0.34); root.add(ham);
+      const stud = new THREE.Mesh(new THREE.SphereGeometry(0.03, 10, 8), goldMat);
+      stud.position.set(0.07, 0, -0.34); root.add(stud);
+    } else if (char.type === 'mu') {
+      // 句芒：灵芝杖头
+      const gourdU = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 10), new THREE.MeshStandardMaterial({ color: 0x8ed36a, roughness: 0.5 }));
+      gourdU.position.set(0, 0.075, -0.33); root.add(gourdU);
+      const gourdD = new THREE.Mesh(new THREE.SphereGeometry(0.037, 12, 10), new THREE.MeshStandardMaterial({ color: 0x6aa83a, roughness: 0.5 }));
+      gourdD.position.set(0, 0.02, -0.33); root.add(gourdD);
+      const leaf = new THREE.Mesh(new THREE.SphereGeometry(0.05, 10, 8), new THREE.MeshStandardMaterial({ color: 0x7ec850, roughness: 0.6 }));
+      leaf.scale.set(1.5, 0.35, 0.8); leaf.position.set(0.05, 0.09, -0.31); leaf.rotation.z = -0.4; root.add(leaf);
+    } else if (char.type === 'huo') {
+      // 祝融：离火盆口
+      const bowl = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.06, 0.09, 12), bodyMat);
+      bowl.position.set(0, 0.02, -0.35); root.add(bowl);
+      for (let i = 0; i < 3; i++) {
+        const a = (i / 3) * TAU;
+        const flame = new THREE.Mesh(new THREE.ConeGeometry(0.024, 0.07, 8), accentMat);
+        flame.position.set(Math.cos(a) * 0.045, 0.085, -0.35 + Math.sin(a) * 0.045); root.add(flame);
+      }
+    } else {
+      // 玄冥：玉璧蛇首
+      const bi = new THREE.Mesh(new THREE.TorusGeometry(0.075, 0.018, 8, 24), jadeMat);
+      bi.position.set(0, 0.02, -0.35); root.add(bi);
+      const snake = new THREE.Mesh(new THREE.ConeGeometry(0.026, 0.09, 8), new THREE.MeshStandardMaterial({ color: 0x4fb9c9, roughness: 0.38 }));
+      snake.position.set(0, 0.1, -0.35); snake.rotation.x = 0.5; root.add(snake);
+    }
+    // 侧挂铜钱（外圆内方）+ 朱砂系绳
+    const coin = new THREE.Group();
+    const coinBody = new THREE.Mesh(new THREE.CylinderGeometry(0.042, 0.042, 0.012, 20), goldMat);
+    coinBody.rotation.x = Math.PI / 2;
+    const hole = new THREE.Mesh(new THREE.BoxGeometry(0.022, 0.022, 0.03), darkMat);
+    coin.add(coinBody, hole);
+    coin.position.set(0.072, -0.055, 0.06);
+    root.add(coin);
+    const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.005, 0.005, 0.075, 5), new THREE.MeshStandardMaterial({ color: 0xd0432e, roughness: 0.75 }));
+    cord.position.set(0.072, -0.012, 0.06); root.add(cord);
 
     root.traverse((o) => { if (o.isMesh) { o.castShadow = false; o.frustumCulled = false; o.renderOrder = 2; } });
 
@@ -226,7 +271,7 @@
     ringFx.renderOrder = 3;
     root.add(ringFx);
 
-    // 伙伴宝可梦：左下角小小的一只
+    // 灵兽：左下角小小的一只
     let buddy = null;
     try {
       const m = PG.models && PG.models.make ? PG.models.make(char.partner) : null;
@@ -423,7 +468,7 @@
 
   function makeEnemy(id, x, z, opt) {
     opt = opt || {};
-    const def = ENEMIES[id] || ENEMIES.caterpie;
+    const def = ENEMIES[id] || ENEMIES.lushu;
     let model = null;
     try { model = (PG.models && PG.models.make) ? PG.models.make(id) : null; } catch (e) { model = null; }
     if (!model || !model.group) model = fallbackModel();
@@ -457,7 +502,7 @@
       kind: def.kind || 'enemy',
     };
     if (def.ghost) for (const m of mats) { if (m.transparent !== undefined) { m.transparent = true; m.opacity = 0.72; } }
-    spawnRing(new THREE.Vector3(x, 0.1, z), 0x9b6bff, 1.4, 0.5);
+    spawnRing(new THREE.Vector3(x, 0.1, z), 0x8a6ac8, 1.4, 0.5);
     G.enemies.push(e);
     return e;
   }
@@ -514,7 +559,7 @@
       pl.ammo = Math.min(G.char.gun.ammoMax, pl.ammo + 1);
     }
     addCombo(3);
-    const col = e.kind === 'boss' ? 0xff5ad0 : e.kind === 'elite' ? 0xffc93c : 0x9ef06b;
+    const col = e.kind === 'boss' ? 0xffb04a : e.kind === 'elite' ? 0xe8b33a : 0x9ef06b;
     spawnSpark(e.hitCenter.clone(), col, e.kind === 'boss' ? 60 : e.kind === 'elite' ? 26 : 12, e.kind === 'boss' ? 2.4 : 1.2, 0.9);
     spawnRing(e.pos.clone().setY(0.15), col, e.kind === 'boss' ? 4 : 1.6, 0.55);
     if (PG.audio) PG.audio.sfx('kill', { vol: e.kind === 'enemy' ? 0.5 : 0.85 });
@@ -556,7 +601,7 @@
     if (PG.audio) PG.audio.sfx('heal', { vol: 0.3, rate: 0.6 });
     if (pl.pos.distanceTo(e.pos) < 7) {
       pl.slowT = 2.5;
-      if (PG.ui && PG.ui.toast) PG.ui.toast('胖丁的歌声让你脚步发沉…', 1600);
+      if (PG.ui && PG.ui.toast) PG.ui.toast('鲛人的歌声让你脚步沉滞…', 1600);
     }
   }
 
@@ -577,7 +622,7 @@
         const base = aim.clone().sub(from).normalize();
         for (let i = -1; i <= 1; i++) {
           const dir = base.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), i * 0.13);
-          fireProjectile(from.clone(), dir, { dmg: 12, projSpd: 24 }, 1, true, 0xc76bff);
+          fireProjectile(from.clone(), dir, { dmg: 12, projSpd: 24 }, 1, true, 0xff9a4a);
         }
         if (PG.audio) PG.audio.sfx('boss_roar', { vol: 0.5, rate: 1.5 });
         e.cd = phase2 ? 1.5 : 2.2;
@@ -586,23 +631,23 @@
         const from = new THREE.Vector3(e.pos.x, e.pos.y + e.height * 0.7, e.pos.z);
         for (let i = 0; i < n; i++) {
           const a = (i / n) * TAU + t;
-          fireProjectile(from.clone(), new THREE.Vector3(Math.cos(a), rand(-0.05, 0.05), Math.sin(a)), { dmg: 9, projSpd: 16 }, 1, true, 0xd66bff);
+          fireProjectile(from.clone(), new THREE.Vector3(Math.cos(a), rand(-0.05, 0.05), Math.sin(a)), { dmg: 9, projSpd: 16 }, 1, true, 0xffb04a);
         }
-        spawnRing(e.pos.clone().setY(e.pos.y + 0.5), 0xc76bff, 3.2, 0.6);
+        spawnRing(e.pos.clone().setY(e.pos.y + 0.5), 0xffb04a, 3.2, 0.6);
         e.cd = phase2 ? 2.0 : 3.0;
       } else if (mode === 2) {
-        spawnSpark(e.pos.clone().setY(e.hitCenter.y), 0xc76bff, 24, 1.6, 0.6);
+        spawnSpark(e.pos.clone().setY(e.hitCenter.y), 0xffb04a, 24, 1.6, 0.6);
         const a = rand(0, TAU), r = rand(6, 10);
         e.pos.x = pl.pos.x + Math.cos(a) * r;
         e.pos.z = pl.pos.z + Math.sin(a) * r;
-        spawnRing(e.pos.clone().setY(0.2), 0xc76bff, 2.4, 0.5);
+        spawnRing(e.pos.clone().setY(0.2), 0xffb04a, 2.4, 0.5);
         e.cd = phase2 ? 1.8 : 2.6;
       } else {
         for (let i = 0; i < 2; i++) {
           const a = rand(0, TAU), r = rand(4, 8);
-          spawnEnemyAt(pick(['gastly', 'gengar']), e.pos.x + Math.cos(a) * r, e.pos.z + Math.sin(a) * r);
+          spawnEnemyAt(pick(['chimei', 'wangliang']), e.pos.x + Math.cos(a) * r, e.pos.z + Math.sin(a) * r);
         }
-        if (PG.ui && PG.ui.subtitle) PG.ui.subtitle('超梦', '更多暗影……从森林深处涌出来了！', 2600);
+        if (PG.ui && PG.ui.subtitle) PG.ui.subtitle('混沌', '更多混沌……从山泽深处涌出来了！', 2600);
         e.cd = 4.0;
       }
     }
@@ -850,7 +895,7 @@
     pl.ultCd = pl.ultMax;
     const id = G.char.id;
     if (PG.audio) PG.audio.sfx('levelup', { vol: 0.8 });
-    if (PG.ui && PG.ui.subtitle) PG.ui.subtitle(G.char.partnerCn, { t_bolt: '十万伏特！', t_leaf: '飞叶风暴！', t_ember: '火焰漩涡！', t_tide: '海潮护盾！' }[id], 1800);
+    if (PG.ui && PG.ui.subtitle) PG.ui.subtitle(G.char.partnerCn, { t_bolt: '天雷引！', t_leaf: '万物生！', t_ember: '焚天业火！', t_tide: '玄冥水盾！' }[id], 1800);
     if (id === 't_bolt') {
       const targets = G.enemies.filter((e) => e.alive).sort((a, b) => a.pos.distanceTo(pl.pos) - b.pos.distanceTo(pl.pos)).slice(0, 6);
       const from = new THREE.Vector3(pl.pos.x, 1.2, pl.pos.z);
@@ -1027,25 +1072,25 @@
     G.state.boss = null;
     if (PG.audio) PG.audio.music(w.boss ? 'boss' : 'battle');
     if (PG.ui) {
-      if (PG.ui.banner) PG.ui.banner(w.boss ? '最终波 · ' + w.name : '第 ' + (idx + 1) + ' 波 · ' + w.name, w.boss ? '击败暗影核心' : '剩余敌人 ' + G.waves.queue.length, 2600);
-      if (PG.ui.subtitle) PG.ui.subtitle(w.boss ? '超梦' : G.char.partnerCn, w.tip, 4200);
+      if (PG.ui.banner) PG.ui.banner(w.boss ? '最终波 · ' + w.name : '第 ' + (idx + 1) + ' 波 · ' + w.name, w.boss ? '直面混沌' : '剩余妖物 ' + G.waves.queue.length, 2600);
+      if (PG.ui.subtitle) PG.ui.subtitle(w.boss ? '混沌' : G.char.partnerCn, w.tip, 4200);
       if (PG.ui.setObjectives) PG.ui.setObjectives([
-        { text: '清剿第 ' + (idx + 1) + ' 波宝可梦', done: false },
-        { text: w.boss ? '击败超梦' : '守住森林神龛', done: false },
+        { text: '清剿第 ' + (idx + 1) + ' 波妖物', done: false },
+        { text: w.boss ? '击败混沌' : '守住山海祭坛', done: false },
         { text: '击退全部 ' + WAVE_TOTAL + ' 波', done: false },
       ]);
     }
     if (PG.audio) PG.audio.sfx('wave', { vol: 0.8 });
     if (w.boss) {
-      spawnEnemyAt('mewtwo', 0, -24);
-      G.state.boss = { name: '超梦', hp: 1500, hpMax: 1500 };
+      spawnEnemyAt('hundun', 0, -24);
+      G.state.boss = { name: '混沌', hp: 1500, hpMax: 1500 };
     }
   }
 
   function spawnEnemyAt(id, x, z, opt) {
     const e = makeEnemy(id, x, z, opt);
     if (e.kind === 'boss') {
-      G.state.boss = { name: '超梦', hp: e.hp, hpMax: e.hpMax };
+      G.state.boss = { name: '混沌', hp: e.hp, hpMax: e.hpMax };
       e.bossRef = true;
     }
     return e;
@@ -1086,7 +1131,7 @@
         const sx = dl > R ? (px / dl) * R : px;
         const sz = dl > R ? (pz / dl) * R : pz;
         spawnEnemyAt(id, sx, sz);
-        w.spawnT = w.drip * (id === 'mewtwo' ? 1 : rand(0.75, 1.25));
+        w.spawnT = w.drip * (id === 'hundun' ? 1 : rand(0.75, 1.25));
         w.totalSpawned++;
       }
       return;
@@ -1205,8 +1250,8 @@
     if (PG.ui) {
       if (PG.ui.setCrosshair) PG.ui.setCrosshair(1, 0);
       if (PG.ui.setObjectives) PG.ui.setObjectives([
-        { text: '清剿第 1 波宝可梦', done: false },
-        { text: '守住森林神龛', done: false },
+        { text: '清剿第 1 波妖物', done: false },
+        { text: '守住山海祭坛', done: false },
         { text: '击退全部 ' + WAVE_TOTAL + ' 波', done: false },
       ]);
     }

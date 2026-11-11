@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>宝可梦 · 森之突袭 | 音频自检台</title>
+<title>山海 · 森之突袭 | 音频自检台</title>
 <script>
   /* 在模块脚本之前就装好捕获：这样 10-audio.js 自身的加载/初始化错误也能显示出来 */
   window.__earlyErrors = [];
@@ -15,13 +15,14 @@
   :root {
     --ink: #24313f;
     --ink-soft: #56697a;
-    --yellow: #ffcb05;
+    --yellow: #e8b33a;
     --green: #4e9c3f;
     --grass: #7ec850;
     --sky: #9fe0ff;
-    --blue: #3aa0e8;
-    --red: #e8453c;
-    --orange: #ff9f43;
+    --blue: #2f6fae;
+    --red: #d0432e;
+    --orange: #f09b3c;
+    --jade: #2f9e8f;
     --card: rgba(255, 255, 255, 0.94);
   }
   * { box-sizing: border-box; }
@@ -40,7 +41,7 @@
     background-attachment: fixed;
     overflow-x: hidden;
   }
-  /* 背景装饰：柔和的宝可梦配色光斑 */
+  /* 背景装饰：山海国风配色的柔光斑（鎏金 / 苔绿 / 天青） */
   .bg { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
   .bg i { position: absolute; border-radius: 50%; opacity: 0.55; filter: blur(1px); }
   .bg i:nth-child(1) { width: 220px; height: 220px; left: -60px; top: 18%; background: radial-gradient(circle at 35% 35%, #ffffff, rgba(255, 255, 255, 0)); }
@@ -60,17 +61,18 @@
     box-shadow: 0 10px 26px rgba(32, 74, 96, 0.18), inset 0 0 0 2px rgba(255, 255, 255, 0.6);
   }
   .brand { display: flex; align-items: center; gap: 13px; }
-  .ball {
+  /* 铜钱徽记：外圆内方（鎏金） */
+  .coin {
     width: 42px; height: 42px; border-radius: 50%; flex: none;
-    background: linear-gradient(180deg, #e8453c 0 45%, #24313f 45% 55%, #ffffff 55% 100%);
-    border: 3px solid #24313f;
+    background: radial-gradient(circle at 34% 30%, #ffe9a8, #e8b33a 58%, #c68f1e 100%);
+    border: 3px solid #8a5a12;
     position: relative;
-    box-shadow: 0 3px 0 rgba(36, 49, 63, 0.25), inset 0 -3px 0 rgba(0, 0, 0, 0.08);
+    box-shadow: 0 3px 0 rgba(138, 90, 18, 0.28), inset 0 -3px 0 rgba(0, 0, 0, 0.08);
   }
-  .ball::after {
-    content: ''; position: absolute; left: 50%; top: 50%; width: 14px; height: 14px;
-    transform: translate(-50%, -50%); border-radius: 50%;
-    background: #ffffff; border: 3px solid #24313f;
+  .coin::after {
+    content: ''; position: absolute; left: 50%; top: 50%; width: 13px; height: 13px;
+    transform: translate(-50%, -50%); border-radius: 2px;
+    background: #fff8e6; border: 3px solid #8a5a12;
   }
   .brand h1 { margin: 0; font-size: 20px; font-weight: 900; letter-spacing: 1.2px; }
   .brand p { margin: 2px 0 0; font-size: 10.5px; font-weight: 800; letter-spacing: 2.6px; color: #7c8b99; }
@@ -86,7 +88,7 @@
   .badge.warn { background: #fff8e2; border-color: #ffe08a; color: #8a6a00; }
   .badge.warn::before { background: #ffb520; box-shadow: 0 0 0 2px rgba(255, 181, 32, 0.22); }
   .badge.bad { background: #fff0ef; border-color: #f6b6b1; color: #b3241c; }
-  .badge.bad::before { background: #e8453c; box-shadow: 0 0 0 2px rgba(232, 69, 60, 0.22); }
+  .badge.bad::before { background: var(--red); box-shadow: 0 0 0 2px rgba(208, 67, 46, 0.22); }
 
   /* ---------------- 布局 ---------------- */
   .layout { display: grid; grid-template-columns: minmax(0, 1fr) 430px; gap: 12px; align-items: start; }
@@ -119,17 +121,17 @@
     position: relative;
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
     padding: 8px 4px 7px;
-    border: 2px solid #ffd93d; border-radius: 13px;
+    border: 2px solid var(--yellow); border-radius: 13px;
     background: #ffffff; color: var(--ink);
     font: inherit; cursor: pointer;
-    box-shadow: 0 2px 0 #ffd93d;
+    box-shadow: 0 2px 0 var(--yellow);
     transition: transform 0.09s ease, box-shadow 0.12s ease, background 0.16s ease, border-color 0.16s ease;
     overflow: hidden;
   }
   .sfx-btn .n { font-size: 12.5px; font-weight: 800; line-height: 1.15; letter-spacing: 0.3px; }
   .sfx-btn .k { font-size: 9.5px; font-weight: 600; color: #93a2ae; font-family: ui-monospace, Consolas, 'Courier New', monospace; }
-  .sfx-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 0 #ffd93d, 0 8px 14px rgba(32, 74, 96, 0.12); }
-  .sfx-btn:active { transform: translateY(1px); box-shadow: 0 1px 0 #ffd93d; }
+  .sfx-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 0 var(--yellow), 0 8px 14px rgba(32, 74, 96, 0.12); }
+  .sfx-btn:active { transform: translateY(1px); box-shadow: 0 1px 0 var(--yellow); }
   .sfx-btn.played {
     background: linear-gradient(180deg, #f2ffe7, #dcf7c8);
     border-color: #7ec850; box-shadow: 0 2px 0 #7ec850;
@@ -159,8 +161,8 @@
   .btn:active { transform: translateY(1px); box-shadow: 0 1px 0 #d5e0e8; }
   .btn.primary { border-color: #3f7d31; background: linear-gradient(180deg, #96e472, #6cc74e); color: #143d17; box-shadow: 0 2px 0 #3f7d31; }
   .btn.primary:active { box-shadow: 0 1px 0 #3f7d31; }
-  .btn.warn { border-color: #e8453c; color: #c22e26; box-shadow: 0 2px 0 #e8453c; background: #fff; }
-  .btn.warn:active { box-shadow: 0 1px 0 #e8453c; }
+  .btn.warn { border-color: var(--red); color: #b02b1c; box-shadow: 0 2px 0 var(--red); background: #fff; }
+  .btn.warn:active { box-shadow: 0 1px 0 var(--red); }
 
   /* ---------------- 音乐按钮 ---------------- */
   .music-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
@@ -179,7 +181,7 @@
   .music-btn:active { transform: translateY(1px); box-shadow: 0 1px 0 #b9e0f7; }
   .music-btn.active {
     background: linear-gradient(180deg, #fff8cf, #ffe066);
-    border-color: #ff9f43; box-shadow: 0 2px 0 #ff9f43;
+    border-color: var(--orange); box-shadow: 0 2px 0 var(--orange);
   }
   .music-btn.active span { color: #9a6a00; }
   .music-btn.active::after {
@@ -199,7 +201,7 @@
   input[type='range'] {
     -webkit-appearance: none; appearance: none;
     width: 100%; height: 9px; border-radius: 6px;
-    background: linear-gradient(90deg, #7ec850, #ffd93d);
+    background: linear-gradient(90deg, #4e9c3f, #e8b33a);
     outline: none; border: none;
     box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.18);
   }
@@ -264,9 +266,9 @@
 <div id="app">
   <header class="topbar">
     <div class="brand">
-      <div class="ball" aria-hidden="true"></div>
+      <div class="coin" aria-hidden="true"></div>
       <div>
-        <h1>宝可梦 · 森之突袭</h1>
+        <h1>山海 · 森之突袭</h1>
         <p>音频自检台 · AUDIO LAB · 10-audio.js</p>
       </div>
     </div>
@@ -337,7 +339,7 @@
     <ul id="err-list"></ul>
   </div>
 
-  <div class="foot">纯程序化 WebAudio 合成 · 无任何外部音频文件 · <b>24 SFX / 6 MUSIC CUES</b> · 契约 PG.audio 全实现</div>
+  <div class="foot">山海国风 · 纯程序化 WebAudio 合成 · 无任何外部音频文件 · <b>24 SFX / 6 MUSIC CUES</b> · 契约 PG.audio 全实现</div>
 </div>
 
 <script src="../src/10-audio.js"></script>
@@ -704,7 +706,7 @@
       const grad = sg.createLinearGradient(0, 0, W, 0);
       grad.addColorStop(0, '#7ef0b0');
       grad.addColorStop(0.55, '#c8f76e');
-      grad.addColorStop(1, '#ffd93d');
+      grad.addColorStop(1, '#e8b33a');
       sg.strokeStyle = grad;
       sg.lineWidth = 2.4;
       sg.beginPath();

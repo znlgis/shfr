@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>forest · PG.world 自测</title>
+<title>古林 · PG.world 自测</title>
 <style>
   html, body { margin: 0; height: 100%; overflow: hidden; background: #bfe9ff;
     font-family: 'PingFang SC','Microsoft YaHei',system-ui,sans-serif; }
@@ -24,7 +24,7 @@
 <canvas id="view"></canvas>
 <div id="hud">加载中…</div>
 <div id="err"></div>
-<div id="boot">正在生成森林…</div>
+<div id="boot">正在生成山海古林…</div>
 
 <script src="../vendor/three.min.js"></script>
 <script src="../src/40-util.js"></script>
@@ -152,6 +152,10 @@
       '  landmarks ' + world.landmarks.length);
     const dirOk = world.sunDir && Math.abs(world.sunDir.length() - 1) < 1e-3;
     apiLines.push('sunDir ' + ok(dirOk) + '  (' + world.sunDir.toArray().map((v) => v.toFixed(2)).join(', ') + ')');
+    const lmTypes = (world.landmarks || []).map((l) => l.type);
+    const altarOk = lmTypes.indexOf('altar') >= 0;
+    apiLines.push('landmarks ' + lmTypes.join('/') + '  祭坛 ' + ok(altarOk));
+    if (!altarOk) apiLines.push('✗ landmarks 缺少 altar（祭坛）');
     if (world.spawnPoints.length < 12) apiLines.push('✗ spawnPoints 少于 12 个');
     const badSpawn = world.spawnPoints.some((s) => {
       const r = Math.hypot(s.x, s.z);

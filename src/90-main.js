@@ -193,7 +193,7 @@
           pk.group.position.set(xs[i] + (i % 2 === 0 ? 0.75 : -0.75), 0, 1.5);
           pk.group.rotation.y = Math.PI * 0.86;
           g.add(pk.group);
-          list.push({ model: pk, phase: i * 0.7 + 0.4, base: pk.group.position.clone(), kind: 'poke' });
+          list.push({ model: pk, phase: i * 0.7 + 0.4, base: pk.group.position.clone(), kind: 'beast' });
         }
       } catch (e) {}
     }
@@ -213,7 +213,7 @@
       const m = it.model;
       if (!m || !m.group) continue;
       // 呼吸 + 轻微摇摆
-      m.group.position.y = it.base.y + Math.sin(t * 1.6 + it.phase) * (it.kind === 'poke' ? 0.04 : 0.02);
+      m.group.position.y = it.base.y + Math.sin(t * 1.6 + it.phase) * (it.kind === 'beast' ? 0.04 : 0.02);
       m.group.rotation.z = Math.sin(t * 0.9 + it.phase) * 0.02;
       if (m.update) { try { m.update(dt, t + it.phase); } catch (e) {} }
     }
@@ -236,10 +236,10 @@
     const msg = document.getElementById('boot-msg');
     const bootEl = document.getElementById('boot');
     const steps = [
-      [0.12, '正在唤醒森之秘境…'],
-      [0.38, '培育宝可梦…'],
+      [0.12, '正在唤醒山海秘境…'],
+      [0.38, '召唤上古灵兽…'],
       [0.64, '编织森林光影…'],
-      [0.86, '校准精灵球发射器…'],
+      [0.86, '校准伏魔法器…'],
       [1.0, '准备就绪'],
     ];
     let i = 0;
@@ -289,7 +289,7 @@
         const pn = document.querySelector('.hud-pname');
         if (pn) pn.textContent = cd.cn;
         const pt = document.querySelector('.hud-partner');
-        if (pt) pt.textContent = '伙伴 ' + cd.partnerCn;
+        if (pt) pt.textContent = '灵兽 ' + cd.partnerCn;
       }
     } catch (e) {}
     try { PG.game.init({ scene: E.scene, camera: E.camera, renderer: E.renderer, world: E.world, vmScene: E.vmScene, vmCamera: E.vmCamera }); } catch (e) {}

@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>山海妖物模型验收 · 14 只异兽</title>
+<style>
+  :root {
+    --ink: #24313f; --gold: #e8b33a; --red: #d0432e; --jade: #2f9e8f;
+    --sky: #9fe0ff; --paper: #fffdf6; --muted: #7a8a9a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--sky); color: var(--ink);
+    font-family: 'PingFang SC', 'Microsoft YaHei', 'YouYuan', '幼圆', system-ui, sans-serif; }
+  #err { position: fixed; z-index: 99; left: 0; right: 0; top: 0; display: none; padding: 9px 16px;
+    background: rgba(208, 67, 46, .96); color: #fff; font-size: 13px; font-weight: 700; white-space: pre-wrap; }
+  #app { position: fixed; inset: 0; display: flex; }
+  #stage { position: relative; flex: 1 1 auto; min-width: 0; }
+  #view { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #labels { position: absolute; inset: 0; pointer-events: none; }
+  .label { position: absolute; transform: translate(-50%, -100%); white-space: nowrap;
+    padding: 3px 9px 4px; border-radius: 10px; background: rgba(255, 253, 246, .94);
+    border: 2px solid var(--gold); box-shadow: 0 4px 10px rgba(36, 49, 63, .18);
+    font-size: 12px; font-weight: 800; letter-spacing: .5px; }
+  .label i { font-style: normal; font-weight: 700; font-size: 10px; color: var(--muted); margin-left: 5px; }
+  .label.warn { border-color: var(--red); }
+  #hud { position: absolute; left: 16px; top: 14px; padding: 9px 15px; border-radius: 14px;
+    background: rgba(255, 253, 246, .92); border: 3px solid var(--gold);
+    box-shadow: 0 6px 16px rgba(36, 49, 63, .16); font-size: 12px; font-weight: 700; line-height: 1.65;
+    max-width: 360px; }
+  #hud b { color: var(--red); }
+  #hud .ok { color: var(--jade); }
+  #panel { flex: 0 0 396px; height: 100%; overflow: auto;
+    background: linear-gradient(180deg, #fffdf6, #eef8f2); border-left: 3px solid var(--gold);
+    padding: 14px 14px 24px; }
+  #panel h1 { margin: 0; font-size: 17px; letter-spacing: 1.5px; font-weight: 900; }
+  #panel h1 small { display: block; margin-top: 3px; font-size: 11px; font-weight: 700;
+    letter-spacing: 1.2px; color: var(--muted); }
+  .stats { margin: 10px 0 12px; padding: 8px 10px; border-radius: 12px; background: #fff;
+    border: 2px solid #f0e2bc; box-shadow: 0 3px 10px rgba(36, 49, 63, .08);
+    font-size: 12px; font-weight: 700; line-height: 1.8; }
+  .stats .geo { color: var(--jade); }
+  .stats .bad { color: var(--red); }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; background: #fff;
+    border-radius: 12px; overflow: hidden; box-shadow: 0 3px 12px rgba(36, 49, 63, .10); }
+  th, td { padding: 4px 6px; border-bottom: 1px solid #edf3ee; text-align: center; white-space: nowrap; }
+  th { background: var(--gold); color: #24313f; font-weight: 800; font-size: 10px; letter-spacing: .4px; }
+  td.l { text-align: left; font-weight: 800; }
+  td.l span { color: var(--muted); font-weight: 600; margin-left: 4px; }
+  tr:nth-child(even) td { background: #fbfdfa; }
+  .pass { color: var(--jade); font-weight: 800; }
+  .near { color: #b58a00; font-weight: 800; }
+  .fail { color: var(--red); font-weight: 800; }
+  .hint { margin-top: 12px; padding: 9px 11px; border-radius: 12px; background: #fff;
+    border: 2px dashed #e8b33a; font-size: 11px; line-height: 1.7; color: #5b6a7a; font-weight: 600; }
+  .hint b { color: var(--red); }
+  #missing { margin-top: 10px; color: var(--red); font-size: 11px; font-weight: 700;
+    white-space: pre-wrap; display: none; }
+</style>
+</head>
+<body>
+<div id="err"></div>
+<div id="app">
+  <div id="stage">
+    <canvas id="view"></canvas>
+    <div id="labels"></div>
+    <div id="hud">正在搭建验收台…</div>
+  </div>
+  <div id="panel">
+    <h1>妖物模型验收台<small>山海 · 森之突袭 · 14 只妖物</small></h1>
+    <div class="stats" id="stats">加载中…</div>
+    <table>
+      <thead>
+        <tr><th>妖物</th><th>h 目标</th><th>h 实测</th><th>r 目标</th><th>r 实测</th><th>网格</th><th>状态</th></tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div id="missing"></div>
+    <div class="hint">验收要点：脚底 y=0、正面朝 -Z（已转 180° 面向镜头）、高度与半径贴合设计表；<b>动画节点</b>做呼吸 / 摆尾 / 振翅 / 雾摆 / 鳞光。红色错误条出现即视为不通过。</div>
+  </div>
+</div>
+
+<script src="../vendor/three.min.js"></script>
+<script src="../src/30-models.js"></script>
+<script src="../src/32-beasts.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  // -------------------------------------------------------------------------
+  // 0. 错误可视化：所有 JS 错误 / Promise 拒绝都显示在顶部红条
+  // -------------------------------------------------------------------------
+  var errors = [];
+  function showError(msg) {
+    errors.push(msg);
+    var el = document.getElementById('err');
+    if (!el) return;
+    el.style.display = 'block';
+    el.textContent = 'JS 错误（' + errors.length + '）：' + msg;
+  }
+  window.addEventListener('error', function (e) {
+    showError((e.message || String(e.error)) + ' @' + (e.filename || '') + ':' + (e.lineno || 0));
+  });
+  window.addEventListener('unhandledrejection', function (e) {
+    showError('Promise 拒绝：' + (e.reason && e.reason.message ? e.reason.message : String(e.reason)));
+  });
+
+  // -------------------------------------------------------------------------
+  // 1. 设计表（docs/MYTHOLOGY.md 第 3 节：14 只妖物的高度 / 半径）
+  // -------------------------------------------------------------------------
+  var BEASTS = [
+    { id: 'lushu', cn: '鹿蜀', h: 0.66, r: 0.32 },
+    { id: 'wugong', cn: '蜈蚣精', h: 0.66, r: 0.30 },
+    { id: 'zhen', cn: '鸩鸟', h: 0.62, r: 0.30 },
+    { id: 'mumei', cn: '木魅', h: 0.62, r: 0.30 },
+    { id: 'xuanfeng', cn: '玄蜂', h: 1.15, r: 0.45 },
+    { id: 'zheng', cn: '狰', h: 1.35, r: 0.42 },
+    { id: 'jiuwei', cn: '九尾狐', h: 0.92, r: 0.34 },
+    { id: 'jiaoren', cn: '鲛人', h: 0.60, r: 0.28 },
+    { id: 'chimei', cn: '魑魅', h: 0.85, r: 0.40 },
+    { id: 'wangliang', cn: '魍魉', h: 1.45, r: 0.50 },
+    { id: 'chiru', cn: '赤鱬', h: 0.86, r: 0.34 },
+    { id: 'taotie', cn: '饕餮', h: 2.20, r: 0.82 },
+    { id: 'bashe', cn: '巴蛇', h: 1.75, r: 0.55 },
+    { id: 'hundun', cn: '混沌', h: 1.90, r: 0.42 },
+  ];
+  var ROWS = 7;
+
+  var M = window.PG && window.PG.models;
+  var T = window.THREE;
+  var hud = document.getElementById('hud');
+  var statsEl = document.getElementById('stats');
+  var rowsEl = document.getElementById('rows');
+  var labelsEl = document.getElementById('labels');
+  var missingEl = document.getElementById('missing');
+
+  function fatal(text) {
+    if (hud) { hud.innerHTML = text; }
+    showError(text.replace(/<[^>]+>/g, ''));
+    return null;
+  }
+
+  if (!T) { fatal('three.js 未加载：检查 ../vendor/three.min.js'); return; }
+  if (!M) { fatal('PG.models 未加载：检查 ../src/30-models.js'); return; }
+  if (!M._dsl) {
+    fatal('PG.models._dsl 缺失：30-models.js 尚未暴露 DSL / registerBuilders，妖物无法构建。等待模型库就绪后刷新本页。');
+    return;
+  }
+
+  // -------------------------------------------------------------------------
+  // 2. 渲染器 / 场景 / 相机 / 灯光（山海国风：天青、青玉地台、鎏金环）
+  // -------------------------------------------------------------------------
+  var stage = document.getElementById('stage');
+  var canvas = document.getElementById('view');
+  var renderer = new T.WebGLRenderer({ canvas: canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  renderer.outputColorSpace = T.SRGBColorSpace;
+  var scene = new T.Scene();
+  scene.background = new T.Color(0x9fe0ff);
+  scene.fog = new T.Fog(0x9fe0ff, 15, 34);
+  var camera = new T.PerspectiveCamera(45, 1, 0.1, 120);
+  camera.position.set(0, 2.90, 8.85);
+  var lookTarget = new T.Vector3(0, 0.86, -0.10);
+
+  scene.add(new T.HemisphereLight(0xfffdf2, 0x4e9c3f, 1.0));
+  var sun = new T.DirectionalLight(0xfff2cf, 2.1);
+  sun.position.set(4.5, 9, 6.5);
+  scene.add(sun);
+  var rim = new T.DirectionalLight(0xbfe8ff, 1.1);
+  rim.position.set(-6, 4, -7);
+  scene.add(rim);
+
+  // 青玉地台 + 鎏金环 + 云纹浅刻
+  var ground = new T.Mesh(
+    new T.CylinderGeometry(6.6, 6.9, 0.16, 56),
+    new T.MeshStandardMaterial({ color: 0x2f9e8f, roughness: 0.9, metalness: 0.05 })
+  );
+  ground.position.y = -0.08;
+  scene.add(ground);
+  var goldRing = new T.Mesh(
+    new T.RingGeometry(5.15, 5.42, 72),
+    new T.MeshStandardMaterial({ color: 0xe8b33a, roughness: 0.42, metalness: 0.35, side: T.DoubleSide })
+  );
+  goldRing.rotation.x = -Math.PI / 2;
+  goldRing.position.y = 0.005;
+  scene.add(goldRing);
+  var innerRing = new T.Mesh(
+    new T.RingGeometry(1.6, 1.72, 64),
+    new T.MeshStandardMaterial({ color: 0xe8b33a, roughness: 0.5, metalness: 0.3, side: T.DoubleSide, transparent: true, opacity: 0.55 })
+  );
+  innerRing.rotation.x = -Math.PI / 2;
+  innerRing.position.y = 0.004;
+  scene.add(innerRing);
+
+  // -------------------------------------------------------------------------
+  // 3. 实例化 14 只妖物，排成两排
+  // -------------------------------------------------------------------------
+  var models = [];
+  var missing = [];
+  for (var i = 0; i < BEASTS.length; i++) {
+    var def = BEASTS[i];
+    var row = Math.floor(i / ROWS);
+    var col = i % ROWS;
+    var x = (col - (ROWS - 1) / 2) * 1.10;
+    var z = row === 0 ? 1.30 : -1.40;
+    var inst = null;
+    try {
+      inst = M.make(def.id);
+    } catch (e) {
+      missing.push(def.id + '（' + def.cn + '）：' + (e && e.message ? e.message : e));
+      continue;
+    }
+    if (!inst || !inst.group) { missing.push(def.id + '（' + def.cn + '）：make 未返回 group'); continue; }
+    inst.group.position.set(x, 0, z);
+    inst.group.rotation.y = Math.PI;   // 模型正面朝 -Z，这里转 180° 面向镜头
+    scene.add(inst.group);
+    models.push({
+      def: def, inst: inst, drawCalls: 0,
+      head: new T.Vector3(x, Math.max(inst.height || 0.6, 0.55) + 0.16, z),
+      el: null, warn: false,
+    });
+  }
+  if (missing.length) {
+    missingEl.style.display = 'block';
+    missingEl.textContent = '未注册 / 构建失败：\n' + missing.join('\n');
+  }
+
+  // 标签
+  for (var li = 0; li < models.length; li++) {
+    var el = document.createElement('div');
+    el.className = 'label';
+    el.innerHTML = models[li].def.cn + '<i>' + models[li].def.h.toFixed(2) + 'm</i>';
+    labelsEl.appendChild(el);
+    models[li].el = el;
+  }
+
+  // -------------------------------------------------------------------------
+  // 4. 表格：设计值 vs 实测值
+  // -------------------------------------------------------------------------
+  function fmt(v) { return (v == null || isNaN(v)) ? '–' : v.toFixed(3); }
+  function classify(h, r, th, tr) {
+    var dh = Math.abs(h - th) / th;
+    var dr = Math.abs(r - tr) / tr;
+    if (dh <= 0.06 && dr <= 0.14) return ['pass', '通过'];
+    if (dh <= 0.12 && dr <= 0.26) return ['near', '接近'];
+    return ['fail', '偏差'];
+  }
+  for (var mi = 0; mi < models.length; mi++) {
+    var m = models[mi];
+    var st = M.stats ? M.stats(m.def.id) : null;
+    var cls = classify(m.inst.height || 0, m.inst.radius || 0, m.def.h, m.def.r);
+    m.warn = cls[0] === 'fail';
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td class="l">' + m.def.cn + '<span>' + m.def.id + '</span></td>' +
+      '<td>' + m.def.h.toFixed(2) + '</td>' +
+      '<td>' + fmt(m.inst.height) + '</td>' +
+      '<td>' + m.def.r.toFixed(2) + '</td>' +
+      '<td>' + fmt(m.inst.radius) + '</td>' +
+      '<td>' + (st ? st.meshes : '–') + '</td>' +
+      '<td class="' + cls[0] + '">' + cls[1] + '</td>';
+    rowsEl.appendChild(tr);
+    if (m.el) {
+      if (m.warn) m.el.className = 'label warn';
+      m.el.innerHTML = m.def.cn + '<i>' + fmt(m.inst.height) + 'm</i>';
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // 5. 尺寸 / 相机
+  // -------------------------------------------------------------------------
+  function resize() {
+    var w = Math.max(320, stage.clientWidth);
+    var h = Math.max(240, stage.clientHeight);
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // -------------------------------------------------------------------------
+  // 6. 动画循环：转台轻摆 + 妖物自带动画 + 标签投影
+  // -------------------------------------------------------------------------
+  var clock = new T.Clock();
+  var elapsed = 0;
+  var lastHud = -1;
+  var tmp = new T.Vector3();
+
+  function projectLabels() {
+    var w = stage.clientWidth, h = stage.clientHeight;
+    for (var i = 0; i < models.length; i++) {
+      var m = models[i];
+      tmp.copy(m.head).project(camera);
+      if (tmp.z > 1 || tmp.z < -1) { m.el.style.display = 'none'; continue; }
+      m.el.style.display = 'block';
+      m.el.style.left = ((tmp.x * 0.5 + 0.5) * w).toFixed(1) + 'px';
+      m.el.style.top = ((-tmp.y * 0.5 + 0.5) * h).toFixed(1) + 'px';
+    }
+  }
+
+  function frame() {
+    requestAnimationFrame(frame);
+    var dt = Math.min(clock.getDelta(), 0.05);
+    elapsed += dt;
+
+    camera.position.x = Math.sin(elapsed * 0.16) * 0.40;
+    camera.position.y = 2.90 + Math.sin(elapsed * 0.21) * 0.06;
+    camera.lookAt(lookTarget);
+
+    for (var i = 0; i < models.length; i++) {
+      try {
+        models[i].inst.update(dt, elapsed + i * 0.37);
+      } catch (e) {
+        if (!models[i]._uerr) {
+          models[i]._uerr = true;
+          showError('update 异常（' + models[i].def.id + '）：' + (e && e.message ? e.message : e));
+        }
+      }
+    }
+
+    renderer.render(scene, camera);
+    projectLabels();
+
+    var report = renderer.info.render;
+    if (elapsed - lastHud > 0.3) {
+      lastHud = elapsed;
+      var errCount = errors.length;
+      hud.innerHTML =
+        '妖物 <b>' + models.length + '</b> / ' + BEASTS.length + ' 已渲染' +
+        ' · 错误 <b class="' + (errCount ? '' : 'ok') + '">' + errCount + '</b><br>' +
+        'draw calls <b class="ok">' + report.calls + '</b> · 三角形 ' + report.triangles.toLocaleString() + '<br>' +
+        '转台轻摆中 · 脚底 y=0 · 面向已转正';
+      statsEl.innerHTML =
+        '已渲染 <span class="' + (models.length === BEASTS.length ? 'geo' : 'bad') + '">' + models.length + ' / ' + BEASTS.length + '</span>' +
+        '　draw calls <b>' + report.calls + '</b><br>' +
+        'JS 错误 <span class="' + (errCount ? 'bad' : 'geo') + '">' + errCount + '</span>' +
+        '　缺失 ' + missing.length + ' 只';
+    }
+  }
+
+  // 先同步渲染一帧，保证任何时刻截图都有内容
+  renderer.render(scene, camera);
+  projectLabels();
+  frame();
+
+  // 供验收脚本读取
+  window.__BEASTS_TEST__ = {
+    ids: BEASTS.map(function (b) { return b.id; }),
+    models: models.map(function (m) {
+      return {
+        id: m.def.id, cn: m.def.cn,
+        target: { h: m.def.h, r: m.def.r },
+        actual: { h: m.inst.height, r: m.inst.radius },
+        warn: m.warn,
+      };
+    }),
+    missing: missing,
+    errors: errors,
+  };
+})();
+</script>
+</body>
+</html>

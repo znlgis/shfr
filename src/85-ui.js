@@ -1,4 +1,4 @@
-/* 85-ui.js — 全屏界面层：启动屏 / 标题卡 / 四选一选角 / 暂停 / 失败结算 / 胜利结算（负责人：ui2）
+/* 85-ui.js — 全屏界面层：启动屏 / 标题卡 / 四选一选角 / 暂停 / 失败结算 / 胜利结算（负责人：ui）
    -----------------------------------------------------------------------------
    · 只负责 DOM 界面态；HUD（血条/弹药/准星/飘字/触屏）由 80-hud.js 挂到同一个
      window.PG.ui 上，本文件绝不整体覆盖 PG.ui，只逐个追加方法。
@@ -37,9 +37,9 @@
   function hexRgba(hex, a) {
     let h = typeof hex === 'string' ? hex.replace('#', '') : '';
     if (h.length === 3) h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
-    if (h.length !== 6) h = 'ffcb05';
+    if (h.length !== 6) h = 'e8b33a';
     const n = parseInt(h, 16);
-    if (!isFinite(n)) return 'rgba(255,203,5,' + a + ')';
+    if (!isFinite(n)) return 'rgba(232,179,58,' + a + ')';
     return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')';
   }
   // 复制一份画布，避免把 PG.models 生成的头像节点搬来搬去影响 HUD
@@ -59,7 +59,7 @@
     }
   }
 
-  const TYPE_CN = { electric: '电', grass: '草', fire: '火', water: '水', normal: '一般', poison: '毒', psychic: '超能' };
+  const TYPE_CN = { lei: '雷', mu: '木', huo: '火', shui: '水', feng: '风', du: '毒', yan: '岩', shou: '兽', ling: '灵', gui: '鬼', yao: '妖' };
   const STATS = [['hp', '体力'], ['dmg', '伤害'], ['rate', '射速'], ['spd', '速度']];
 
   /* ================================= 状态 ================================= */
@@ -153,29 +153,29 @@
     s.setAttribute('data-scr', 'title');
 
     const deco = mk('div', 'title-deco', s);
-    for (let i = 0; i < 6; i++) mk('i', 'deco-ball', deco);
+    for (let i = 0; i < 6; i++) mk('i', 'deco-orb', deco);
 
     const hero = mk('header', 'title-hero', s);
-    mk('div', 'title-ribbon', hero, '森林深处 · 暗影来袭');
+    mk('div', 'title-ribbon', hero, '山海秘境 · 混沌来袭');
     const logo = mk('h1', 'title-logo', hero);
-    mk('span', 'tl-top', logo, '宝可梦');
+    mk('span', 'tl-top', logo, '山海');
     mk('span', 'tl-main', logo, '森之突袭');
     const en = mk('div', 'title-en', hero);
-    mk('span', '', en, 'POKÉMON');
+    mk('span', '', en, 'SHAN HAI');
     mk('i', 'en-dot', en);
     mk('span', '', en, 'FOREST RAID');
-    mk('p', 'title-tag', hero, '野生宝可梦陷入狂暴，暗影核心正在吞噬森林。带上伙伴，从这里一路打到森林最深处。');
+    mk('p', 'title-tag', hero, '混沌之气侵入山海秘境，上古妖物纷纷苏醒。带上灵兽，从古林一路打到山海之眼。');
 
     const chips = mk('div', 'title-chips', hero);
     mk('span', 'chip', chips, '8 波关卡');
-    mk('span', 'chip', chips, '第 8 波 BOSS · 超梦');
-    mk('span', 'chip', chips, '4 位训练家可选');
+    mk('span', 'chip', chips, '第 8 波 BOSS · 混沌');
+    mk('span', 'chip', chips, '4 位行者可选');
 
     const foot = mk('footer', 'title-actions', s);
     const start = mk('button', 'ui-btn ui-btn-primary btn-start', foot);
     start.type = 'button';
-    mk('i', 'ui-ball', start);
-    mk('span', '', start, '开始冒险');
+    mk('i', 'ui-coin', start);
+    mk('span', '', start, '开始探险');
     start.addEventListener('click', () => enterSelect());
     mk('div', 'title-hint', foot, '按 Enter 或点击按钮开始 · 建议全屏游玩');
     buildSettings(foot).classList.add('title-settings');
@@ -197,16 +197,16 @@
       screen('title');
     });
     const mid = mk('div', 'head-mid', head);
-    mk('div', 'scr-kicker', mid, '训练家档案 · 四选一');
-    mk('h2', 'scr-h', mid, '选择你的训练家');
-    mk('p', 'scr-sub', mid, '伙伴宝可梦会随你进入森林，武器与被动各不相同');
+    mk('div', 'scr-kicker', mid, '行者卷宗 · 四选一');
+    mk('h2', 'scr-h', mid, '选择你的行者');
+    mk('p', 'scr-sub', mid, '灵兽会随你进入古林，法器与异能各不相同');
     D.elCount = mk('div', 'sel-count', head);
 
     D.grid = mk('div', 'char-grid', s);
 
     const foot = mk('footer', 'sel-foot', s);
     const ult = mk('div', 'sel-ult', foot);
-    mk('span', 'ult-tag', ult, '伙伴技');
+    mk('span', 'ult-tag', ult, '灵兽技');
     D.elUlt = mk('b', 'ult-text', ult, '');
     D.btnLaunch = mk('button', 'ui-btn ui-btn-primary btn-launch', foot, '确认出发');
     D.btnLaunch.type = 'button';
@@ -226,30 +226,30 @@
       const c = D.chars[i];
       const card = mk('article', 'char-card', D.grid);
       card.style.setProperty('--i', String(i));
-      card.style.setProperty('--type', c.color || '#ffcb05');
-      card.style.setProperty('--type-soft', hexRgba(c.color || '#ffcb05', 0.2));
+      card.style.setProperty('--type', c.color || '#e8b33a');
+      card.style.setProperty('--type-soft', hexRgba(c.color || '#e8b33a', 0.2));
 
       const por = mk('div', 'cc-portrait', card);
       const cv = copyCanvas(c.portrait, 256, 'cc-canvas');
       if (cv) por.appendChild(cv);
-      else mk('span', 'cc-initial', por, (c.cn || '训').slice(0, 1));
-      mk('span', 'cc-type', por, TYPE_CN[c.type] || '一般');
+      else mk('span', 'cc-initial', por, (c.cn || '行').slice(0, 1));
+      mk('span', 'cc-type', por, TYPE_CN[c.type] || '');
 
       const nm = mk('div', 'cc-name', card);
-      mk('b', '', nm, c.cn || '训练家');
+      mk('b', '', nm, c.cn || '行者');
       mk('em', '', nm, c.en || '');
 
       const partner = mk('div', 'cc-partner', card);
       const picon = copyCanvas(c.partnerIcon, 128, 'cc-pic cc-canvas');
       if (picon) partner.appendChild(picon);
-      else mk('i', 'cc-pic cc-pic-blank', partner, (c.partnerCn || '宠').slice(0, 1));
-      mk('span', 'cc-pname', partner, c.partnerCn || '伙伴宝可梦');
+      else mk('i', 'cc-pic cc-pic-blank', partner, (c.partnerCn || '兽').slice(0, 1));
+      mk('span', 'cc-pname', partner, c.partnerCn || '灵兽');
 
       const weapon = mk('div', 'cc-weapon', card);
       mk('i', 'cc-wdot', weapon);
-      mk('span', '', weapon, c.weapon || '招式发射器');
+      mk('span', '', weapon, c.weapon || '伏魔法器');
 
-      mk('p', 'cc-passive', card, c.passive || '以招式发射器与宝可梦并肩作战');
+      mk('p', 'cc-passive', card, c.passive || '以伏魔法器与灵兽并肩作战');
 
       const stats = mk('div', 'cc-stats', card);
       for (let j = 0; j < STATS.length; j++) {
@@ -304,7 +304,7 @@
     mk('i', '', badge);
     mk('i', '', badge);
     mk('h2', 'pause-title', card, '已暂停');
-    mk('p', 'pause-sub', card, '森林的时间也停下来等你了');
+    mk('p', 'pause-sub', card, '古林的时间也为你停驻');
 
     const list = mk('div', 'menu-list', card);
     const resume = mk('button', 'ui-btn ui-btn-primary', list, '继续游戏');
@@ -318,7 +318,7 @@
     quit.addEventListener('click', doQuit);
 
     const tips = mk('div', 'pause-tips', card);
-    const TIPS = [['WASD', '移动'], ['鼠标', '瞄准'], ['左键', '射击'], ['R', '装填'], ['Shift', '冲刺'], ['Space', '跳跃'], ['Q', '伙伴技'], ['Esc', '暂停']];
+    const TIPS = [['WASD', '移动'], ['鼠标', '瞄准'], ['左键', '射击'], ['R', '装填'], ['Shift', '冲刺'], ['Space', '跳跃'], ['Q', '灵兽技'], ['Esc', '暂停']];
     for (let i = 0; i < TIPS.length; i++) {
       const row = mk('div', 'tip', tips);
       mk('kbd', '', row, TIPS[i][0]);
@@ -339,7 +339,7 @@
     const backdrop = mk('div', 'result-backdrop ' + kind, s);
     if (win) {
       const conf = mk('div', 'confetti', backdrop);
-      const colors = ['#ffcb05', '#e8453c', '#3aa0e8', '#7ec850', '#ff9f43', '#b06bff', '#ffffff'];
+      const colors = ['#e8b33a', '#d0432e', '#2f6fae', '#4e9c3f', '#f09b3c', '#2f9e8f', '#ffffff'];
       for (let i = 0; i < 22; i++) {
         const p = mk('i', '', conf);
         p.style.left = (3 + Math.random() * 94).toFixed(1) + '%';
@@ -354,7 +354,7 @@
 
     const card = mk('div', 'ui-card result-card ' + kind, s);
     const kicker = mk('div', 'result-kicker', card);
-    mk('h2', 'result-title', card, win ? '森林得救了！' : '挑战失败');
+    mk('h2', 'result-title', card, win ? '山泽安宁！' : '挑战失败');
 
     let rank = null;
     if (win) {
@@ -377,7 +377,7 @@
     }
 
     const actions = mk('div', 'result-actions', card);
-    const btnAgain = mk('button', 'ui-btn ui-btn-primary', actions, win ? '再战一局' : '再来一局');
+    const btnAgain = mk('button', 'ui-btn ui-btn-primary', actions, win ? '再来一局' : '再战一局');
     btnAgain.type = 'button';
     btnAgain.addEventListener('click', doRestart);
     const btnTitle = mk('button', 'ui-btn ui-btn-ghost', actions, '返回标题');
@@ -395,7 +395,7 @@
     } catch (e) {}
     const c = D.chars[D.sel];
     if (c && c.partnerCn) return c.partnerCn;
-    return '伙伴宝可梦';
+    return '灵兽';
   }
   function gameState() {
     try {
@@ -425,15 +425,15 @@
     const combo = Math.round(num(r.comboMax, num(g.comboMax, 0)));
     const time = num(r.time, num(g.time, 0));
 
-    R.kicker.textContent = win ? ('第 ' + total + ' 波 · 暗影核心已净化') : ('第 ' + Math.max(1, wave) + ' 波 · 森之秘径');
+    R.kicker.textContent = win ? ('第 ' + total + ' 波 · 混沌之核已净化') : ('第 ' + Math.max(1, wave) + ' 波 · 山海古径');
     R.refs.wave.textContent = wave + ' / ' + total;
     R.refs.score.textContent = group(score);
     R.refs.combo.textContent = 'x' + combo;
     R.refs.time.textContent = fmtTime(time);
     R.who.textContent = '「' + partnerName() + '」';
     R.text.textContent = win
-      ? '成功了！森林的暗影散了——谢谢你，训练家！'
-      : '别灰心，训练家……我们再试一次，森林还等着我们！';
+      ? '成功了！山泽的暗影散了——多谢你，行者！'
+      : '别灰心，行者……我们再试一次，山林还等着我们！';
     if (R.rank) {
       const rk = (typeof r.rank === 'string' && r.rank) || rankOf(score, win);
       R.rank.textContent = rk;
@@ -484,7 +484,7 @@
     const fill = document.getElementById('boot-fill');
     if (fill) fill.style.width = '0%';
     const msg = document.getElementById('boot-msg');
-    if (msg) msg.textContent = '正在进入森之秘境…';
+    if (msg) msg.textContent = '正在进入山海秘境…';
   }
   function hideBoot() {
     const el = bootEl();
@@ -664,6 +664,49 @@
     D.result = base;
     if (D.screen === 'dead' || D.screen === 'win') renderResult(D.screen);
   }
+
+  /* ============================ HUD 兜底与 toast ============================
+     80-hud.js 先于本文件加载；若它缺失/抛错，至少保证 90-main.js 调用的 HUD 方法
+     全部存在（空操作或极简 DOM 版本），避免一处出错整屏白掉。 */
+  function fallbackToast(text, ms) {
+    try {
+      let el = document.getElementById('ui-fb-toast');
+      if (!el) {
+        el = mk('div', '', document.body);
+        el.id = 'ui-fb-toast';
+        el.style.cssText = 'position:fixed;left:50%;bottom:16%;transform:translateX(-50%);z-index:80;' +
+          'padding:9px 20px;border-radius:999px;background:#e8b33a;color:#24313f;' +
+          'font:900 13px/1.4 var(--ui-font,sans-serif);letter-spacing:.08em;' +
+          'box-shadow:0 6px 18px rgba(36,49,63,.28);pointer-events:none;opacity:0;transition:opacity .2s';
+      }
+      el.textContent = text || '';
+      el.style.opacity = '1';
+      clearTimeout(el._t);
+      el._t = setTimeout(() => { el.style.opacity = '0'; }, Math.max(600, ms || 1600));
+    } catch (e) {}
+  }
+  function installHudFallbacks() {
+    const noop = function () {};
+    const fb = {
+      hud: noop,
+      hudVisible: noop,
+      setCrosshair: noop,
+      setAmmoWarn: noop,
+      hitmarker: noop,
+      damageFrom: noop,
+      killfeed: noop,
+      damageNumber: noop,
+      fps: noop,
+      hurtFlash: noop,
+      setObjectives: noop,
+      banner: (title, sub) => fallbackToast([title, sub].filter(Boolean).join(' · '), 2000),
+      subtitle: (who, text) => fallbackToast([who, text].filter(Boolean).join('：'), 2600),
+      toast: fallbackToast,
+      isTouch: () => false,
+    };
+    for (const k in fb) if (typeof ui[k] !== 'function') ui[k] = fb[k];
+  }
+  installHudFallbacks();
 
   ui.mount = mount;
   ui.screen = screen;

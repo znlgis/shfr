@@ -9,8 +9,8 @@
  *   - 总线：masterGain -> compressor(限幅) -> analyser -> destination
  *           sfxBus -> masterGain
  *           musicBus -> duckGain -> masterGain   （setDuck 只压音乐）
- *   - sfx 额外支持 opts.weapon / opts.type 选择武器音色（electric/fire/water/grass），
- *     这样同一份 "shot" 音效可以给四位训练家不同音色；不传则用清脆电系。
+ *   - sfx 额外支持 opts.weapon / opts.type 选择武器音色（thunder/wood/fire/water），
+ *     这样同一份 "shot" 音效可以给四位行者不同音色；不传则用清脆雷音。
  *   - 同名音效 30ms 内最多 3 次 + 全局 80ms 内最多 20 次，防止叠爆/破音。
  *   - 音乐使用 25ms 间隔、提前 0.18s 排程的 lookahead scheduler，切歌 0.5s 交叉淡入淡出，
  *     同一 cue 重复调用不会重启。
@@ -376,7 +376,7 @@
     // ----------------------------------------------------------------
     // 五、音乐乐器（全部程序化；V 由 track 提供，共享混响发送节点）
     // ----------------------------------------------------------------
-    // 音乐盒 / 钟琴：基频 + 八度 + 三倍泛音，轻盈的"宝可梦"味
+    // 音乐盒 / 钟琴：基频 + 八度 + 三倍泛音，轻盈的国风清音
     function iBell(V, t, midi, dur, vol) {
       const f = midiHz(midi);
       tone(V, { type: 'sine', f, t, a: 0.004, d: dur, vol, send: 0.55 });
@@ -519,13 +519,14 @@
     // ----------------------------------------------------------------
     // 六、音效（契约 3.2 全部 25 个名字 + 武器音色变体）
     // ----------------------------------------------------------------
+    // 属性键 / 法器别名 -> 音色族（雷 / 木 / 火 / 水）
     const TIMBRES = {
-      bolt: 'electric', electric: 'electric', pikachu: 'electric', thunder: 'electric', zap: 'electric',
-      leaf: 'grass', grass: 'grass', bulbasaur: 'grass', seed: 'grass', vine: 'grass',
-      ember: 'fire', fire: 'fire', charmander: 'fire', flame: 'fire', blaze: 'fire',
-      tide: 'water', water: 'water', squirtle: 'water', aqua: 'water', bubble: 'water',
+      lei: 'thunder', bolt: 'thunder', thunder: 'thunder',
+      mu: 'wood', seed: 'wood', leaf: 'wood', wood: 'wood',
+      huo: 'fire', ember: 'fire', flame: 'fire', fire: 'fire',
+      shui: 'water', tide: 'water', water: 'water',
     };
-    const TIMBRE_ORDER = ['electric', 'fire', 'water', 'grass'];
+    const TIMBRE_ORDER = ['thunder', 'fire', 'water', 'wood'];
 
     function normTimbre(w) {
       if (w == null) return null;
@@ -534,10 +535,10 @@
       return TIMBRES[key] || null;
     }
 
-    // 四种武器的射击音色：电=高频方波+噪声 / 火=低沉噪声爆炸 / 水=气泡+正弦扫频 / 草=木质短促
+    // 四种法器的射击音色：雷=高频方波+噪声 / 火=低沉噪声爆炸 / 水=气泡+正弦扫频 / 木=木质短促
     function weaponShot(V, heavy) {
       const t = V.t;
-      const timbre = V.timbre || 'electric';
+      const timbre = V.timbre || 'thunder';
       // 轻微随机音高，避免连发时像复读机
       const jitter = 1 + (Math.random() - 0.5) * 0.04;
       if (timbre === 'fire') {
@@ -562,7 +563,7 @@
         if (heavy) tone(V, { type: 'sine', f: 200, f1: 1200, t: t + 0.12, a: 0.01, d: 0.22, vol: 0.16 });
         return;
       }
-      if (timbre === 'grass') {
+      if (timbre === 'wood') {
         tone(V, { type: 'triangle', f: 620 * jitter, f1: 280, t, a: 0.003, d: 0.09, vol: 0.17, filter: { type: 'lowpass', freq: 2200 } });
         noiseBurst(V, {
           t, a: 0.002, d: 0.06, vol: 0.09,
@@ -580,7 +581,7 @@
         }
         return;
       }
-      // electric（默认）：清脆"啾 / 啪"
+      // thunder（默认）：清脆雷音"啾 / 啪"
       const f = (heavy ? 1300 : 1700) * jitter;
       tone(V, {
         type: 'square', f, f1: heavy ? 380 : 460, t, a: 0.002, d: heavy ? 0.13 : 0.1,
@@ -616,7 +617,7 @@
         tone(V, { type: 'square', f: 720, f1: 540, t, a: 0.002, d: 0.07, vol: 0.055, filter: { type: 'lowpass', freq: 2600 } });
         tone(V, { type: 'square', f: 500, f1: 360, t: t + 0.065, a: 0.002, d: 0.09, vol: 0.045, filter: { type: 'lowpass', freq: 2200 } });
       },
-      // 选中：两个音的上行（宝可梦菜单确认音）
+      // 选中：两个音的上行（山海菜单确认音）
       select(V) {
         const t = V.t;
         tone(V, { type: 'sine', f: 660, t, a: 0.003, d: 0.09, vol: 0.08, send: 0.2 });

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // 构建：把 three.js + 各模块 + CSS 拼成单文件 HTML
-//   node build.mjs              -> dist/宝可梦森之突袭_V1.html（单文件交付物，可直接双击游玩）
+//   node build.mjs              -> dist/山海森之突袭_V1.html（单文件交付物，可直接双击游玩）
 //   node build.mjs --dev        -> dev.html（<script src> 版，改完刷新即见）
 //   node build.mjs --dev --out=tests/x.html
 import fs from 'node:fs';
@@ -13,9 +13,9 @@ const dev = argv.includes('--dev');
 const outArg = argv.find((a) => a.startsWith('--out='));
 const outFile = outArg
   ? path.join(root, outArg.slice(6))
-  : (dev ? path.join(root, 'dev.html') : path.join(root, 'dist', '宝可梦森之突袭_V1.html'));
+  : (dev ? path.join(root, 'dev.html') : path.join(root, 'dist', '山海森之突袭_V1.html'));
 
-const JS_ORDER = ['10-audio.js', '20-world.js', '30-models.js', '40-util.js', '50-game.js', '80-hud.js', '85-ui.js', '90-main.js'];
+const JS_ORDER = ['10-audio.js', '20-world.js', '30-models.js', '32-beasts.js', '35-art.js', '40-util.js', '50-game.js', '80-hud.js', '85-ui.js', '90-main.js'];
 // hud 样式必须最后加载：全屏界面 CSS 里若残留 .hud 规则，也不该压过 HUD 自己的样式
 const CSS_FILES = ['70-ui.css', '75-hud.css'];
 
@@ -55,7 +55,7 @@ if (dev) {
 let html = template
   .replace('<!--CSS-->', () => '<style>' + css + '\n</style>')
   .replace('<!--BODY-->', () => body)
-  .replace(/__TITLE__/g, () => '宝可梦森之突袭');
+  .replace(/__TITLE__/g, () => '山海森之突袭');
 
 fs.mkdirSync(path.dirname(outFile), { recursive: true });
 fs.writeFileSync(outFile, html, 'utf8');
