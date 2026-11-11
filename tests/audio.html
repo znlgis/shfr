@@ -1,0 +1,870 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>宝可梦 · 森之突袭 | 音频自检台</title>
+<script>
+  /* 在模块脚本之前就装好捕获：这样 10-audio.js 自身的加载/初始化错误也能显示出来 */
+  window.__earlyErrors = [];
+  window.addEventListener('error', function (e) {
+    window.__earlyErrors.push((e.message || 'error') + ' @ ' + (e.filename || '?') + ':' + (e.lineno || 0));
+  });
+</script>
+<style>
+  :root {
+    --ink: #24313f;
+    --ink-soft: #56697a;
+    --yellow: #ffcb05;
+    --green: #4e9c3f;
+    --grass: #7ec850;
+    --sky: #9fe0ff;
+    --blue: #3aa0e8;
+    --red: #e8453c;
+    --orange: #ff9f43;
+    --card: rgba(255, 255, 255, 0.94);
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    padding: 14px 18px 18px;
+    font-family: 'PingFang SC', 'Microsoft YaHei', 'YouYuan', '幼圆', system-ui, sans-serif;
+    color: var(--ink);
+    background:
+      radial-gradient(1100px 520px at 12% -8%, rgba(255, 255, 255, 0.9), transparent 62%),
+      radial-gradient(820px 420px at 96% 2%, rgba(255, 231, 120, 0.55), transparent 64%),
+      radial-gradient(760px 420px at 82% 100%, rgba(126, 200, 80, 0.5), transparent 70%),
+      linear-gradient(180deg, #9fe0ff 0%, #c9f0ff 26%, #eaf9d9 58%, #a8e07a 100%);
+    background-attachment: fixed;
+    overflow-x: hidden;
+  }
+  /* 背景装饰：柔和的宝可梦配色光斑 */
+  .bg { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+  .bg i { position: absolute; border-radius: 50%; opacity: 0.55; filter: blur(1px); }
+  .bg i:nth-child(1) { width: 220px; height: 220px; left: -60px; top: 18%; background: radial-gradient(circle at 35% 35%, #ffffff, rgba(255, 255, 255, 0)); }
+  .bg i:nth-child(2) { width: 300px; height: 300px; right: -90px; top: 6%; background: radial-gradient(circle at 45% 40%, #ffe680, rgba(255, 230, 128, 0)); }
+  .bg i:nth-child(3) { width: 260px; height: 260px; left: 30%; bottom: -100px; background: radial-gradient(circle at 50% 40%, #b9f0a0, rgba(185, 240, 160, 0)); }
+  .bg i:nth-child(4) { width: 160px; height: 160px; right: 18%; bottom: 8%; background: radial-gradient(circle at 50% 40%, #bdeaff, rgba(189, 234, 255, 0)); }
+
+  #app { position: relative; z-index: 1; max-width: 1440px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+
+  /* ---------------- 顶栏 ---------------- */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    padding: 10px 18px;
+    background: var(--card);
+    border: 3px solid var(--yellow);
+    border-radius: 20px;
+    box-shadow: 0 10px 26px rgba(32, 74, 96, 0.18), inset 0 0 0 2px rgba(255, 255, 255, 0.6);
+  }
+  .brand { display: flex; align-items: center; gap: 13px; }
+  .ball {
+    width: 42px; height: 42px; border-radius: 50%; flex: none;
+    background: linear-gradient(180deg, #e8453c 0 45%, #24313f 45% 55%, #ffffff 55% 100%);
+    border: 3px solid #24313f;
+    position: relative;
+    box-shadow: 0 3px 0 rgba(36, 49, 63, 0.25), inset 0 -3px 0 rgba(0, 0, 0, 0.08);
+  }
+  .ball::after {
+    content: ''; position: absolute; left: 50%; top: 50%; width: 14px; height: 14px;
+    transform: translate(-50%, -50%); border-radius: 50%;
+    background: #ffffff; border: 3px solid #24313f;
+  }
+  .brand h1 { margin: 0; font-size: 20px; font-weight: 900; letter-spacing: 1.2px; }
+  .brand p { margin: 2px 0 0; font-size: 10.5px; font-weight: 800; letter-spacing: 2.6px; color: #7c8b99; }
+  .badges { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 7px 12px; border-radius: 999px;
+    font-size: 11.5px; font-weight: 800; letter-spacing: 0.2px;
+    background: #f4fbf0; border: 2px solid #cbe8b8; color: #2f6b24;
+    white-space: nowrap;
+  }
+  .badge::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #6fcf4f; box-shadow: 0 0 0 2px rgba(111, 207, 79, 0.22); }
+  .badge.warn { background: #fff8e2; border-color: #ffe08a; color: #8a6a00; }
+  .badge.warn::before { background: #ffb520; box-shadow: 0 0 0 2px rgba(255, 181, 32, 0.22); }
+  .badge.bad { background: #fff0ef; border-color: #f6b6b1; color: #b3241c; }
+  .badge.bad::before { background: #e8453c; box-shadow: 0 0 0 2px rgba(232, 69, 60, 0.22); }
+
+  /* ---------------- 布局 ---------------- */
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) 430px; gap: 12px; align-items: start; }
+  .col { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+
+  /* ---------------- 卡片 ---------------- */
+  .card {
+    background: var(--card);
+    border: 3px solid var(--yellow);
+    border-radius: 20px;
+    padding: 12px 14px 13px;
+    box-shadow: 0 10px 24px rgba(32, 74, 96, 0.16), inset 0 0 0 2px rgba(255, 255, 255, 0.62);
+  }
+  .card h2 {
+    margin: 0 0 10px;
+    font-size: 15px; font-weight: 900; letter-spacing: 0.6px;
+    display: flex; align-items: baseline; gap: 8px;
+  }
+  .card h2 .sub { font-size: 11px; font-weight: 700; color: #7c8b99; letter-spacing: 0; margin-left: auto; }
+  .card h2 .sub.ok { color: #2f8a20; }
+  .card h2 .sub.bad { color: #c22e26; }
+  .card h2 .tag {
+    font-size: 9.5px; font-weight: 800; letter-spacing: 1px; color: #fff;
+    background: var(--ink); border-radius: 999px; padding: 2px 8px 1px;
+  }
+
+  /* ---------------- 音效按钮 ---------------- */
+  .sfx-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 7px; }
+  .sfx-btn {
+    position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+    padding: 8px 4px 7px;
+    border: 2px solid #ffd93d; border-radius: 13px;
+    background: #ffffff; color: var(--ink);
+    font: inherit; cursor: pointer;
+    box-shadow: 0 2px 0 #ffd93d;
+    transition: transform 0.09s ease, box-shadow 0.12s ease, background 0.16s ease, border-color 0.16s ease;
+    overflow: hidden;
+  }
+  .sfx-btn .n { font-size: 12.5px; font-weight: 800; line-height: 1.15; letter-spacing: 0.3px; }
+  .sfx-btn .k { font-size: 9.5px; font-weight: 600; color: #93a2ae; font-family: ui-monospace, Consolas, 'Courier New', monospace; }
+  .sfx-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 0 #ffd93d, 0 8px 14px rgba(32, 74, 96, 0.12); }
+  .sfx-btn:active { transform: translateY(1px); box-shadow: 0 1px 0 #ffd93d; }
+  .sfx-btn.played {
+    background: linear-gradient(180deg, #f2ffe7, #dcf7c8);
+    border-color: #7ec850; box-shadow: 0 2px 0 #7ec850;
+  }
+  .sfx-btn.played::after {
+    content: '✓'; position: absolute; top: 1px; right: 5px;
+    font-size: 10px; font-weight: 900; color: #4e9c3f;
+  }
+  .sfx-btn.pulse { animation: pop 0.26s ease; }
+  @keyframes pop { 0% { transform: scale(0.93); } 55% { transform: scale(1.05); } 100% { transform: scale(1); } }
+
+  .row-actions { display: flex; align-items: center; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+  .hint { font-size: 11.5px; font-weight: 700; color: #7c8b99; }
+  .hint b { color: var(--ink); }
+
+  /* ---------------- 通用按钮 ---------------- */
+  .btn {
+    font: inherit; font-size: 12px; font-weight: 800; letter-spacing: 0.2px;
+    border: 2px solid #d5e0e8; border-radius: 11px;
+    background: #ffffff; color: var(--ink);
+    padding: 7px 13px; cursor: pointer;
+    box-shadow: 0 2px 0 #d5e0e8;
+    transition: transform 0.08s ease, box-shadow 0.1s ease, background 0.15s ease;
+    white-space: nowrap;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn:active { transform: translateY(1px); box-shadow: 0 1px 0 #d5e0e8; }
+  .btn.primary { border-color: #3f7d31; background: linear-gradient(180deg, #96e472, #6cc74e); color: #143d17; box-shadow: 0 2px 0 #3f7d31; }
+  .btn.primary:active { box-shadow: 0 1px 0 #3f7d31; }
+  .btn.warn { border-color: #e8453c; color: #c22e26; box-shadow: 0 2px 0 #e8453c; background: #fff; }
+  .btn.warn:active { box-shadow: 0 1px 0 #e8453c; }
+
+  /* ---------------- 音乐按钮 ---------------- */
+  .music-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+  .music-btn {
+    position: relative;
+    font: inherit; font-size: 12px; font-weight: 800;
+    padding: 8px 4px; cursor: pointer;
+    border: 2px solid #b9e0f7; border-radius: 11px;
+    background: #f7fcff; color: var(--ink);
+    box-shadow: 0 2px 0 #b9e0f7;
+    transition: transform 0.09s ease, box-shadow 0.12s ease, background 0.16s ease, border-color 0.16s ease;
+    display: flex; flex-direction: column; align-items: center; gap: 1px;
+  }
+  .music-btn span { font-size: 10px; font-weight: 700; color: #8aa3b5; font-family: ui-monospace, Consolas, monospace; letter-spacing: 0.4px; }
+  .music-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 0 #b9e0f7; }
+  .music-btn:active { transform: translateY(1px); box-shadow: 0 1px 0 #b9e0f7; }
+  .music-btn.active {
+    background: linear-gradient(180deg, #fff8cf, #ffe066);
+    border-color: #ff9f43; box-shadow: 0 2px 0 #ff9f43;
+  }
+  .music-btn.active span { color: #9a6a00; }
+  .music-btn.active::after {
+    content: '♪'; position: absolute; top: 2px; right: 6px; font-size: 11px; color: #d8860a;
+    animation: bob 1.2s ease-in-out infinite;
+  }
+  @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+  .cue-state { margin-top: 9px; font-size: 11.5px; font-weight: 700; color: #7c8b99; display: flex; align-items: center; gap: 8px; }
+  .cue-state b { color: var(--ink); font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; }
+  .cue-state .dot { width: 8px; height: 8px; border-radius: 50%; background: #b9c6d1; }
+  .cue-state .dot.on { background: #6fcf4f; box-shadow: 0 0 0 3px rgba(111, 207, 79, 0.2); }
+
+  /* ---------------- 混音器 ---------------- */
+  .ctl { display: grid; grid-template-columns: 88px minmax(0, 1fr) 46px; align-items: center; gap: 9px; margin-bottom: 10px; }
+  .ctl span { font-size: 11.5px; font-weight: 800; color: var(--ink-soft); }
+  .ctl b { font-size: 11.5px; font-weight: 900; text-align: right; font-variant-numeric: tabular-nums; }
+  input[type='range'] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 9px; border-radius: 6px;
+    background: linear-gradient(90deg, #7ec850, #ffd93d);
+    outline: none; border: none;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.18);
+  }
+  input[type='range']::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 19px; height: 19px; border-radius: 50%;
+    background: #ffffff; border: 3px solid #4e9c3f;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.22);
+    cursor: pointer;
+  }
+  .mix-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
+  .mix-note { margin-top: 8px; font-size: 10.5px; font-weight: 600; color: #93a2ae; line-height: 1.5; }
+
+  /* ---------------- 示波器 ---------------- */
+  .scope-wrap { position: relative; border-radius: 13px; overflow: hidden; border: 2px solid #2f4a60; background: #182634; }
+  canvas#scope { display: block; width: 100%; height: auto; }
+  .scope-legend { display: flex; justify-content: space-between; margin-top: 7px; font-size: 10px; font-weight: 700; color: #93a2ae; letter-spacing: 0.4px; }
+  .scope-legend b { color: #4e9c3f; font-variant-numeric: tabular-nums; }
+
+  /* ---------------- 离线自检 ---------------- */
+  .offline-card { flex: 1; }
+  .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10.5px; font-weight: 800; letter-spacing: 0.1px;
+    padding: 3px 8px; border-radius: 999px;
+    background: #eef8e6; border: 1.5px solid #bfe3a6; color: #2f6b24;
+    white-space: nowrap;
+  }
+  .chip i { font-style: normal; font-size: 9.5px; font-weight: 700; color: #6e9460; font-family: ui-monospace, Consolas, monospace; }
+  .chip.bad { background: #ffefee; border-color: #f3b7b2; color: #b3241c; }
+  .chip.bad i { color: #b56962; }
+  .chip.cue { background: #eaf5ff; border-color: #b6dcf5; color: #1c5f8f; }
+  .chip.cue i { color: #5d8aa9; }
+  .offline-note { margin-top: 8px; font-size: 10.5px; color: #93a2ae; font-weight: 600; }
+
+  /* ---------------- 错误 ---------------- */
+  #errors {
+    display: none;
+    background: #fff2f1;
+    border: 3px solid var(--red);
+    border-radius: 16px;
+    padding: 10px 14px;
+    box-shadow: 0 8px 20px rgba(232, 69, 60, 0.16);
+  }
+  #errors.show { display: block; }
+  #errors h3 { margin: 0 0 6px; font-size: 13px; font-weight: 900; color: #b3241c; }
+  #errors ul { margin: 0; padding-left: 18px; max-height: 130px; overflow: auto; }
+  #errors li { font-size: 11px; color: #a8241c; font-family: ui-monospace, Consolas, monospace; line-height: 1.55; }
+
+  .foot { text-align: center; font-size: 10.5px; font-weight: 700; letter-spacing: 0.6px; color: rgba(36, 49, 63, 0.52); padding-bottom: 2px; }
+  .foot b { color: rgba(36, 49, 63, 0.72); }
+
+  @media (max-width: 1120px) {
+    .layout { grid-template-columns: minmax(0, 1fr); }
+    .sfx-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  }
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="ball" aria-hidden="true"></div>
+      <div>
+        <h1>宝可梦 · 森之突袭</h1>
+        <p>音频自检台 · AUDIO LAB · 10-audio.js</p>
+      </div>
+    </div>
+    <div class="badges">
+      <span class="badge" id="badge-error">JS 错误 0</span>
+      <span class="badge warn" id="badge-ctx">AudioContext 待启用</span>
+      <span class="badge" id="badge-api">契约 API —</span>
+      <span class="badge warn" id="badge-offline">离线自检 —</span>
+    </div>
+  </header>
+
+  <main class="layout">
+    <div class="col">
+      <!-- ============ 音效 ============ -->
+      <section class="card sfx-card">
+        <h2>音效 SFX <span class="tag">WEB AUDIO</span><span class="sub" id="sfx-sub">24 个 · 已播放 0/24</span></h2>
+        <div class="sfx-grid" id="sfx-grid"></div>
+        <div class="row-actions">
+          <button class="btn primary" id="play-all" type="button">▶ 全部试听</button>
+          <span class="hint" id="last-played">最近播放：<b>—</b></span>
+        </div>
+      </section>
+
+      <!-- ============ 离线自检 ============ -->
+      <section class="card offline-card">
+        <h2>离线自检 OFFLINE RENDER <span class="sub" id="offline-sum">准备中…</span></h2>
+        <div id="offline-body">
+          <div class="chips"><span class="chip">用 OfflineAudioContext 逐个渲染全部音效与音乐…</span></div>
+        </div>
+        <div class="offline-note">不需要用户手势：加载后自动把 24 个音效与 6 段音乐各渲染一遍，检查异常 / NaN / 静音峰值。</div>
+        <div class="row-actions">
+          <button class="btn" id="rerun-offline" type="button">↻ 重新自检</button>
+        </div>
+      </section>
+    </div>
+
+    <aside class="col">
+      <!-- ============ 音乐 ============ -->
+      <section class="card music-card">
+        <h2>音乐 MUSIC <span class="tag">LOOP</span><span class="sub" id="music-sub">点击试听</span></h2>
+        <div class="music-grid" id="music-grid"></div>
+        <div class="cue-state">当前播放 <span class="dot" id="cue-dot"></span><b id="cue-name">none</b></div>
+      </section>
+
+      <!-- ============ 混音 ============ -->
+      <section class="card mixer-card">
+        <h2>混音 MIXER <span class="sub" id="mixer-sub">master → compressor</span></h2>
+        <label class="ctl"><span>主音量</span><input type="range" id="vol" min="0" max="100" step="1" value="80"><b id="vol-val">80%</b></label>
+        <label class="ctl"><span>音乐压低</span><input type="range" id="duck" min="0" max="100" step="1" value="100"><b id="duck-val">100%</b></label>
+        <div class="mix-row">
+          <button class="btn" id="mute" type="button">静音</button>
+          <button class="btn primary" id="unlock" type="button">🔊 启用声音</button>
+        </div>
+        <div class="mix-note">duck 只压低音乐总线（菜单用）；音效不受影响。浏览器需要一次用户手势才能出声。</div>
+      </section>
+
+      <!-- ============ 示波器 ============ -->
+      <section class="card scope-card">
+        <h2>输出波形 SCOPE <span class="sub" id="scope-level">等待启用</span></h2>
+        <div class="scope-wrap"><canvas id="scope" width="820" height="250"></canvas></div>
+        <div class="scope-legend"><span>ANALYSER · TIME DOMAIN</span><span>电平 <b id="scope-db">−∞ dB</b></span></div>
+      </section>
+    </aside>
+  </main>
+
+  <div id="errors">
+    <h3>页面 JS 错误 <span id="err-count">0</span> 条（应为 0）</h3>
+    <ul id="err-list"></ul>
+  </div>
+
+  <div class="foot">纯程序化 WebAudio 合成 · 无任何外部音频文件 · <b>24 SFX / 6 MUSIC CUES</b> · 契约 PG.audio 全实现</div>
+</div>
+
+<script src="../src/10-audio.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  // ==================================================================
+  // 0. 页面元素 & 错误捕获
+  // ==================================================================
+  const $ = (id) => document.getElementById(id);
+  const A = (window.PG && window.PG.audio) || null;
+  const errors = [];
+
+  function reportError(msg) {
+    const text = String(msg);
+    errors.push(text);
+    const box = $('errors');
+    box.classList.add('show');
+    $('err-count').textContent = String(errors.length);
+    const li = document.createElement('li');
+    li.textContent = text.slice(0, 500);
+    $('err-list').appendChild(li);
+    const badge = $('badge-error');
+    badge.textContent = 'JS 错误 ' + errors.length;
+    badge.classList.remove('warn');
+    badge.classList.add('bad');
+  }
+  window.addEventListener('error', (e) => {
+    reportError((e.message || 'window.onerror') + ' @ ' + (e.filename || '?') + ':' + (e.lineno || 0));
+  });
+  window.addEventListener('unhandledrejection', (e) => {
+    const r = e.reason;
+    reportError('未处理的 Promise 拒绝: ' + (r && r.message ? r.message : String(r)));
+  });
+
+  const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
+
+  // ==================================================================
+  // 1. 数据：契约要求的名字与中文标签
+  // ==================================================================
+  const SFX_LIST = [
+    ['ui_hover', '悬停'], ['ui_click', '点击'], ['ui_back', '返回'], ['select', '选中'],
+    ['shot', '射击'], ['shot_alt', '重击'], ['reload', '装填'], ['empty', '空弹'],
+    ['hit', '命中'], ['crit', '暴击'], ['kill', '击杀'], ['hurt', '受伤'],
+    ['heal', '回复'], ['wave', '波次'], ['jump', '跳跃'], ['dash', '冲刺'],
+    ['boss_roar', '首领吼'], ['win', '胜利音'], ['lose', '失败音'], ['levelup', '升级'],
+    ['combo', '连击'], ['orb', '拾取'], ['spawn', '刷怪'], ['amb', '环境音'],
+  ];
+  const CUE_LIST = [
+    ['title', '标题', 'TITLE'], ['forest', '森林', 'FOREST'], ['battle', '战斗', 'BATTLE'],
+    ['boss', '首领', 'BOSS'], ['win', '胜利', 'WIN'], ['lose', '失败', 'LOSE'], ['none', '停止', 'STOP'],
+  ];
+  const REQUIRED_API = ['init', 'sfx', 'music', 'setMuted', 'isMuted', 'setVolume', 'getVolume', 'setDuck'];
+  const played = Object.create(null);
+  const btnByName = Object.create(null);
+  const btnByCue = Object.create(null);
+  let currentCue = 'none';
+  let lastPlayLabel = '—';
+
+  // ==================================================================
+  // 2. 构建按钮
+  // ==================================================================
+  function buildUI() {
+    const grid = $('sfx-grid');
+    for (let i = 0; i < SFX_LIST.length; i++) {
+      const name = SFX_LIST[i][0], cn = SFX_LIST[i][1];
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'sfx-btn';
+      b.title = '播放音效 ' + name;
+      const n = document.createElement('span');
+      n.className = 'n';
+      n.textContent = cn;
+      const k = document.createElement('span');
+      k.className = 'k';
+      k.textContent = name;
+      b.appendChild(n);
+      b.appendChild(k);
+      b.addEventListener('click', () => playSfx(name));
+      grid.appendChild(b);
+      btnByName[name] = b;
+    }
+    const mgrid = $('music-grid');
+    for (let i = 0; i < CUE_LIST.length; i++) {
+      const cue = CUE_LIST[i][0], cn = CUE_LIST[i][1], en = CUE_LIST[i][2];
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'music-btn';
+      b.title = '播放音乐 ' + cue;
+      const n = document.createElement('span');
+      n.textContent = cn;
+      n.style.fontSize = '12px';
+      n.style.color = 'inherit';
+      n.style.fontFamily = 'inherit';
+      const k = document.createElement('span');
+      k.textContent = en;
+      b.appendChild(n);
+      b.appendChild(k);
+      b.addEventListener('click', () => playCue(cue));
+      mgrid.appendChild(b);
+      btnByCue[cue] = b;
+    }
+  }
+
+  // ==================================================================
+  // 3. 契约 API 检查
+  // ==================================================================
+  function checkApi() {
+    const badge = $('badge-api');
+    if (!A) {
+      badge.textContent = 'PG.audio 未加载';
+      badge.classList.remove('warn');
+      badge.classList.add('bad');
+      reportError('PG.audio 未加载：../src/10-audio.js 可能加载失败或模块初始化异常（见浏览器控制台）');
+      return;
+    }
+    const missing = REQUIRED_API.filter((k) => typeof A[k] !== 'function');
+    let sfxNames = [];
+    let cueNames = [];
+    try { sfxNames = A.__sfxNames ? A.__sfxNames() : []; } catch (e) { sfxNames = []; }
+    try { cueNames = A.__cues ? A.__cues() : []; } catch (e) { cueNames = []; }
+    const missingSfx = SFX_LIST.map((x) => x[0]).filter((n) => sfxNames.indexOf(n) < 0);
+    const needCue = ['title', 'forest', 'battle', 'boss', 'win', 'lose'];
+    const missingCue = needCue.filter((c) => cueNames.indexOf(c) < 0);
+    const totalMissing = missing.length + missingSfx.length + missingCue.length;
+    if (totalMissing === 0) {
+      badge.textContent = '契约 API ✓ · ' + sfxNames.length + ' SFX / ' + cueNames.length + ' CUES';
+      badge.classList.remove('warn', 'bad');
+    } else {
+      badge.textContent = '契约缺 ' + totalMissing + ' 项';
+      badge.classList.remove('warn');
+      badge.classList.add('bad');
+      if (missing.length) reportError('缺少 API: ' + missing.join(', '));
+      if (missingSfx.length) reportError('缺少音效: ' + missingSfx.join(', '));
+      if (missingCue.length) reportError('缺少音乐 cue: ' + missingCue.join(', '));
+    }
+  }
+
+  // ==================================================================
+  // 4. 音频启用 & 播放
+  // ==================================================================
+  function ensureAudio() {
+    if (!A) return false;
+    try {
+      A.init();
+    } catch (e) {
+      reportError('init() 抛错: ' + (e && e.message));
+      return false;
+    }
+    let st = null;
+    try { st = A.__state ? A.__state() : null; } catch (e) { st = null; }
+    const ready = !!(st && st.ready);
+    if (!ready) {
+      $('badge-ctx').textContent = 'AudioContext 不可用';
+      $('badge-ctx').classList.add('bad');
+      return false;
+    }
+    $('badge-ctx').textContent = 'AudioContext ' + st.state + ' · ' + (st.sampleRate / 1000).toFixed(1) + ' kHz';
+    $('badge-ctx').classList.remove('warn', 'bad');
+    return true;
+  }
+
+  function markPlayed(name) {
+    played[name] = true;
+    const b = btnByName[name];
+    if (b) {
+      if (!b.classList.contains('played')) b.classList.add('played');
+      b.classList.remove('pulse');
+      // 触发重排以重放动画
+      void b.offsetWidth;
+      b.classList.add('pulse');
+    }
+    const count = Object.keys(played).length;
+    $('sfx-sub').textContent = '24 个 · 已播放 ' + count + '/24';
+  }
+
+  function updateLastPlayed(name, cn) {
+    lastPlayLabel = cn + ' · ' + name;
+    $('last-played').innerHTML = '最近播放：<b>' + lastPlayLabel + '</b> · 已播放 ' + Object.keys(played).length + '/24';
+  }
+
+  function playSfx(name) {
+    const cn = (SFX_LIST.find((x) => x[0] === name) || [name, name])[1];
+    if (!ensureAudio()) {
+      $('last-played').innerHTML = '最近播放：<b>需要启用声音</b>';
+      return;
+    }
+    try {
+      A.sfx(name);
+    } catch (e) {
+      reportError('sfx(' + name + ') 抛错: ' + (e && e.message));
+      return;
+    }
+    markPlayed(name);
+    updateLastPlayed(name, cn);
+  }
+
+  function updateCueUI(cue) {
+    currentCue = cue;
+    for (const key in btnByCue) {
+      if (btnByCue[key]) btnByCue[key].classList.toggle('active', key === cue && cue !== 'none');
+    }
+    $('cue-name').textContent = cue;
+    const on = cue !== 'none';
+    $('cue-dot').classList.toggle('on', on);
+    $('music-sub').textContent = on ? '循环播放中 · 重复点击不重启' : '点击试听';
+  }
+
+  function playCue(cue) {
+    if (!ensureAudio()) return;
+    try {
+      A.music(cue);
+    } catch (e) {
+      reportError('music(' + cue + ') 抛错: ' + (e && e.message));
+      return;
+    }
+    // 回读实际 cue（重复点同一 cue 时内部不会重启）
+    let st = null;
+    try { st = A.__state ? A.__state() : null; } catch (e) { st = null; }
+    updateCueUI(st && st.ready && st.cue ? st.cue : cue);
+  }
+
+  // ==================================================================
+  // 5. 控件绑定
+  // ==================================================================
+  let allTimer = 0;
+  function stopPlayAll() {
+    if (allTimer) { clearInterval(allTimer); allTimer = 0; }
+    $('play-all').textContent = '▶ 全部试听';
+  }
+  function playAll() {
+    if (allTimer) { stopPlayAll(); return; }
+    if (!ensureAudio()) return;
+    let i = 0;
+    $('play-all').textContent = '■ 停止试听';
+    playSfx(SFX_LIST[0][0]);
+    i = 1;
+    allTimer = setInterval(() => {
+      if (i >= SFX_LIST.length) { stopPlayAll(); return; }
+      playSfx(SFX_LIST[i][0]);
+      i++;
+    }, 380);
+  }
+
+  function bindControls() {
+    $('play-all').addEventListener('click', playAll);
+
+    $('vol').addEventListener('input', (e) => {
+      const v = Number(e.target.value) / 100;
+      $('vol-val').textContent = Math.round(v * 100) + '%';
+      if (ensureAudio()) A.setVolume(v);
+    });
+    $('duck').addEventListener('input', (e) => {
+      const v = Number(e.target.value) / 100;
+      $('duck-val').textContent = Math.round(v * 100) + '%';
+      if (ensureAudio()) A.setDuck(v);
+    });
+    $('mute').addEventListener('click', () => {
+      if (!ensureAudio()) return;
+      const next = !A.isMuted();
+      A.setMuted(next);
+      $('mute').textContent = next ? '取消静音' : '静音';
+      $('mute').classList.toggle('warn', next);
+    });
+    $('unlock').addEventListener('click', () => {
+      if (ensureAudio()) {
+        A.sfx('select');
+        $('mixer-sub').textContent = '输出已就绪 · running';
+        $('unlock').textContent = '✓ 声音已启用';
+      }
+    });
+    $('rerun-offline').addEventListener('click', () => { runOffline(); });
+  }
+
+  // ==================================================================
+  // 6. 状态轮询（AudioContext / 当前 cue / 静音）
+  // ==================================================================
+  function updateStatus() {
+    if (!A) return;
+    let st = null;
+    try { st = A.__state ? A.__state() : null; } catch (e) { st = null; }
+    if (!st) return;
+    const ctxBadge = $('badge-ctx');
+    if (st.ready) {
+      ctxBadge.textContent = 'AudioContext ' + st.state + ' · ' + (st.sampleRate / 1000).toFixed(1) + ' kHz';
+      ctxBadge.classList.remove('warn', 'bad');
+    }
+    // 当前 cue：如果外部（自动演示）切了歌，这里同步 UI
+    if (st.ready && st.cue !== currentCue) updateCueUI(st.cue);
+    const muteBtn = $('mute');
+    if (st.muted && muteBtn.textContent !== '取消静音') {
+      muteBtn.textContent = '取消静音';
+      muteBtn.classList.add('warn');
+    } else if (!st.muted && muteBtn.textContent === '取消静音') {
+      muteBtn.textContent = '静音';
+      muteBtn.classList.remove('warn');
+    }
+  }
+
+  // ==================================================================
+  // 7. 示波器（AnalyserNode 波形 + 电平）
+  // ==================================================================
+  const scope = $('scope');
+  const sg = scope.getContext('2d');
+  let analyser = null;
+  let waveBuf = null;
+
+  function roundRect(g, x, y, w, h, r) {
+    g.beginPath();
+    g.moveTo(x + r, y);
+    g.arcTo(x + w, y, x + w, y + h, r);
+    g.arcTo(x + w, y + h, x, y + h, r);
+    g.arcTo(x, y + h, x, y, r);
+    g.arcTo(x, y, x + w, y, r);
+    g.closePath();
+  }
+
+  function drawScope() {
+    const W = scope.width;
+    const H = scope.height;
+    sg.clearRect(0, 0, W, H);
+    // 深色示波器底
+    const bg = sg.createLinearGradient(0, 0, 0, H);
+    bg.addColorStop(0, '#1d2f41');
+    bg.addColorStop(1, '#131f2b');
+    sg.fillStyle = bg;
+    sg.fillRect(0, 0, W, H);
+    // 网格
+    sg.strokeStyle = 'rgba(159, 224, 255, 0.1)';
+    sg.lineWidth = 1;
+    for (let x = 0; x <= W; x += W / 16) {
+      sg.beginPath(); sg.moveTo(x, 0); sg.lineTo(x, H); sg.stroke();
+    }
+    for (let y = 0; y <= H; y += H / 6) {
+      sg.beginPath(); sg.moveTo(0, y); sg.lineTo(W, y); sg.stroke();
+    }
+    // 中轴
+    sg.strokeStyle = 'rgba(159, 224, 255, 0.24)';
+    sg.setLineDash([6, 7]);
+    sg.beginPath(); sg.moveTo(0, H / 2); sg.lineTo(W, H / 2); sg.stroke();
+    sg.setLineDash([]);
+
+    if (!analyser) {
+      try { analyser = A && A.__analyser ? A.__analyser() : null; } catch (e) { analyser = null; }
+    }
+
+    if (analyser) {
+      if (!waveBuf || waveBuf.length !== analyser.fftSize) waveBuf = new Uint8Array(analyser.fftSize);
+      analyser.getByteTimeDomainData(waveBuf);
+      let sum = 0;
+      for (let i = 0; i < waveBuf.length; i++) {
+        const v = (waveBuf[i] - 128) / 128;
+        sum += v * v;
+      }
+      const rms = Math.sqrt(sum / waveBuf.length);
+      const db = rms > 0.0002 ? 20 * Math.log10(rms) : -Infinity;
+      $('scope-level').textContent = 'LIVE';
+      $('scope-db').textContent = isFinite(db) ? db.toFixed(1) + ' dB' : '−∞ dB';
+      // 波形（发光绿线 + 顶部黄色高光）
+      sg.save();
+      sg.shadowColor = 'rgba(140, 235, 150, 0.85)';
+      sg.shadowBlur = 10;
+      const grad = sg.createLinearGradient(0, 0, W, 0);
+      grad.addColorStop(0, '#7ef0b0');
+      grad.addColorStop(0.55, '#c8f76e');
+      grad.addColorStop(1, '#ffd93d');
+      sg.strokeStyle = grad;
+      sg.lineWidth = 2.4;
+      sg.beginPath();
+      const step = Math.max(1, Math.floor(waveBuf.length / W));
+      for (let x = 0; x < W; x++) {
+        const i = Math.min(waveBuf.length - 1, x * step);
+        const y = H / 2 + ((waveBuf[i] - 128) / 128) * (H / 2 - 12);
+        if (x === 0) sg.moveTo(x, y); else sg.lineTo(x, y);
+      }
+      sg.stroke();
+      sg.restore();
+      // 峰值保持条
+      const meterW = Math.round((W - 20) * Math.min(1, rms * 3.2));
+      sg.fillStyle = 'rgba(255, 217, 61, 0.85)';
+      roundRect(sg, 10, H - 14, Math.max(3, meterW), 6, 3);
+      sg.fill();
+    } else {
+      // 未启用：画一条柔和的空闲正弦线，并提示点击
+      $('scope-level').textContent = '等待启用';
+      const t = performance.now() / 1000;
+      sg.strokeStyle = 'rgba(159, 224, 255, 0.55)';
+      sg.lineWidth = 2;
+      sg.beginPath();
+      for (let x = 0; x < W; x++) {
+        const y = H / 2 + Math.sin(x / W * Math.PI * 3 + t * 1.6) * (H * 0.05);
+        if (x === 0) sg.moveTo(x, y); else sg.lineTo(x, y);
+      }
+      sg.stroke();
+      sg.fillStyle = 'rgba(159, 224, 255, 0.55)';
+      sg.font = '700 13px ui-monospace, Consolas, monospace';
+      sg.fillText('点击任意按钮启用声音…', 16, 28);
+    }
+    requestAnimationFrame(drawScope);
+  }
+
+  // ==================================================================
+  // 8. 离线自检（不需要用户手势）
+  // ==================================================================
+  let offlineBusy = false;
+
+  function renderOffline(res) {
+    const sum = $('offline-sum');
+    const body = $('offline-body');
+    const sfxTotal = res.sfx.length;
+    const musicTotal = res.music.length;
+    const sfxOk = res.sfx.filter((x) => x.ok).length;
+    const musicOk = res.music.filter((x) => x.ok).length;
+    const allOk = sfxOk === sfxTotal && musicOk === musicTotal && !res.errors.length;
+    sum.textContent = '音效 ' + sfxOk + '/' + sfxTotal + ' · 音乐 ' + musicOk + '/' + musicTotal +
+      ' · 峰值 ' + res.peakSfx.toFixed(2) + ' / ' + res.peakMusic.toFixed(2) +
+      (res.elapsed ? ' · 耗时 ' + res.elapsed.toFixed(1) + 's' : '');
+    sum.classList.remove('ok', 'bad');
+    sum.classList.add(allOk ? 'ok' : 'bad');
+
+    const badge = $('badge-offline');
+    badge.textContent = allOk ? ('离线自检 ✓ ' + (sfxOk + musicOk) + '/' + (sfxTotal + musicTotal)) : '离线自检 有异常';
+    badge.classList.remove('warn', 'bad');
+    if (!allOk) badge.classList.add('bad');
+
+    const chips = document.createElement('div');
+    chips.className = 'chips';
+    const addChip = (label, peak, ok, isCue) => {
+      const c = document.createElement('span');
+      c.className = 'chip' + (ok ? (isCue ? ' cue' : '') : ' bad');
+      c.appendChild(document.createTextNode((ok ? '✓ ' : '✗ ') + label + ' '));
+      const i = document.createElement('i');
+      i.textContent = peak.toFixed(2);
+      c.appendChild(i);
+      chips.appendChild(c);
+    };
+    for (let i = 0; i < res.sfx.length; i++) addChip(res.sfx[i].name, res.sfx[i].peak, res.sfx[i].ok, false);
+    for (let i = 0; i < res.music.length; i++) addChip(res.music[i].cue, res.music[i].peak, res.music[i].ok, true);
+    body.textContent = '';
+    body.appendChild(chips);
+    if (res.errors.length) {
+      const n = document.createElement('div');
+      n.className = 'offline-note';
+      n.textContent = '异常：' + res.errors.join(' | ');
+      body.appendChild(n);
+    }
+  }
+
+  async function runOffline() {
+    if (offlineBusy) return;
+    offlineBusy = true;
+    const sum = $('offline-sum');
+    const body = $('offline-body');
+    if (!A || !A.__test || typeof A.__test.offlineCheck !== 'function') {
+      sum.textContent = 'PG.audio 未加载，跳过离线自检';
+      sum.classList.add('bad');
+      offlineBusy = false;
+      return;
+    }
+    body.innerHTML = '<div class="chips"><span class="chip">渲染中…</span></div>';
+    sum.textContent = '准备渲染…';
+    try {
+      const t0 = Date.now();
+      const res = await A.__test.offlineCheck({
+        onProgress: (done, total, label) => {
+          const el = ((Date.now() - t0) / 1000).toFixed(2);
+          sum.textContent = Math.round((done / total) * 100) + '% · ' + label + ' · ' + el + 's';
+        },
+      });
+      res.elapsed = (Date.now() - t0) / 1000;
+      renderOffline(res);
+    } catch (e) {
+      sum.textContent = '离线自检抛错：' + (e && e.message);
+      sum.classList.add('bad');
+      reportError('offlineCheck 抛错: ' + (e && e.message));
+    } finally {
+      offlineBusy = false;
+    }
+  }
+
+  // ==================================================================
+  // 9. 自动演示（无头截图用：?auto=1）
+  // ==================================================================
+  const AUTO = /(^|[?&])auto=1(&|$)/.test(location.search);
+
+  async function autoDemo() {
+    await sleep(120);
+    const ready = ensureAudio();
+    if (!ready) return;
+    const demo = ['select', 'shot', 'hit', 'crit', 'kill', 'levelup', 'heal', 'wave'];
+    for (let i = 0; i < demo.length; i++) {
+      try { A.sfx(demo[i]); } catch (e) { reportError('sfx(' + demo[i] + '): ' + (e && e.message)); }
+      markPlayed(demo[i]);
+      updateLastPlayed(demo[i], (SFX_LIST.find((x) => x[0] === demo[i]) || [demo[i], demo[i]])[1]);
+      await sleep(150);
+    }
+    playCue('title');
+    await sleep(120);
+    playCue('title'); // 幂等验证：同一 cue 不应重启
+    $('play-all').textContent = '▶ 全部试听';
+  }
+
+  // ==================================================================
+  // 10. 启动
+  // ==================================================================
+  function boot() {
+    // 把模块脚本加载期捕获的早期错误也并入错误面板
+    const early = Array.isArray(window.__earlyErrors) ? window.__earlyErrors : [];
+    for (let i = 0; i < early.length; i++) reportError('[early] ' + early[i]);
+    buildUI();
+    bindControls();
+    checkApi();
+    requestAnimationFrame(drawScope);
+    setInterval(updateStatus, 400);
+    updateStatus();
+    // 测试模式：自动演示与离线自检并行，这样截图既能看见播放状态，也能看见离线渲染结果
+    if (AUTO) autoDemo();
+    runOffline();
+  }
+
+  try {
+    boot();
+  } catch (e) {
+    reportError('启动异常: ' + (e && e.message));
+  }
+})();
+</script>
+</body>
+</html>

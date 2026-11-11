@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>PG.models 自测 · 宝可梦与训练家模型库</title>
+<style>
+  :root { --ink:#24313f; --yellow:#ffcb05; --red:#e8453c; --green:#4e9c3f; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; height:100%; overflow:hidden; background:#dff2ff;
+    font-family:'PingFang SC','Microsoft YaHei','YouYuan','幼圆',system-ui,sans-serif; color:var(--ink); }
+  #err { position:fixed; z-index:99; left:0; right:0; top:0; display:none; padding:10px 16px;
+    background:rgba(232,69,60,.95); color:#fff; font-size:14px; font-weight:700; white-space:pre-wrap; }
+  #stage { position:relative; width:100vw; height:calc(100vh - 140px); overflow:hidden; }
+  #view { position:absolute; inset:0; width:100%; height:100%; display:block; }
+  #labels { position:absolute; inset:0; pointer-events:none; }
+  .label { position:absolute; transform:translate(-50%,-100%); white-space:nowrap;
+    padding:2px 8px 3px; border-radius:9px; background:rgba(255,255,255,.92);
+    border:2px solid #ffcb05; box-shadow:0 3px 8px rgba(36,49,63,.18);
+    font-size:12px; font-weight:800; letter-spacing:.4px; color:#24313f; }
+  .label i { font-style:normal; font-weight:600; font-size:10px; color:#6b7a8a; margin-left:4px; }
+  #hud { position:absolute; left:14px; top:14px; padding:8px 14px; border-radius:14px;
+    background:rgba(255,255,255,.9); border:3px solid var(--yellow);
+    box-shadow:0 6px 16px rgba(36,49,63,.16); font-size:13px; font-weight:700; line-height:1.55; }
+  #hud b { color:#e8453c; }
+  #hud .ok { color:var(--green); }
+  #hud .bad { color:var(--red); }
+  #gallery { height:140px; padding:8px 12px; display:flex; align-items:center; gap:14px;
+    background:linear-gradient(#ffffff, #eef7ff); border-top:3px solid var(--yellow);
+    box-shadow:0 -6px 20px rgba(36,49,63,.10); overflow:hidden; }
+  .gsec { display:flex; align-items:center; gap:8px; }
+  .card { display:flex; flex-direction:column; align-items:center; gap:2px; }
+  .card canvas { display:block; border-radius:12px; box-shadow:0 3px 8px rgba(36,49,63,.16); }
+  .card span { font-size:10px; font-weight:700; color:#5b6a7a; }
+  .vline { width:2px; height:96px; background:#dbe6ef; border-radius:1px; }
+  #gtitle { writing-mode:vertical-rl; font-size:12px; font-weight:800; color:#8a9aab; letter-spacing:2px; }
+  /* stats 视图 */
+  #stats { position:fixed; inset:0; overflow:auto; padding:18px 22px 40px; background:#f2f9ff; display:none; }
+  #stats h1 { font-size:20px; margin:0 0 4px; letter-spacing:1px; }
+  #stats h1 small { font-size:12px; color:#6b7a8a; font-weight:600; letter-spacing:0; margin-left:8px; }
+  table { border-collapse:collapse; margin-top:12px; font-size:12px; background:#fff;
+    border-radius:12px; overflow:hidden; box-shadow:0 4px 14px rgba(36,49,63,.10); }
+  th, td { padding:5px 10px; border-bottom:1px solid #e8f0f6; text-align:center; white-space:nowrap; }
+  th { background:#ffcb05; color:#24313f; font-weight:800; }
+  tr:nth-child(even) td { background:#fafdff; }
+  td.l { text-align:left; font-weight:700; }
+  .pass { color:#2f8a3f; font-weight:800; }
+  .fail { color:#e8453c; font-weight:800; }
+  #checks { margin-top:14px; font-size:13px; line-height:1.9; background:#fff; padding:12px 16px;
+    border-radius:12px; box-shadow:0 4px 14px rgba(36,49,63,.10); max-width:1180px; }
+  /* 2d 画廊视图 */
+  #gallery2d { position:fixed; inset:0; overflow:auto; padding:20px 26px 40px; background:#f2f9ff; display:none; }
+  #gallery2d h1 { font-size:20px; margin:0 0 14px; }
+  #gallery2d .row { display:flex; flex-wrap:wrap; gap:14px; margin-bottom:22px; }
+  #gallery2d .big { display:flex; flex-direction:column; align-items:center; gap:5px;
+    background:#fff; padding:8px; border-radius:16px; box-shadow:0 4px 14px rgba(36,49,63,.12); }
+  #gallery2d .big span { font-size:12px; font-weight:800; }
+  #gallery2d .big small { font-size:10px; color:#7a8a9a; }
+  #soloTag { position:absolute; left:50%; bottom:18px; transform:translateX(-50%);
+    padding:8px 18px; border-radius:16px; background:rgba(255,255,255,.94); border:3px solid var(--yellow);
+    font-weight:800; box-shadow:0 6px 18px rgba(36,49,63,.16); display:none; font-size:14px; }
+</style>
+</head>
+<body>
+<div id="err"></div>
+<div id="stage">
+  <canvas id="view"></canvas>
+  <div id="labels"></div>
+  <div id="hud">加载中…</div>
+  <div id="soloTag"></div>
+</div>
+<div id="gallery"><div id="gtitle">头像</div><div class="gsec" id="gTrainers"></div><div class="vline"></div><div class="gsec" id="gIcons"></div></div>
+<div id="stats"></div>
+<div id="gallery2d"></div>
+
+<script>
+  // 错误可视化：页面内所有 JS 错误 / Promise 拒绝都显示在顶部红条
+  window.__ERRORS__ = [];
+  function __showErr(msg) {
+    window.__ERRORS__.push(msg);
+    var el = document.getElementById('err');
+    if (!el) return;
+    el.style.display = 'block';
+    el.textContent = 'JS 错误：' + msg;
+  }
+  window.onerror = function (m, src, line, col) { __showErr(m + '  @' + (src || '') + ':' + line + ':' + col); };
+  window.addEventListener('unhandledrejection', function (e) { __showErr('Promise: ' + (e.reason && e.reason.message || e.reason)); });
+</script>
+<script src="../vendor/three.min.js"></script>
+<script src="../src/30-models.js"></script>
+<script>
+(function () {
+  'use strict';
+  var Q = new URLSearchParams(location.search);
+  var VIEW = Q.get('view') || '3d';
+  var FOCUS = Q.get('solo') ? Q.get('solo').split(',').filter(Boolean) : [];
+  var SOLO = FOCUS.length === 1 ? FOCUS[0] : null;
+  var ANG = Q.has('a') ? (parseFloat(Q.get('a')) || 0) * Math.PI / 180 : -0.42;
+  var errors = window.__ERRORS__;
+  var M = window.PG && window.PG.models;
+  var hud = document.getElementById('hud');
+
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+
+  if (!M) {
+    hud.innerHTML = '<b>PG.models 未定义！</b>';
+    return;
+  }
+
+  var info = {};
+  M.POKEMON.forEach(function (id) { info[id] = M.info(id); });
+  M.TRAINERS.forEach(function (id) { info[id] = M.info(id); });
+
+  // ---------------- 2D 画廊（底部条） ----------------
+  (function buildStrip() {
+    var gt = document.getElementById('gTrainers');
+    M.TRAINERS.forEach(function (id) {
+      var card = el('div', 'card');
+      var c = M.portrait(id, 72);
+      if (c) card.appendChild(c); else card.appendChild(el('span', '', 'ERR'));
+      card.appendChild(el('span', '', info[id].cn));
+      gt.appendChild(card);
+    });
+    var gi = document.getElementById('gIcons');
+    M.POKEMON.forEach(function (id) {
+      var card = el('div', 'card');
+      var c = M.icon(id, 40);
+      if (c) card.appendChild(c);
+      card.appendChild(el('span', '', info[id].cn));
+      gi.appendChild(card);
+    });
+  })();
+
+  // ---------------- 2D 大画廊视图 ----------------
+  if (VIEW === '2d') {
+    document.getElementById('stage').style.display = 'none';
+    document.getElementById('gallery').style.display = 'none';
+    var box = document.getElementById('gallery2d');
+    box.style.display = 'block';
+    box.appendChild(el('h1', '', '训练家头像 portrait(id, 200)　·　宝可梦图标 icon(id, 116)'));
+    var row1 = el('div', 'row');
+    M.TRAINERS.forEach(function (id) {
+      var d = el('div', 'big');
+      d.appendChild(M.portrait(id, 200));
+      d.appendChild(el('span', '', info[id].cn + ' / ' + info[id].en));
+      d.appendChild(el('small', '', 'portrait 200×200　type=' + info[id].type));
+      row1.appendChild(d);
+    });
+    box.appendChild(row1);
+    var row2 = el('div', 'row');
+    M.POKEMON.forEach(function (id) {
+      var d = el('div', 'big');
+      d.appendChild(M.icon(id, 116));
+      d.appendChild(el('span', '', info[id].cn));
+      d.appendChild(el('small', '', id + ' / ' + info[id].type + ' / ' + info[id].kind));
+      row2.appendChild(d);
+    });
+    box.appendChild(row2);
+    var row3 = el('div', 'row');
+    M.POKEMON.forEach(function (id) {
+      var d = el('div', 'big');
+      d.appendChild(M.icon(id, 40));
+      d.appendChild(el('span', '', info[id].cn));
+      d.appendChild(el('small', '', '40px HUD 尺寸'));
+      row3.appendChild(d);
+    });
+    box.appendChild(row3);
+    return;
+  }
+
+  var stats = [];
+  (function gatherStats() {
+    var ids = M.POKEMON.concat(M.TRAINERS);
+    ids.forEach(function (id) {
+      if (!M.has(id)) return;
+      var t0 = performance.now();
+      var isT = id.indexOf('t_') === 0;
+      var inst = isT ? M.makeTrainer(id) : M.make(id);
+      var ms = performance.now() - t0;
+      var box = new THREE.Box3().setFromObject(inst.group);
+      var meshes = 0; inst.group.traverse(function (o) { if (o.isMesh) meshes++; });
+      stats.push({ id: id, cn: (info[id] || {}).cn || id, height: inst.height, radius: inst.radius,
+        minY: box.min.y, maxY: box.max.y, meshes: meshes, ms: ms, kind: (info[id] || {}).kind || 'trainer' });
+    });
+  })();
+
+  // ---------------- 质量自检 ----------------
+  var checks = [];
+  function check(name, fn) {
+    try {
+      var r = fn();
+      var isStr = typeof r === 'string';
+      checks.push({ name: name, ok: r === true, detail: isStr ? r : (r ? '' : '返回 ' + r) });
+    } catch (e) { checks.push({ name: name, ok: false, detail: '异常 ' + e.message }); }
+  }
+  check('PG.models 契约 API 完整（make/makeTrainer/portrait/icon/info/has/POKEMON/TRAINERS）', function () {
+    return typeof M.make === 'function' && typeof M.makeTrainer === 'function' && typeof M.portrait === 'function' &&
+      typeof M.icon === 'function' && typeof M.info === 'function' && typeof M.has === 'function' &&
+      Array.isArray(M.POKEMON) && M.POKEMON.length === 18 && M.TRAINERS.length === 4;
+  });
+  check('18 只宝可梦 + 4 名训练家 id 可构建且 info 字段正确', function () {
+    var allowedTypes = ['electric','grass','fire','water','bug','flying','poison','normal','psychic','ghost','rock'];
+    var allowedKinds = ['starter','enemy','elite','boss'];
+    var bad = [];
+    M.POKEMON.forEach(function (id) {
+      var i = M.info(id);
+      if (!i || !i.cn || !i.en || allowedTypes.indexOf(i.type) < 0 || allowedKinds.indexOf(i.kind) < 0 || !(i.scale > 0)) bad.push(id);
+    });
+    M.TRAINERS.forEach(function (id) {
+      var i = M.info(id);
+      if (!i || !i.cn || !i.en || allowedTypes.indexOf(i.type) < 0) bad.push(id);
+    });
+    return bad.length ? '异常 ' + bad.join(',') : true;
+  });
+  check('portrait / icon 返回方形 Canvas 且尺寸正确、非空白', function () {
+    var bad = [];
+    M.POKEMON.forEach(function (id) {
+      var c = M.icon(id, 64);
+      if (!c || c.width !== 64 || c.height !== 64) { bad.push('icon:' + id); return; }
+      var d = c.getContext('2d').getImageData(0, 0, 64, 64).data;
+      var sum = 0; for (var i = 0; i < d.length; i += 4) sum += d[i] + d[i + 1] + d[i + 2];
+      if (sum < 1000) bad.push('blank:' + id);
+    });
+    M.TRAINERS.forEach(function (id) {
+      var c = M.portrait(id, 128);
+      if (!c || c.width !== 128 || c.height !== 128) bad.push('portrait:' + id);
+    });
+    return bad.length ? '异常 ' + bad.join(',') : true;
+  });
+  check('每只模型脚底 y≈0（-0.01~0.01）', function () {
+    var bad = [];
+    stats.forEach(function (s) {
+      if (s.minY < -0.012 || s.minY > 0.012) bad.push(s.id + '(' + s.minY.toFixed(3) + ')');
+    });
+    return bad.length ? '异常 ' + bad.join(',') : true;
+  });
+  check('正面朝 -Z：头部节点在模型 z≤0.08 的前侧', function () {
+    var bad = [];
+    stats.forEach(function (s) {
+      var inst = s.id.indexOf('t_') === 0 ? M.makeTrainer(s.id) : M.make(s.id);
+      var head = null;
+      inst.group.traverse(function (o) { if (!head && o.name === 'head') head = o; });
+      var z = 0;
+      if (head) {
+        var v = new THREE.Vector3(); head.getWorldPosition(v);
+        z = v.z;
+      }
+      if (z > 0.08) bad.push(s.id + '(z=' + z.toFixed(2) + ')');
+    });
+    return bad.length ? '异常 ' + bad.join(',') : true;
+  });
+  check('高度符合契约区间：小型 0.6~0.9 / 中型 1.0~1.5 / 卡比兽≈2.2 / 超梦≈1.9 / 训练家≈1.8', function () {
+    var bad = [];
+    M.POKEMON.forEach(function (s) {
+      var h = s.height, id = s.id;
+      if (id === 'snorlax') { if (Math.abs(h - 2.2) > 0.25) bad.push(id + ':' + h.toFixed(2)); }
+      else if (id === 'mewtwo') { if (Math.abs(h - 1.9) > 0.2) bad.push(id + ':' + h.toFixed(2)); }
+      else if (['caterpie','weedle','pidgey','oddish','gastly','jigglypuff'].indexOf(id) >= 0) {
+        if (h < 0.5 || h > 0.95) bad.push(id + ':' + h.toFixed(2));
+      } else if (['beedrill','scyther','gengar','onix','meowth','psyduck'].indexOf(id) >= 0) {
+        if (h < 0.85 || h > 1.6) bad.push(id + ':' + h.toFixed(2));
+      } else if (h < 0.55 || h > 1.25) bad.push(id + ':' + h.toFixed(2));
+    });
+    M.TRAINERS.forEach(function (s) { if (Math.abs(s.height - 1.8) > 0.25) bad.push(s.id + ':' + s.height.toFixed(2)); });
+    return bad.length ? '异常 ' + bad.join(',') : true;
+  });
+  check('单模型 draw call（合并后 mesh 数）< 12', function () {
+    var bad = [];
+    stats.forEach(function (s) { if (s.meshes > 12) bad.push(s.id + ':' + s.meshes); });
+    return bad.length ? '异常 ' + bad.join(',') : true;
+  });
+  check('update(dt,t) 可调用且节点变换发生变化（动画确实在动）', function () {
+    var bad = [];
+    stats.forEach(function (s) {
+      var inst = s.id.indexOf('t_') === 0 ? M.makeTrainer(s.id) : M.make(s.id);
+      var nodes = [];
+      inst.group.traverse(function (o) { if (o !== inst.group) nodes.push(o); });
+      function snap() {
+        var sum = 0;
+        for (var j = 0; j < nodes.length; j++) {
+          var o = nodes[j];
+          sum += o.position.y * 3.1 + o.rotation.x * 2.3 + o.rotation.z * 1.7 + o.scale.y * 1.3;
+        }
+        return sum;
+      }
+      var before = snap();
+      for (var k = 0; k < 40; k++) inst.update(0.016, k * 0.05);
+      var after = snap();
+      if (Math.abs(after - before) < 1e-5) bad.push(s.id + ':无动画');
+      if (typeof inst.height !== 'number' || !inst.group) bad.push(s.id + ':返回值缺字段');
+    });
+    return bad.length ? '异常 ' + bad.join(',') : true;
+  });
+  check('训练家 handAnchor 存在（供 90-main 挂武器）', function () {
+    var bad = [];
+    M.TRAINERS.forEach(function (id) {
+      var t = M.makeTrainer(id);
+      if (!t.handAnchor) bad.push(id);
+    });
+    return bad.length ? '异常 ' + bad.join(',') : true;
+  });
+
+  // ---------------- stats 视图 ----------------
+  if (VIEW === 'stats') {
+    document.getElementById('stage').style.display = 'none';
+    document.getElementById('gallery').style.display = 'none';
+    var st = document.getElementById('stats');
+    st.style.display = 'block';
+    st.appendChild(el('h1', '', 'PG.models 质量报告　<small>高度单位：米（脚底 y=0）· meshes = 合并后 draw call 数</small>'));
+    var tbl = el('table');
+    var thead = el('tr');
+    ['id', '中文名', 'kind', '实测高度', '碰撞半径', '脚底 minY', '顶点最高', 'meshes', '构建 ms'].forEach(function (h) { thead.appendChild(el('th', '', h)); });
+    tbl.appendChild(thead);
+    var totalMeshes = 0, totalMs = 0;
+    stats.forEach(function (s) {
+      totalMeshes += s.meshes; totalMs += s.ms;
+      var tr = el('tr');
+      [s.id, s.cn, s.kind, s.height.toFixed(2), s.radius == null ? '—' : s.radius.toFixed(2), s.minY.toFixed(3), s.maxY.toFixed(2), s.meshes, s.ms.toFixed(1)]
+        .forEach(function (v, i) { tr.appendChild(el('td', i === 0 || i === 1 ? 'l' : '', String(v))); });
+      tbl.appendChild(tr);
+    });
+    st.appendChild(tbl);
+    var sum = el('div', '', '合计：22 个模型 · 合并后 mesh 总数 ' + totalMeshes + ' · 模板构建总耗时 ' + totalMs.toFixed(1) + ' ms · 单模型平均 ' + (totalMeshes / stats.length).toFixed(1) + ' draw call');
+    sum.style.cssText = 'margin-top:10px;font-weight:800;font-size:13px;';
+    st.appendChild(sum);
+    // 质量自检结果
+    var cbox = el('div');
+    cbox.id = 'checks';
+    cbox.appendChild(el('h1', '', '质量自检　<small>' + checks.filter(function (c) { return c.ok; }).length + '/' + checks.length + ' 通过</small>'));
+    checks.forEach(function (c) {
+      var row = el('div', c.ok ? 'pass' : 'fail', (c.ok ? '✓ ' : '✗ ') + c.name + (c.detail ? '　—　' + c.detail : ''));
+      cbox.appendChild(row);
+    });
+    st.appendChild(cbox);
+    // 3D 视角下若有失败也提示到 HUD
+    if (checks.some(function (c) { return !c.ok; })) {
+      document.getElementById('hud').innerHTML = '<b>自检失败：</b>' + checks.filter(function (c) { return !c.ok; }).length + ' 项';
+    }
+    return;
+  }
+
+  // ---------------- 3D 场景 ----------------
+  var canvas = document.getElementById('view');
+  var stage = document.getElementById('stage');
+  var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: false });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  var scene = new THREE.Scene();
+  // 天空渐变背景
+  (function sky() {
+    var c = document.createElement('canvas');
+    c.width = 4; c.height = 256;
+    var g = c.getContext('2d');
+    var gr = g.createLinearGradient(0, 0, 0, 256);
+    gr.addColorStop(0, '#8ed4ff');
+    gr.addColorStop(0.55, '#cdeeff');
+    gr.addColorStop(1, '#efffe0');
+    g.fillStyle = gr; g.fillRect(0, 0, 4, 256);
+    var tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    scene.background = tex;
+  })();
+  scene.fog = new THREE.Fog(0xd7f0ff, 16, 42);
+
+  var camera = new THREE.PerspectiveCamera(42, 1, 0.1, 120);
+
+  // 灯光：明亮卡通
+  var hemi = new THREE.HemisphereLight(0xdff4ff, 0x7fae5a, 1.45);
+  scene.add(hemi);
+  var amb = new THREE.AmbientLight(0xffffff, 0.16);
+  scene.add(amb);
+  var sun = new THREE.DirectionalLight(0xfff6e2, 2.5);
+  sun.position.set(6.5, 11, 5.5);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(1024, 1024);
+  sun.shadow.camera.near = 1;
+  sun.shadow.camera.far = 34;
+  sun.shadow.camera.left = -9; sun.shadow.camera.right = 9;
+  sun.shadow.camera.top = 9; sun.shadow.camera.bottom = -9;
+  sun.shadow.bias = -0.0008;
+  sun.shadow.normalBias = 0.02;
+  scene.add(sun);
+  var rim = new THREE.DirectionalLight(0x9fe0ff, 0.85);
+  rim.position.set(-7, 5, -8);
+  scene.add(rim);
+
+  // 草地
+  var groundMat = new THREE.MeshStandardMaterial({ color: 0x8cdb63, roughness: 0.96, metalness: 0 });
+  var ground = new THREE.Mesh(new THREE.CircleGeometry(17, 56), groundMat);
+  ground.rotation.x = -Math.PI / 2;
+  ground.receiveShadow = true;
+  scene.add(ground);
+  var ringMat = new THREE.MeshStandardMaterial({ color: 0x6fc04a, roughness: 1 });
+  var ring = new THREE.Mesh(new THREE.RingGeometry(16.2, 17, 56), ringMat);
+  ring.rotation.x = -Math.PI / 2;
+  scene.add(ring);
+  // 草地上的小花点（InstancedMesh 控制 draw call）
+  (function flowers() {
+    var geo = new THREE.SphereGeometry(0.05, 6, 5);
+    var mat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.8 });
+    var count = 90;
+    var inst = new THREE.InstancedMesh(geo, mat, count);
+    var dummy = new THREE.Object3D();
+    var col = new THREE.Color();
+    var palette = [0xffe066, 0xff9fc0, 0xffffff, 0xffb43d];
+    for (var i = 0; i < count; i++) {
+      var a = Math.random() * Math.PI * 2, r = 3 + Math.random() * 13;
+      dummy.position.set(Math.cos(a) * r, 0.05, Math.sin(a) * r);
+      dummy.scale.setScalar(0.7 + Math.random() * 0.8);
+      dummy.updateMatrix();
+      inst.setMatrixAt(i, dummy.matrix);
+      inst.setColorAt(i, col.setHex(palette[i % palette.length]));
+    }
+    inst.instanceMatrix.needsUpdate = true;
+    scene.add(inst);
+  })();
+
+  // ---------------- 放置模型 ----------------
+  var placed = [];   // {obj, labelEl, height}
+  var labelsEl = document.getElementById('labels');
+  var positions = {
+    pokemon: [],
+    trainers: [],
+  };
+  M.POKEMON.forEach(function (id, i) {
+    var col = i % 6, row = Math.floor(i / 6);
+    positions.pokemon.push({ id: id, x: (col - 2.5) * 2.05, z: -2.5 + row * 2.15 });
+  });
+  M.TRAINERS.forEach(function (id, i) {
+    positions.trainers.push({ id: id, x: (i - 1.5) * 2.4, z: 4.6 });
+  });
+
+  var models = {};
+  function addModel(id, x, z) {
+    var isT = id.indexOf('t_') === 0;
+    var inst = isT ? M.makeTrainer(id) : M.make(id);
+    inst.group.position.set(x, 0, z);
+    // 让模型微微朝向镜头方向（-Z 是正面，绕 Y 轻微错开避免完全整齐）
+    inst.group.rotation.y = (Math.random() - 0.5) * 0.5;
+    scene.add(inst.group);
+    models[id] = inst;
+    var lab = el('div', 'label');
+    var inf = info[id];
+    lab.innerHTML = inf.cn + '<i>' + inf.en + '</i>';
+    labelsEl.appendChild(lab);
+    placed.push({ obj: inst, el: lab, height: inst.height, id: id });
+    return inst;
+  }
+
+  if (FOCUS.length) {
+    document.getElementById('gallery').style.display = 'none';
+    stage.style.height = '100vh';
+    var spacing = 1.75;
+    var totalW = (FOCUS.length - 1) * spacing;
+    FOCUS.forEach(function (id, i) {
+      if (!M.has(id)) return;
+      var isT = id.indexOf('t_') === 0;
+      var inst = isT ? M.makeTrainer(id) : M.make(id);
+      inst.group.position.set(i * spacing - totalW / 2, 0, 0);
+      scene.add(inst.group);
+      models[id] = inst;
+      var lab = el('div', 'label');
+      var inf = info[id];
+      lab.innerHTML = inf.cn + '<i>' + inf.en + ' · ' + id + '</i>';
+      labelsEl.appendChild(lab);
+      placed.push({ obj: inst, el: lab, height: inst.height, id: id });
+    });
+    var maxH = 1;
+    placed.forEach(function (p) { maxH = Math.max(maxH, p.height); });
+    window.__FOCUS_GEO__ = { totalW: totalW, maxH: maxH };
+    var tag = document.getElementById('soloTag');
+    tag.style.display = 'block';
+    tag.textContent = FOCUS.join(' · ') + '　（脚底 y=0，正面朝 -Z）';
+  } else {
+    positions.pokemon.forEach(function (p) { addModel(p.id, p.x, p.z); });
+    positions.trainers.forEach(function (p) { addModel(p.id, p.x, p.z); });
+  }
+
+  // ---------------- 相机（自动环绕） ----------------
+  var cam = { angle: ANG, radius: 12.4, height: 4.85, target: new THREE.Vector3(0, 0.85, 0) };
+  if (window.__FOCUS_GEO__) {
+    var fg = window.__FOCUS_GEO__;
+    var halfHfov = Math.atan(Math.tan(THREE.MathUtils.degToRad(camera.fov) / 2) * Math.max(1.2, stage.clientWidth / Math.max(1, stage.clientHeight)));
+    cam.radius = Math.max(2.2, (fg.totalW / 2 + 1.6) / Math.tan(halfHfov));
+    cam.height = fg.maxH * 0.55 + 0.30;
+    cam.target.set(0, fg.maxH * 0.47, 0);
+  }
+  var camLook = new THREE.Vector3();
+  var autoRotate = !Q.has('norotate');
+
+  function resize() {
+    var w = stage.clientWidth, h = stage.clientHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  // ---------------- 主循环 ----------------
+  var clock = new THREE.Clock();
+  var fpsAcc = 0, fpsFrames = 0, fps = 0, drawCalls = 0;
+  var v3 = new THREE.Vector3();
+  var last = performance.now();
+  var elapsed = 0;
+
+  function projectLabels() {
+    var w = stage.clientWidth, h = stage.clientHeight;
+    for (var i = 0; i < placed.length; i++) {
+      var p = placed[i];
+      v3.setFromMatrixPosition(p.obj.group.matrixWorld);
+      v3.y += p.height * 1.02 + 0.12;
+      v3.project(camera);
+      var sx = (v3.x * 0.5 + 0.5) * w, sy = (-v3.y * 0.5 + 0.5) * h;
+      if (v3.z > 1) { p.el.style.display = 'none'; continue; }
+      p.el.style.display = 'block';
+      p.el.style.left = sx.toFixed(1) + 'px';
+      p.el.style.top = sy.toFixed(1) + 'px';
+    }
+  }
+
+  // ---------------- 性能基准（?bench=1）：同步渲染 20 只，测 draw call 与帧耗时 ----------------
+  if (Q.has('bench')) {
+    document.getElementById('gallery').style.display = 'none';
+    stage.style.height = '100vh';
+    // 清空默认摆位，改为 20 只环形摆放（相当于最坏情况的同屏敌人数量）
+    placed.forEach(function (p) { p.el.remove(); });
+    placed.length = 0;
+    Object.keys(models).forEach(function (k) {
+      scene.remove(models[k].group);
+    });
+    for (var k in models) delete models[k];
+    var ids20 = [];
+    for (var bi = 0; bi < 20; bi++) ids20.push(M.POKEMON[bi % M.POKEMON.length]);
+    var day = 0;
+    ids20.forEach(function (id, i) {
+      var a = (i / ids20.length) * Math.PI * 2;
+      var rr = 3.0 + (i % 3) * 0.55;
+      var inst = M.make(id);
+      inst.group.position.set(Math.cos(a) * rr, 0, Math.sin(a) * rr);
+      inst.group.rotation.y = -a + Math.PI;
+      scene.add(inst.group);
+      models['bench' + i] = inst;
+    });
+    cam.radius = 8.2; cam.height = 4.2; cam.target.set(0, 0.9, 0);
+    // 同步渲染 40 帧计时（不依赖 rAF，headless 虚拟时间下也能拿到数据）
+    var frames = 40, tStart = performance.now();
+    for (var fi = 0; fi < frames; fi++) {
+      for (var key in models) models[key].update(1 / 60, fi / 60);
+      camera.position.set(Math.sin(0.5) * cam.radius, cam.height, -Math.cos(0.5) * cam.radius);
+      camera.lookAt(cam.target);
+      renderer.render(scene, camera);
+    }
+    var msPerFrame = (performance.now() - tStart) / frames;
+    var info = renderer.info.render;
+    var perf = document.createElement('div');
+    perf.id = 'benchResult';
+    perf.style.cssText = 'position:fixed;left:24px;top:120px;z-index:50;padding:16px 22px;border-radius:16px;background:#fff;border:3px solid #ffcb05;box-shadow:0 8px 24px rgba(36,49,63,.2);font-size:15px;line-height:1.8;font-weight:700;';
+    perf.innerHTML = '性能基准（20 只宝可梦同屏 · SwiftShader 软件渲染）<br>' +
+      'draw calls：<b style="color:#e8453c">' + info.calls + '</b>　三角形：<b>' + info.triangles.toLocaleString() + '</b><br>' +
+      '同步渲染平均：<b>' + msPerFrame.toFixed(2) + ' ms/帧</b>（软件渲染 CPU 光栅化，真机 GPU 会显著更快）<br>' +
+      '<span style="font-size:12px;color:#6b7a8a;font-weight:600">注：headless 虚拟时间下 requestAnimationFrame 的 FPS 计数无效，故用同步计时</span>';
+    document.body.appendChild(perf);
+    return;
+  }
+
+  function animate() {
+    requestAnimationFrame(animate);
+    var dt = Math.min(clock.getDelta(), 0.05);
+    var now = performance.now();
+    elapsed += dt;
+
+    if (autoRotate) cam.angle += dt * 0.16;
+    var r = cam.radius;
+    camera.position.set(Math.sin(cam.angle) * r, cam.height, -Math.cos(cam.angle) * r);
+    camLook.copy(cam.target);
+    camera.lookAt(camLook);
+
+    for (var key in models) models[key].update(dt, elapsed);
+
+    renderer.render(scene, camera);
+    drawCalls = renderer.info.render.calls;
+    projectLabels();
+
+    // FPS 统计（每 0.5s 刷新一次显示）
+    fpsAcc += dt; fpsFrames++;
+    if (fpsAcc > 0.5) { fps = fpsFrames / fpsAcc; fpsAcc = 0; fpsFrames = 0; }
+    var errCount = errors.length + ((window.PG && window.PG.errors && window.PG.errors.length) || 0);
+    hud.innerHTML =
+      '宝可梦 <b>' + M.POKEMON.length + '</b> · 训练家 <b>' + M.TRAINERS.length + '</b><br>' +
+      'draw calls <b>' + drawCalls + '</b> · FPS <b>' + fps.toFixed(0) + '</b><br>' +
+      'JS 错误 <b class="' + (errCount ? 'bad' : 'ok') + '">' + errCount + '</b> · 模型高度 ' + placed.length + ' 个已渲染';
+  }
+  animate();
+})();
+</script>
+</body>
+</html>

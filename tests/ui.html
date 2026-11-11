@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>UI 自测 · 全屏界面</title>
+<link rel="stylesheet" href="../src/70-ui.css">
+<style>
+  /* 测试页专用：模拟 three.js 森林画面（标题/选角屏底下本来是 3D 实时背景） */
+  .mock-scene { position: fixed; inset: 0; z-index: 0; overflow: hidden; background: linear-gradient(180deg, #3aa0e8 0%, #9fe0ff 34%, #dff3d0 58%, #a9e072 78%, #6fae4a 100%); }
+  .mock-sun { position: absolute; left: 16%; top: 10%; width: 260px; height: 260px; border-radius: 50%; background: radial-gradient(circle, rgba(255, 246, 200, .95), rgba(255, 246, 200, 0) 68%); }
+  .mock-hill { position: absolute; bottom: 18%; border-radius: 50% 50% 0 0; background: linear-gradient(180deg, #8ed36a, #4e9c3f); }
+  .mock-hill.h1 { left: -8%; width: 70%; height: 34%; opacity: .9; }
+  .mock-hill.h2 { right: -12%; width: 66%; height: 40%; background: linear-gradient(180deg, #a4dd7e, #5aa844); }
+  .mock-ground { position: absolute; left: 0; right: 0; bottom: 0; height: 26%; background: linear-gradient(180deg, #7ec850, #4e9c3f 60%, #3c7a32); }
+  .mock-ground::before { content: ''; position: absolute; inset: 0; background: radial-gradient(60% 90% at 50% 0%, rgba(255, 255, 255, .22), rgba(255, 255, 255, 0) 60%); }
+  .mock-tree { position: absolute; bottom: 22%; width: 74px; height: 170px; }
+  .mock-tree::before { content: ''; position: absolute; left: 50%; bottom: 0; width: 16px; height: 62px; margin-left: -8px; border-radius: 6px; background: #7a5230; }
+  .mock-tree::after { content: ''; position: absolute; left: 50%; bottom: 40px; width: 110px; height: 128px; margin-left: -55px; border-radius: 50% 50% 46% 46%; background: radial-gradient(circle at 36% 28%, #a9e874, #62b046 62%, #3f8a33); box-shadow: 0 10px 24px rgba(20, 50, 20, .18); }
+  .mock-tree.t1 { left: 4%; transform: scale(.92); }
+  .mock-tree.t2 { right: 3%; transform: scale(1.06); }
+  .mock-tree.t3 { left: 16%; bottom: 26%; transform: scale(.66); opacity: .9; }
+  .mock-tree.t4 { right: 15%; bottom: 27%; transform: scale(.58); opacity: .85; }
+  .mock-figures { position: absolute; left: 50%; bottom: 17%; transform: translateX(-50%); display: flex; gap: 74px; }
+  .mock-fig { position: relative; width: 66px; height: 128px; }
+  .mock-fig .body { position: absolute; left: 50%; bottom: 0; width: 52px; height: 76px; margin-left: -26px; border-radius: 26px 26px 14px 14px; background: linear-gradient(180deg, #3aa0e8, #2b6fd6); box-shadow: 0 10px 22px rgba(20, 50, 80, .25); }
+  .mock-fig .head { position: absolute; left: 50%; top: 4px; width: 54px; height: 54px; margin-left: -27px; border-radius: 50%; background: #ffe2c4; box-shadow: inset 0 -6px 0 rgba(200, 150, 110, .28); }
+  .mock-fig .hair { position: absolute; left: 50%; top: 0; width: 58px; height: 34px; margin-left: -29px; border-radius: 29px 29px 8px 8px; background: #3b2a20; }
+  .mock-fig.f1 .body { background: linear-gradient(180deg, #ffe27a, #ffcb05); }
+  .mock-fig.f2 .body { background: linear-gradient(180deg, #9ee06f, #4e9c3f); }
+  .mock-fig.f3 .body { background: linear-gradient(180deg, #ffa76b, #ff7a2f); }
+  .mock-fig.f4 .body { background: linear-gradient(180deg, #7fd0ff, #2b8fd0); }
+
+  .test-nav {
+    position: fixed;
+    z-index: 900;
+    left: 50%;
+    top: 10px;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(20, 34, 48, .72);
+    color: #fff;
+    font: 900 12px/1 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, .28);
+    backdrop-filter: blur(6px);
+  }
+  .test-nav b { letter-spacing: .1em; opacity: .72; font-size: 11px; }
+  .test-nav button {
+    border: 0;
+    border-radius: 999px;
+    padding: 5px 11px;
+    background: rgba(255, 255, 255, .16);
+    color: #fff;
+    font: 800 11.5px/1 inherit;
+    cursor: pointer;
+  }
+  .test-nav button.on { background: #ffcb05; color: #3a2a00; }
+  .test-nav span { opacity: .6; font-size: 11px; margin-left: 4px; }
+  .test-err {
+    position: fixed;
+    z-index: 1000;
+    left: 12px;
+    bottom: 12px;
+    max-width: min(760px, 74vw);
+    max-height: 40vh;
+    overflow: auto;
+    white-space: pre-wrap;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: rgba(200, 36, 36, .95);
+    color: #fff;
+    font: 12px/1.5 ui-monospace, Consolas, monospace;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, .35);
+  }
+  body[data-hide-nav='1'] .test-nav { display: none; }
+  .test-dbg {
+    position: fixed;
+    z-index: 950;
+    left: 12px;
+    top: 12px;
+    max-width: min(560px, 46vw);
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: rgba(12, 22, 34, .86);
+    color: #9ff0a8;
+    font: 12px/1.55 ui-monospace, Consolas, monospace;
+    white-space: pre-wrap;
+    box-shadow: 0 10px 26px rgba(0, 0, 0, .35);
+  }
+</style>
+</head>
+<body data-screen="hidden">
+<div class="mock-scene">
+  <div class="mock-sun"></div>
+  <div class="mock-hill h1"></div>
+  <div class="mock-hill h2"></div>
+  <div class="mock-tree t1"></div>
+  <div class="mock-tree t2"></div>
+  <div class="mock-tree t3"></div>
+  <div class="mock-tree t4"></div>
+  <div class="mock-ground"></div>
+  <div class="mock-figures">
+    <div class="mock-fig f1"><i class="hair"></i><i class="head"></i><i class="body"></i></div>
+    <div class="mock-fig f2"><i class="hair"></i><i class="head"></i><i class="body"></i></div>
+    <div class="mock-fig f3"><i class="hair"></i><i class="head"></i><i class="body"></i></div>
+    <div class="mock-fig f4"><i class="hair"></i><i class="head"></i><i class="body"></i></div>
+  </div>
+</div>
+
+<div id="app">
+  <canvas id="view" style="display:none"></canvas>
+  <div id="ui"></div>
+  <div id="boot">
+    <div class="boot-mark">宝可梦</div>
+    <div class="boot-sub" id="boot-msg">正在进入森之秘境…</div>
+    <div class="boot-bar"><i id="boot-fill" style="width:62%"></i></div>
+  </div>
+  <div id="fatal"></div>
+</div>
+
+<nav class="test-nav" id="nav">
+  <b>UI 自测</b>
+  <button data-s="boot">启动</button>
+  <button data-s="title">标题</button>
+  <button data-s="select">选角</button>
+  <button data-s="pause">暂停</button>
+  <button data-s="dead">失败</button>
+  <button data-s="win">胜利</button>
+  <span id="now">—</span>
+</nav>
+<pre class="test-err" id="err" hidden></pre>
+
+<script>
+  // ---------------- 错误可视化（截图里能直接看到） ----------------
+  window.__errs = [];
+  function showErr(msg) {
+    window.__errs.push(String(msg));
+    var box = document.getElementById('err');
+    if (box) { box.hidden = false; box.textContent = window.__errs.join('\n\n'); }
+    var fatal = document.getElementById('fatal');
+    if (fatal) { fatal.style.display = 'block'; fatal.textContent = 'UI 测试错误：\n' + window.__errs.join('\n'); }
+  }
+  window.addEventListener('error', function (e) { showErr((e.error && e.error.stack) || e.message || e); });
+  window.addEventListener('unhandledrejection', function (e) { showErr('Promise: ' + (e.reason && (e.reason.stack || e.reason.message) || e.reason)); });
+  console.error = (function (orig) {
+    return function () { try { showErr(Array.prototype.join.call(arguments, ' ')); } catch (x) {} orig.apply(console, arguments); };
+  })(console.error);
+
+  // ---------------- 桩：PG.audio / PG.game ----------------
+  window.PG = {
+    audio: {
+      _v: 0.72,
+      _muted: false,
+      init: function () {},
+      sfx: function (name) { /* 记录最后几个音效，方便核对 hover/click */ var a = (window.__sfx = window.__sfx || []); a.push(name); if (a.length > 24) a.shift(); },
+      music: function (cue) { window.__music = cue; },
+      getVolume: function () { return this._v; },
+      setVolume: function (v) { this._v = v; },
+      setMuted: function (m) { this._muted = !!m; },
+      isMuted: function () { return this._muted; },
+      setDuck: function () {}
+    },
+    game: {
+      state: { mode: 'idle', wave: 3, waveTotal: 8, score: 4860, combo: 0, comboMax: 17, time: 142 },
+      char: null
+    }
+  };
+
+  // ---------------- 假头像 / 假伙伴图标（真实游戏里来自 PG.models） ----------------
+  var TYPE_COLOR = { electric: '#ffd93d', grass: '#8ed36a', fire: '#ff8a3d', water: '#5ab8f0' };
+  function makePortrait(id, color, skin, hairColor, outfit, size) {
+    var c = document.createElement('canvas');
+    c.width = c.height = size;
+    var x = c.getContext('2d');
+    var S = size;
+    var g = x.createLinearGradient(0, 0, S, S);
+    g.addColorStop(0, 'rgba(255,255,255,.95)');
+    g.addColorStop(0.55, color + '66');
+    g.addColorStop(1, color + 'bb');
+    x.fillStyle = g;
+    x.fillRect(0, 0, S, S);
+    // 光斑
+    x.fillStyle = 'rgba(255,255,255,.55)';
+    x.beginPath(); x.arc(S * 0.24, S * 0.2, S * 0.16, 0, Math.PI * 2); x.fill();
+    // 身体
+    x.fillStyle = outfit;
+    x.beginPath();
+    x.roundRect ? x.roundRect(S * 0.2, S * 0.66, S * 0.6, S * 0.42, S * 0.16) : x.rect(S * 0.2, S * 0.66, S * 0.6, S * 0.42);
+    x.fill();
+    // 脖子
+    x.fillStyle = skin;
+    x.fillRect(S * 0.44, S * 0.6, S * 0.12, S * 0.12);
+    // 头
+    x.beginPath(); x.arc(S * 0.5, S * 0.44, S * 0.23, 0, Math.PI * 2); x.fill();
+    // 头发
+    x.fillStyle = hairColor;
+    x.beginPath(); x.arc(S * 0.5, S * 0.42, S * 0.245, Math.PI * 1.02, Math.PI * 1.98); x.fill();
+    x.beginPath(); x.ellipse(S * 0.5, S * 0.26, S * 0.2, S * 0.1, 0, 0, Math.PI * 2); x.fill();
+    // 眼睛
+    x.fillStyle = '#2b2118';
+    x.beginPath(); x.arc(S * 0.42, S * 0.45, S * 0.026, 0, Math.PI * 2); x.fill();
+    x.beginPath(); x.arc(S * 0.58, S * 0.45, S * 0.026, 0, Math.PI * 2); x.fill();
+    x.fillStyle = 'rgba(255,255,255,.9)';
+    x.beginPath(); x.arc(S * 0.414, S * 0.442, S * 0.009, 0, Math.PI * 2); x.fill();
+    x.beginPath(); x.arc(S * 0.574, S * 0.442, S * 0.009, 0, Math.PI * 2); x.fill();
+    // 腮红 + 笑
+    x.fillStyle = 'rgba(255,130,120,.5)';
+    x.beginPath(); x.arc(S * 0.36, S * 0.5, S * 0.035, 0, Math.PI * 2); x.fill();
+    x.beginPath(); x.arc(S * 0.64, S * 0.5, S * 0.035, 0, Math.PI * 2); x.fill();
+    x.strokeStyle = '#7a4b32'; x.lineWidth = Math.max(2, S * 0.014); x.lineCap = 'round';
+    x.beginPath(); x.arc(S * 0.5, S * 0.5, S * 0.06, Math.PI * 0.18, Math.PI * 0.82); x.stroke();
+    // 属性徽章（右下）
+    x.fillStyle = color;
+    x.strokeStyle = '#fff'; x.lineWidth = S * 0.018;
+    x.beginPath(); x.arc(S * 0.82, S * 0.84, S * 0.1, 0, Math.PI * 2); x.fill(); x.stroke();
+    return c;
+  }
+  function makePartner(color, size) {
+    var c = document.createElement('canvas');
+    c.width = c.height = size;
+    var x = c.getContext('2d');
+    var S = size;
+    x.fillStyle = 'rgba(255,255,255,.92)';
+    x.beginPath(); x.arc(S / 2, S / 2, S * 0.46, 0, Math.PI * 2); x.fill();
+    // 耳朵
+    x.fillStyle = color;
+    x.beginPath(); x.moveTo(S * 0.28, S * 0.36); x.lineTo(S * 0.34, S * 0.08); x.lineTo(S * 0.46, S * 0.3); x.closePath(); x.fill();
+    x.beginPath(); x.moveTo(S * 0.72, S * 0.36); x.lineTo(S * 0.66, S * 0.08); x.lineTo(S * 0.54, S * 0.3); x.closePath(); x.fill();
+    // 脸
+    x.beginPath(); x.arc(S / 2, S * 0.56, S * 0.29, 0, Math.PI * 2); x.fill();
+    // 眼睛
+    x.fillStyle = '#2b2118';
+    x.beginPath(); x.arc(S * 0.41, S * 0.54, S * 0.038, 0, Math.PI * 2); x.fill();
+    x.beginPath(); x.arc(S * 0.59, S * 0.54, S * 0.038, 0, Math.PI * 2); x.fill();
+    x.fillStyle = 'rgba(255,255,255,.92)';
+    x.beginPath(); x.arc(S * 0.4, S * 0.528, S * 0.012, 0, Math.PI * 2); x.fill();
+    x.beginPath(); x.arc(S * 0.58, S * 0.528, S * 0.012, 0, Math.PI * 2); x.fill();
+    // 腮红
+    x.fillStyle = 'rgba(232,69,60,.55)';
+    x.beginPath(); x.arc(S * 0.3, S * 0.63, S * 0.055, 0, Math.PI * 2); x.fill();
+    x.beginPath(); x.arc(S * 0.7, S * 0.63, S * 0.055, 0, Math.PI * 2); x.fill();
+    // 嘴
+    x.strokeStyle = '#2b2118'; x.lineWidth = Math.max(2, S * 0.02); x.lineCap = 'round';
+    x.beginPath(); x.arc(S * 0.5, S * 0.62, S * 0.05, Math.PI * 0.2, Math.PI * 0.8); x.stroke();
+    return c;
+  }
+
+  // ---------------- 与 90-main.js 完全一致的 4 位训练家 mock 数据 ----------------
+  var CHARS = [
+    {
+      id: 't_bolt', cn: '雷恩', en: 'RAIDEN', type: 'electric', color: '#ffd93d',
+      partner: 'pikachu', partnerCn: '皮卡丘',
+      weapon: '电光弹发射器', passive: '静电场：命中累积电荷，满 5 层下一发必定暴击',
+      ult: '十万伏特：连锁闪电，命中 8 米内最多 6 只宝可梦',
+      stats: { hp: 0.83, dmg: 0.3, rate: 1, spd: 0.89 },
+      skin: '#ffe2c4', hair: '#3b2a20', outfit: '#3a2a00'
+    },
+    {
+      id: 't_leaf', cn: '芽衣', en: 'MAY', type: 'grass', color: '#8ed36a',
+      partner: 'bulbasaur', partnerCn: '妙蛙种子',
+      weapon: '种子散弹枪', passive: '光合作用：脱战 4 秒后缓慢回血',
+      ult: '飞叶风暴：种子暴雨护体，回血并减速周围敌人',
+      stats: { hp: 0.92, dmg: 1, rate: 0.52, spd: 0.56 },
+      skin: '#ffdfc0', hair: '#5a3b1e', outfit: '#2f6b2a'
+    },
+    {
+      id: 't_ember', cn: '炎武', en: 'BLAZE', type: 'fire', color: '#ff8a3d',
+      partner: 'charmander', partnerCn: '小火龙',
+      weapon: '火花榴弹炮', passive: '余烬：击杀后 2 秒内伤害 +40%',
+      ult: '火焰漩涡：以自身为中心的爆炎新星，范围灼烧',
+      stats: { hp: 1, dmg: 0.92, rate: 0.73, spd: 0.22 },
+      skin: '#f9d3ae', hair: '#1f1a16', outfit: '#8a2f14'
+    },
+    {
+      id: 't_tide', cn: '波琳', en: 'MARINA', type: 'water', color: '#5ab8f0',
+      partner: 'squirtle', partnerCn: '杰尼龟',
+      weapon: '水压穿刺枪', passive: '潮汐：每第 5 发伤害翻倍并回复 2 点体力',
+      ult: '海潮护盾：3 秒无敌，冲开周围所有敌人',
+      stats: { hp: 0.875, dmg: 0.38, rate: 1, spd: 0.72 },
+      skin: '#ffe2c4', hair: '#2b4a6b', outfit: '#1f4d73'
+    }
+  ];
+  var list = CHARS.map(function (c) {
+    return {
+      id: c.id, cn: c.cn, en: c.en, type: c.type, color: c.color,
+      partner: c.partner, partnerCn: c.partnerCn,
+      weapon: c.weapon, passive: c.passive, ult: c.ult, stats: c.stats,
+      portrait: makePortrait(c.id, TYPE_COLOR[c.type], c.skin, c.hair, c.outfit, 256),
+      partnerIcon: makePartner(TYPE_COLOR[c.type], 128)
+    };
+  });
+</script>
+<script src="../src/85-ui.js"></script>
+<script>
+  // ---------------- 首次用户手势后初始化 audio（与真实入口一致） ----------------
+  window.addEventListener('pointerdown', function () { try { PG.audio.init(); } catch (e) {} }, { once: true });
+
+  // ---------------- 挂载 & 路由 ----------------
+  var q = new URLSearchParams(location.search);
+  var scr = (q.get('screen') || 'title').toLowerCase();
+  var nav = document.getElementById('nav');
+  var nowEl = document.getElementById('now');
+
+  function fillResult(win) {
+    var wave = Number(q.get('wave') || (win ? 8 : 3));
+    var score = Number(q.get('score') || (win ? 12480 : 4860));
+    var combo = Number(q.get('combo') || (win ? 34 : 17));
+    var time = Number(q.get('time') || (win ? 418 : 142));
+    var rank = q.get('rank') || '';
+    PG.ui.setResult({ wave: wave, waveTotal: 8, score: score, comboMax: combo, time: time, rank: rank });
+  }
+
+  function go(name, first) {
+    scr = name;
+    if (name !== 'boot') {
+      var boot = document.getElementById('boot');
+      if (boot) boot.style.display = 'none';
+    }
+    if (name === 'boot') {
+      var fill = document.getElementById('boot-fill');
+      if (fill) fill.style.width = '62%';
+    }
+    if (name === 'dead') fillResult(false);
+    if (name === 'win') fillResult(true);
+    PG.ui.screen(name === 'game' ? 'game' : name);
+    nowEl.textContent = name + ' · ' + (PG.ui.getScreen ? PG.ui.getScreen() : '?');
+    var btns = nav.querySelectorAll('button');
+    for (var i = 0; i < btns.length; i++) btns[i].classList.toggle('on', btns[i].getAttribute('data-s') === name);
+    if (first) {
+      // 选中第 2 位，验证 .sel 状态与底部伙伴技联动
+      try { if (name === 'select') PG.ui && PG.ui.screen('select'); } catch (e) {}
+    }
+  }
+
+  PG.ui.mount(document.getElementById('ui'));
+  PG.ui.setCharacters(list);
+
+  // 事件日志，便于核对 UI -> main 的接线
+  window.__events = [];
+  ['start', 'select', 'launch', 'resume', 'restart', 'quit', 'mute', 'volume'].forEach(function (evt) {
+    PG.ui.on(evt, function (v) { window.__events.push([evt, v]); });
+  });
+
+  nav.addEventListener('click', function (e) {
+    var b = e.target && e.target.closest ? e.target.closest('button[data-s]') : null;
+    if (b) go(b.getAttribute('data-s'), true);
+  });
+
+  // 顶栏可隐藏（便于拍干净的截图）
+  if (q.get('nav') === '0') document.body.setAttribute('data-hide-nav', '1');
+
+  go(scr, true);
+
+  // 键盘自动化：?keys=ArrowRight,Enter —— 逐个派发（模拟真实按键，验证 ←→/Enter/Esc 链路）
+  var keys = (q.get('keys') || '').split(',').filter(Boolean);
+  keys.forEach(function (k, i) {
+    setTimeout(function () {
+      try {
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: k, code: k, bubbles: true, cancelable: true }));
+      } catch (e) { showErr('key dispatch ' + k + ': ' + e); }
+    }, 700 + i * 450);
+  });
+
+  // 调试浮层：?dbg=1 显示当前屏 / 事件 / 音效 / 错误，截图即可核对
+  if (q.get('dbg') === '1') {
+    var dbg = document.createElement('pre');
+    dbg.className = 'test-dbg';
+    document.body.appendChild(dbg);
+    setInterval(function () {
+      var st = window.__status();
+      dbg.textContent = 'screen: ' + st.screen
+        + '\nevents: ' + JSON.stringify(st.events)
+        + '\nsfx: ' + JSON.stringify(st.sfx)
+        + '\nerrs: ' + (st.errs.length ? JSON.stringify(st.errs) : 'none');
+    }, 200);
+  }
+
+  // 顶部状态提示（浏览器页脚）
+  window.__ready = true;
+  window.__status = function () {
+    return {
+      screen: PG.ui.getScreen ? PG.ui.getScreen() : '?',
+      errs: window.__errs,
+      sfx: (window.__sfx || []).slice(-8),
+      events: (window.__events || []).slice(-8)
+    };
+  };
+</script>
+</body>
+</html>

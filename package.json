@@ -1,0 +1,16 @@
+{
+  "name": "pokemon-forest-raid",
+  "version": "1.0.0",
+  "description": "宝可梦 · 森之突袭 —— 单文件 3D 第一人称宝可梦风格森林射击游戏（Three.js r160，程序化建模/场景/音频）",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node build.mjs --dev",
+    "test": "node tests/playtest.mjs --build",
+    "shot": "node tests/shot.mjs"
+  },
+  "keywords": ["pokemon", "fps", "threejs", "game", "single-file", "webgl"],
+  "license": "MIT",
+  "engines": { "node": ">=22" }
+}

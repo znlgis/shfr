@@ -1,0 +1,14 @@
+# 开发用构建（分文件加载，按需生成）
+dev.html
+_playtest.html
+
+# 自动化验收产物（截图 + JSON 报告）
+_shots/
+
+# 依赖与系统垃圾
+node_modules/
+.DS_Store
+Thumbs.db
+*.log
+
+# 说明：dist/ 下的单文件成品会被提交，仓库开箱即玩（约 1.1MB）。
