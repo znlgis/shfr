@@ -11,6 +11,19 @@
 
 双击打开 **[dist/山海森之突袭_V1.html](dist/山海森之突袭_V1.html)** 即可（约 1.1 MB，浏览器需支持 WebGL2）。
 
+仓库同时提供**目录版**（常规静态站点结构，`index.html` + `assets/`，同样可双击 `index.html` 直接玩，也可以直接丢到任意静态服务器 / 对象存储 / 内网目录里托管）：
+
+```
+dist/web/
+├── index.html            页面壳（外链引用下面三个资源）
+└── assets/
+    ├── app.css           70-ui.css + 75-hud.css 合并
+    ├── three.min.js      three.js r160
+    └── app.js            10 个 JS 模块按序合并
+```
+
+两套产物内容同源：单文件版适合「一个文件发给别人、双击即玩」，目录版适合部署到 Web / CDN / 静态托管。
+
 ## 玩法
 
 | 操作 | 键位 |
@@ -46,7 +59,7 @@
 
 ## 技术要点
 
-- **单文件构建**：`node build.mjs` 把 three.js、10 个 JS 模块、2 个 CSS 合并成 `dist/*.html`；`node build.mjs --dev` 生成用 `<script src>` 分文件加载的 `dev.html`，改完刷新即可调试。
+- **双产物构建**：`node build.mjs` 把 three.js、10 个 JS 模块、2 个 CSS 合并成单文件 `dist/*.html`；`node build.mjs --dir` 生成目录版 `dist/web/`（`index.html` + `assets/{app.css,app.js,three.min.js}`）；`node build.mjs --all` 一次产出两套。`node build.mjs --dev` 生成用 `<script src>` 分文件加载的 `dev.html`，改完刷新即可调试。
 - **全程序化美术**：18 只山海异兽 / 4 位行者由几何体拼装成模型并顶点色合批（单模型平均 7 draw call），古林由 InstancedMesh 承载 5200 草 / 589 花 / 46 蘑菇等；2D 头像与图标用 Canvas2D 绘制。
 - **程序化音频**：WebAudio 合成 24 种音效 + 6 套循环音乐（标题 / 古林 / 战斗 / BOSS / 胜利 / 失败），支持静音、音量、菜单压低。
 - **性能**：1280×800 集成场景 draw call ≈ 87（主场景 66 + 武器层 21），场景三角形约 67.5 万，真实 GPU 下约 95fps。
@@ -55,7 +68,7 @@
 
 ```
 .
-├── build.mjs              构建脚本（单文件 / dev 两种产物）
+├── build.mjs              构建脚本（单文件 / 目录版 / dev 三种产物）
 ├── package.json           npm scripts（build / dev / test / shot）
 ├── src/
 │   ├── index.html         页面壳（占位符注入 CSS/JS）
@@ -80,13 +93,17 @@
 │   ├── MYTHOLOGY.md       中国神话设计规格（id / 命名 / 配色 / 文案）
 │   ├── CONTRACT.md        模块契约（API / 分工 / 美术规范）
 │   └── screenshots/       验收截图
-└── dist/                  构建产物（可直接双击游玩）
+└── dist/
+    ├── 山海森之突袭_V1.html  单文件成品（双击即玩）
+    └── web/                目录版成品（index.html + assets/，静态托管用）
 ```
 
 ## 构建与验收
 
 ```bash
 npm run build        # -> dist/山海森之突袭_V1.html
+npm run build:dir    # -> dist/web/（目录版：index.html + assets/）
+npm run build:all    # 同时产出单文件版与目录版
 npm run dev          # -> dev.html（分文件加载，调试用）
 npm test             # 无头 Edge 自动对局验收（需要安装 Edge）
 ```

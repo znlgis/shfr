@@ -6,6 +6,8 @@
   "type": "module",
   "scripts": {
     "build": "node build.mjs",
+    "build:dir": "node build.mjs --dir",
+    "build:all": "node build.mjs --all",
     "dev": "node build.mjs --dev",
     "test": "node tests/playtest.mjs --build",
     "shot": "node tests/shot.mjs"
