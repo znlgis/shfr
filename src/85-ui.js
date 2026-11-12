@@ -160,6 +160,18 @@
   }
 
   /* =============================== 标题屏 =============================== */
+  // 触屏上写「按 Enter」只会让人困惑；手机竖屏也只有横过来才有完整视野
+  function titleHintText() {
+    let touch = false;
+    try { touch = !!(ui.isTouch && ui.isTouch()); } catch (e) {}
+    if (!touch) {
+      try {
+        touch = (('ontouchstart' in window) || (navigator.maxTouchPoints > 0)) &&
+          !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+      } catch (e) {}
+    }
+    return touch ? '点击按钮开始 · 建议横屏游玩' : '按 Enter 或点击按钮开始 · 建议全屏游玩';
+  }
   function buildTitle() {
     const s = mk('section', 'scr scr-title');
     s.setAttribute('data-scr', 'title');
@@ -189,7 +201,7 @@
     mk('i', 'ui-coin', start);
     mk('span', '', start, '开始探险');
     start.addEventListener('click', () => enterSelect());
-    mk('div', 'title-hint', foot, '按 Enter 或点击按钮开始 · 建议全屏游玩');
+    mk('div', 'title-hint', foot, titleHintText());
     buildSettings(foot).classList.add('title-settings');
     mk('div', 'title-ver', s, 'v1.0 · 单文件离线版');
     return s;

@@ -11,4 +11,4 @@ node_modules/
 Thumbs.db
 *.log
 
-# 说明：dist/ 下的成品会被提交，仓库开箱即玩：单文件版（约 1.1MB）与目录版 dist/web/（约 1.2MB）。
+# 说明：dist/ 下的成品会被提交，仓库开箱即玩：单文件版（约 1.2MB）、目录版 dist/web/ 与 Toy 上传包 dist/toy.zip（各约 1.3MB）。

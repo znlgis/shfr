@@ -168,6 +168,15 @@
 .hud-tbtn.t-jump { width: 56px; height: 56px; right: 86px; bottom: 88px; }
 .hud-tbtn.t-ult { width: 56px; height: 56px; right: 148px; bottom: 76px; background: rgba(47,158,143,.45); }
 
+/* 触屏：右下 210×210 的虚拟按键会盖住弹药计数（手机上等于看不见），
+   这里把弹药整体抬到按键上方；矮屏再缩一点按键，避免顶到屏幕中央。 */
+.hud.hud-touch { --tbtn-size: 210px; }
+.hud.hud-touch .hud-ammo { bottom: calc(max(20px, env(safe-area-inset-bottom)) + var(--tbtn-size) + 6px); }
+@media (max-height: 520px) {
+  .hud.hud-touch { --tbtn-size: 186px; }
+  .hud.hud-touch .hud-tbtns { transform: scale(.88); transform-origin: 100% 100%; }
+}
+
 @media (max-width: 720px) {
   .hud-obj { display: none; }
   .hud-pmid { min-width: 132px; }

@@ -1183,3 +1183,80 @@ body {
   .dc-desc { font-size: 10px; }
   .sel-diffs { margin-top: -2px; }
 }
+
+/* ============================== 运行环境兜底 ==============================
+   两块都是「出问题时才会出现」的元素，正常情况下完全不可见：
+   #rotate-tip   竖屏手机一次性提示横屏（自动消失、不接收点击，不构成常驻干扰）
+   #unsupported  WebGL 不可用时的可读说明，代替一屏红色堆栈            */
+
+/* 竖屏提示放在画面中部偏上：标题卡与选角页顶部都被占了，
+   放顶部会压住「山海秘境 · 混沌来袭」彩带与选角标题；居中 7 秒即淡出，不常驻。 */
+#rotate-tip {
+  position: fixed;
+  left: 50%;
+  top: 52%;
+  z-index: 60;
+  max-width: 86vw;
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: rgba(36, 49, 63, .86);
+  color: #fff;
+  font: 800 13.5px/1.2 var(--ui-font);
+  letter-spacing: .04em;
+  white-space: nowrap;
+  box-shadow: 0 10px 26px rgba(36, 49, 63, .34);
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(.94);
+  transition: opacity .3s ease, transform .35s var(--ui-ease);
+}
+#rotate-tip.on { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+#rotate-tip::before {
+  content: '';
+  display: inline-block;
+  width: 15px;
+  height: 10px;
+  margin-right: 8px;
+  border: 2.5px solid currentColor;
+  border-radius: 3px;
+  vertical-align: -1px;
+  transform: rotate(90deg);
+}
+
+#unsupported {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+  background: linear-gradient(165deg, #d8f0ff 0%, #9fe0ff 62%, #bfe9c9 100%);
+  font-family: var(--ui-font);
+  color: var(--sh-ink);
+}
+#unsupported.on { display: flex; }
+.unsup-card {
+  max-width: min(520px, 92vw);
+  padding: 26px 24px 22px;
+  border-radius: var(--ui-radius);
+  background: var(--sh-white);
+  border: 3px solid #fff;
+  box-shadow: var(--ui-shadow);
+  text-align: center;
+}
+.unsup-card b { display: block; margin-bottom: 10px; font-size: 19px; letter-spacing: .04em; }
+.unsup-card p { margin: 0 0 18px; font-size: 13.5px; line-height: 1.7; font-weight: 700; color: #46525f; }
+.unsup-card button {
+  border: 0;
+  cursor: pointer;
+  padding: 11px 26px;
+  border-radius: 999px;
+  background: var(--sh-gold);
+  color: #24313f;
+  font: 900 14px/1 var(--ui-font);
+  letter-spacing: .06em;
+  box-shadow: 0 5px 0 rgba(36, 49, 63, .16);
+}
+.unsup-card button:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(36, 49, 63, .16); }

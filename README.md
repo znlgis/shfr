@@ -9,7 +9,7 @@
 
 ## 直接游玩
 
-双击打开 **[dist/山海森之突袭_V1.html](dist/山海森之突袭_V1.html)** 即可（约 1.1 MB，浏览器需支持 WebGL2）。
+双击打开 **[dist/山海森之突袭_V1.html](dist/山海森之突袭_V1.html)** 即可（约 1.2 MB，浏览器需支持 WebGL）。
 
 仓库同时提供**目录版**（常规静态站点结构，`index.html` + `assets/`，同样可双击 `index.html` 直接玩，也可以直接丢到任意静态服务器 / 对象存储 / 内网目录里托管）：
 
@@ -23,6 +23,8 @@ dist/web/
 ```
 
 两套产物内容同源：单文件版适合「一个文件发给别人、双击即玩」，目录版适合部署到 Web / CDN / 静态托管。
+
+第三套产物 **`dist/toy.zip`** 是给 B站 Toy 的上传包（目录结构与 `dist/web/` 相同），上传方式见下文「发布到 B站 Toy」。
 
 ## 玩法
 
@@ -114,7 +116,9 @@ dist/web/
 │   └── screenshots/       验收截图
 └── dist/
     ├── 山海森之突袭_V1.html  单文件成品（双击即玩）
-    └── web/                目录版成品（index.html + assets/，静态托管用）
+    ├── web/                目录版成品（index.html + assets/，静态托管用）
+    ├── toy/                Toy 上传包目录（包根即 index.html）
+    └── toy.zip             Toy 上传包（发布页上传这个文件）
 ```
 
 ## 构建与验收
@@ -122,7 +126,9 @@ dist/web/
 ```bash
 npm run build        # -> dist/山海森之突袭_V1.html
 npm run build:dir    # -> dist/web/（目录版：index.html + assets/）
-npm run build:all    # 同时产出单文件版与目录版
+npm run build:toy    # -> dist/toy/ + dist/toy.zip，并跑一遍 Toy 发布包自检
+npm run build:all    # 同时产出单文件版、目录版与 Toy 上传包
+npm run check:toy    # 单独复跑 Toy 自检（入口大小 / 后缀白名单 / 相对路径 / 包根结构）
 npm run dev          # -> dev.html（分文件加载，调试用）
 npm test             # 无头 Edge 自动对局验收（需要安装 Edge）
 ```
@@ -130,6 +136,27 @@ npm test             # 无头 Edge 自动对局验收（需要安装 Edge）
 自动化验收（`tests/playtest.mjs`，CDP 驱动，零依赖）覆盖：启动 → 标题 → 键盘进入选角 → 出发 →
 战斗命中/击杀/得分 → 受击掉血 → Esc 暂停/继续 → 失败结算 → 重开归零 → 真实打通 8 波 → 胜利结算，
 同时统计 draw call / 三角形 / 帧时间并收集所有 JS 错误口径。
+
+## 发布到 B站 Toy
+
+上传 **`dist/toy.zip`** 即可，它已经按平台要求把包根做成 `index.html` + `assets/`；**不要上传 `dist/山海森之突袭_V1.html`**。
+
+原因是平台对上传包有几条硬约束，单文件版不满足：
+
+| 平台约束（见 [Toy 发布 FAQ](https://www.bilibili.com/toy/publish/guide/faq)） | 本项目 |
+|---|---|
+| 入口 `index.html` 限制 1MB | 单文件版把 three.js 和全部代码内联，约 1.28MB 会超限；Toy 包入口只有约 1KB |
+| 压缩包根目录必须有 `index.html` | `dist/toy/` 的根就是入口；直接压 `dist/` 会多套一层目录，页面打不开 |
+| 只发布白名单后缀（`.html/.css/.js/.png` 等） | 包内只有 `.html` / `.css` / `.js` |
+| 资源必须相对路径（`/assets/...` 会解析到站点根，白屏 / 404） | 全部是 `./assets/...` |
+| 整包不超过 50MB | 约 1.3MB |
+
+发布时另外几点：
+
+- **分类建议选「游戏」**：平台对「游戏」分类会自动限制未成年人游玩，和本作的射击玩法匹配；未成年开发者测试阶段可先不选「游戏」。
+- **横屏体验更好**：手机竖屏也能玩（会显示一次性的横屏提示），横屏视野完整；若要在 App 内强制横屏 / 沉浸，按 SDK 文档接入 `setContainerMode` 后真机验证。
+- **内容合规**：页面没有站外链接、广告、第三方登录，也没有自由输入框（UGC 红线），标题页不交互就能看到内容；美术 / 音频全部程序化生成，three.js 为 MIT 许可。
+- **改完先自查**：`npm run check:toy` 会按平台的入口大小、后缀白名单、相对路径、包根结构与 zip 内容逐条核对。
 
 ## 截图
 

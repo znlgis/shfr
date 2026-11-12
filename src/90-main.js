@@ -290,6 +290,8 @@
     buildShowcase();
     PG.ui && PG.ui.screen && PG.ui.screen('title');
     PG.ui && PG.ui.hudVisible && PG.ui.hudVisible(false);
+    hideRotateTip();
+    maybeShowRotateTip();
     PG.audio && PG.audio.music('title');
   }
 
@@ -301,6 +303,7 @@
   function startGame(charId) {
     E.char = charId || E.char;
     E.mode = 'playing';
+    hideRotateTip();
     removeShowcase();
     PG.audio && PG.audio.init && PG.audio.init();
     PG.ui && PG.ui.screen && PG.ui.screen('game');
@@ -495,12 +498,69 @@
     }
   }
 
+  // WebGL 不可用（老设备 / 关了硬件加速 / WebView 禁用 WebGL）时，直接 new WebGLRenderer
+  // 会抛异常，屏幕上只剩一屏红色堆栈。先探测一次，给一张能看懂、能操作的说明卡。
+  function webglAvailable() {
+    try {
+      const c = document.createElement('canvas');
+      const gl = c.getContext('webgl2') || c.getContext('webgl') || c.getContext('experimental-webgl');
+      if (!gl) return false;
+      const lose = gl.getExtension('WEBGL_lose_context');
+      if (lose) lose.loseContext();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+  function showUnsupported() {
+    try {
+      const bootEl = document.getElementById('boot');
+      if (bootEl) bootEl.style.display = 'none';
+      const u = document.getElementById('unsupported');
+      if (u) { u.classList.add('on'); return; }
+    } catch (e) {}
+    // 模板里没有兜底节点时，至少给一行可读文字，别留白屏
+    const f = document.getElementById('fatal');
+    if (f) { f.textContent = '当前环境不支持 WebGL，无法运行本作。请更换浏览器后重试。'; f.style.display = 'block'; }
+  }
+
+  // 竖屏手机提示一次「横过来」。只在标题/选角这类没有 HUD 的界面出现，
+  // 战斗中不弹，避免挡住波次条与弹药；每次会话只提示一次，7 秒后自动消失。
+  let rotateTipShown = false;
+  function maybeShowRotateTip() {
+    if (rotateTipShown) return;
+    const tip = document.getElementById('rotate-tip');
+    if (!tip) return;
+    let touch = false;
+    try { touch = !!(PG.ui && PG.ui.isTouch && PG.ui.isTouch()); } catch (e) {}
+    if (!touch) {
+      try {
+        touch = (('ontouchstart' in window) || (navigator.maxTouchPoints > 0)) &&
+          !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+      } catch (e) {}
+    }
+    if (!touch || window.innerHeight <= window.innerWidth) return;
+    rotateTipShown = true;
+    tip.classList.add('on');
+    setTimeout(() => tip.classList.remove('on'), 7000);
+  }
+  function hideRotateTip() {
+    const tip = document.getElementById('rotate-tip');
+    if (tip) tip.classList.remove('on');
+  }
+
   function reportErr(err) {
     const msg = (err && (err.stack || err.message)) || String(err);
     E.err.push(msg);
-    const f = document.getElementById('fatal');
-    if (f) { f.textContent = '运行错误：\n' + E.err.slice(-3).join('\n\n'); f.style.display = 'block'; }
     if (window.console) console.error(err);
+    // 面向玩家只给一句可读提示：真机上弹一屏红色堆栈，审核侧会直接按「页面报错、打不开」处理。
+    // 完整堆栈仍保留在 console 与 E.err 中，?debug=1 时照常显示（playtest 读的就是 E.err）。
+    const f = document.getElementById('fatal');
+    if (!f) return;
+    f.textContent = Q.get('debug') === '1'
+      ? '运行错误：\n' + E.err.slice(-3).join('\n\n')
+      : '运行出现了一点问题，请刷新页面重试。';
+    f.style.display = 'block';
   }
 
   // ---------------- 启动 ----------------
@@ -508,7 +568,23 @@
     window.addEventListener('error', (e) => reportErr(e.error || new Error(e.message)));
     window.addEventListener('unhandledrejection', (e) => reportErr(e.reason));
     try {
-      initEngine();
+      const unsupReload = document.getElementById('unsup-reload');
+      if (unsupReload) unsupReload.addEventListener('click', () => { try { location.reload(); } catch (e) {} });
+      // 没有 WebGL 直接给兜底页，别让它掉进 reportErr 变成一屏报错
+      if (!webglAvailable()) {
+        E.mode = 'unsupported';
+        showUnsupported();
+        return;
+      }
+      try {
+        initEngine();
+      } catch (e) {
+        // 探测通过但上下文创建失败（驱动 / 显存 / WebView 限制），同样按「不支持」处理
+        E.mode = 'unsupported';
+        showUnsupported();
+        if (window.console) console.warn('[main] WebGL 初始化失败', e);
+        return;
+      }
       // 世界
       try {
         E.world = PG.world.build(E.scene, THREE, { radius: 62, skipLights: true });
@@ -535,6 +611,8 @@
           ui.style.setProperty('--ui-scale', s.toFixed(3));
           document.body.classList.toggle('is-small', w < 900);
         }
+        // 只在校外界面提示横屏；游戏内 HUD 占着顶部，不适合再叠一条提示
+        if (document.body.getAttribute('data-screen') === 'title') maybeShowRotateTip();
       };
       const onResize = () => applyLayout();
       window.addEventListener('resize', onResize);

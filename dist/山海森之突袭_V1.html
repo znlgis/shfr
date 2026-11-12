@@ -1191,6 +1191,83 @@ body {
   .dc-desc { font-size: 10px; }
   .sel-diffs { margin-top: -2px; }
 }
+
+/* ============================== 运行环境兜底 ==============================
+   两块都是「出问题时才会出现」的元素，正常情况下完全不可见：
+   #rotate-tip   竖屏手机一次性提示横屏（自动消失、不接收点击，不构成常驻干扰）
+   #unsupported  WebGL 不可用时的可读说明，代替一屏红色堆栈            */
+
+/* 竖屏提示放在画面中部偏上：标题卡与选角页顶部都被占了，
+   放顶部会压住「山海秘境 · 混沌来袭」彩带与选角标题；居中 7 秒即淡出，不常驻。 */
+#rotate-tip {
+  position: fixed;
+  left: 50%;
+  top: 52%;
+  z-index: 60;
+  max-width: 86vw;
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: rgba(36, 49, 63, .86);
+  color: #fff;
+  font: 800 13.5px/1.2 var(--ui-font);
+  letter-spacing: .04em;
+  white-space: nowrap;
+  box-shadow: 0 10px 26px rgba(36, 49, 63, .34);
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(.94);
+  transition: opacity .3s ease, transform .35s var(--ui-ease);
+}
+#rotate-tip.on { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+#rotate-tip::before {
+  content: '';
+  display: inline-block;
+  width: 15px;
+  height: 10px;
+  margin-right: 8px;
+  border: 2.5px solid currentColor;
+  border-radius: 3px;
+  vertical-align: -1px;
+  transform: rotate(90deg);
+}
+
+#unsupported {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+  background: linear-gradient(165deg, #d8f0ff 0%, #9fe0ff 62%, #bfe9c9 100%);
+  font-family: var(--ui-font);
+  color: var(--sh-ink);
+}
+#unsupported.on { display: flex; }
+.unsup-card {
+  max-width: min(520px, 92vw);
+  padding: 26px 24px 22px;
+  border-radius: var(--ui-radius);
+  background: var(--sh-white);
+  border: 3px solid #fff;
+  box-shadow: var(--ui-shadow);
+  text-align: center;
+}
+.unsup-card b { display: block; margin-bottom: 10px; font-size: 19px; letter-spacing: .04em; }
+.unsup-card p { margin: 0 0 18px; font-size: 13.5px; line-height: 1.7; font-weight: 700; color: #46525f; }
+.unsup-card button {
+  border: 0;
+  cursor: pointer;
+  padding: 11px 26px;
+  border-radius: 999px;
+  background: var(--sh-gold);
+  color: #24313f;
+  font: 900 14px/1 var(--ui-font);
+  letter-spacing: .06em;
+  box-shadow: 0 5px 0 rgba(36, 49, 63, .16);
+}
+.unsup-card button:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(36, 49, 63, .16); }
 /* ==== 75-hud.css ==== */
 /* 75-hud.css — 战斗 HUD 与触屏样式（Lead）
    明亮山海国风：白色卡片的半透明版本 + 鎏金描边 + 柔和投影 + 粗圆体字 */
@@ -1362,6 +1439,15 @@ body {
 .hud-tbtn.t-jump { width: 56px; height: 56px; right: 86px; bottom: 88px; }
 .hud-tbtn.t-ult { width: 56px; height: 56px; right: 148px; bottom: 76px; background: rgba(47,158,143,.45); }
 
+/* 触屏：右下 210×210 的虚拟按键会盖住弹药计数（手机上等于看不见），
+   这里把弹药整体抬到按键上方；矮屏再缩一点按键，避免顶到屏幕中央。 */
+.hud.hud-touch { --tbtn-size: 210px; }
+.hud.hud-touch .hud-ammo { bottom: calc(max(20px, env(safe-area-inset-bottom)) + var(--tbtn-size) + 6px); }
+@media (max-height: 520px) {
+  .hud.hud-touch { --tbtn-size: 186px; }
+  .hud.hud-touch .hud-tbtns { transform: scale(.88); transform-origin: 100% 100%; }
+}
+
 @media (max-width: 720px) {
   .hud-obj { display: none; }
   .hud-pmid { min-width: 132px; }
@@ -1487,10 +1573,18 @@ body {
     <div class="boot-sub" id="boot-msg">正在进入山海秘境…</div>
     <div class="boot-bar"><i id="boot-fill"></i></div>
   </div>
+  <div id="rotate-tip">建议横屏游玩，视野更开阔</div>
+  <div id="unsupported">
+    <div class="unsup-card">
+      <b>当前环境无法启动 3D 画面</b>
+      <p>本作需要浏览器支持 WebGL。请换用较新的 Chrome / Edge / Safari，或在 B站 App 内重新打开。</p>
+      <button type="button" id="unsup-reload">重新加载</button>
+    </div>
+  </div>
   <div id="fatal"></div>
 </div>
 <script>
-console.warn('Scripts "build/three.js" and "build/three.min.js" are deprecated with r150+, and will be removed with r160. Please use ES Modules or alternatives: https://threejs.org/docs/index.html#manual/en/introduction/Installation'),
+0,
 /**
  * @license
  * Copyright 2010-2023 Three.js Authors
@@ -12270,6 +12364,18 @@ PG.models = {
   }
 
   /* =============================== 标题屏 =============================== */
+  // 触屏上写「按 Enter」只会让人困惑；手机竖屏也只有横过来才有完整视野
+  function titleHintText() {
+    let touch = false;
+    try { touch = !!(ui.isTouch && ui.isTouch()); } catch (e) {}
+    if (!touch) {
+      try {
+        touch = (('ontouchstart' in window) || (navigator.maxTouchPoints > 0)) &&
+          !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+      } catch (e) {}
+    }
+    return touch ? '点击按钮开始 · 建议横屏游玩' : '按 Enter 或点击按钮开始 · 建议全屏游玩';
+  }
   function buildTitle() {
     const s = mk('section', 'scr scr-title');
     s.setAttribute('data-scr', 'title');
@@ -12299,7 +12405,7 @@ PG.models = {
     mk('i', 'ui-coin', start);
     mk('span', '', start, '开始探险');
     start.addEventListener('click', () => enterSelect());
-    mk('div', 'title-hint', foot, '按 Enter 或点击按钮开始 · 建议全屏游玩');
+    mk('div', 'title-hint', foot, titleHintText());
     buildSettings(foot).classList.add('title-settings');
     mk('div', 'title-ver', s, 'v1.0 · 单文件离线版');
     return s;
@@ -13228,6 +13334,8 @@ PG.models = {
     buildShowcase();
     PG.ui && PG.ui.screen && PG.ui.screen('title');
     PG.ui && PG.ui.hudVisible && PG.ui.hudVisible(false);
+    hideRotateTip();
+    maybeShowRotateTip();
     PG.audio && PG.audio.music('title');
   }
 
@@ -13239,6 +13347,7 @@ PG.models = {
   function startGame(charId) {
     E.char = charId || E.char;
     E.mode = 'playing';
+    hideRotateTip();
     removeShowcase();
     PG.audio && PG.audio.init && PG.audio.init();
     PG.ui && PG.ui.screen && PG.ui.screen('game');
@@ -13433,12 +13542,69 @@ PG.models = {
     }
   }
 
+  // WebGL 不可用（老设备 / 关了硬件加速 / WebView 禁用 WebGL）时，直接 new WebGLRenderer
+  // 会抛异常，屏幕上只剩一屏红色堆栈。先探测一次，给一张能看懂、能操作的说明卡。
+  function webglAvailable() {
+    try {
+      const c = document.createElement('canvas');
+      const gl = c.getContext('webgl2') || c.getContext('webgl') || c.getContext('experimental-webgl');
+      if (!gl) return false;
+      const lose = gl.getExtension('WEBGL_lose_context');
+      if (lose) lose.loseContext();
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+  function showUnsupported() {
+    try {
+      const bootEl = document.getElementById('boot');
+      if (bootEl) bootEl.style.display = 'none';
+      const u = document.getElementById('unsupported');
+      if (u) { u.classList.add('on'); return; }
+    } catch (e) {}
+    // 模板里没有兜底节点时，至少给一行可读文字，别留白屏
+    const f = document.getElementById('fatal');
+    if (f) { f.textContent = '当前环境不支持 WebGL，无法运行本作。请更换浏览器后重试。'; f.style.display = 'block'; }
+  }
+
+  // 竖屏手机提示一次「横过来」。只在标题/选角这类没有 HUD 的界面出现，
+  // 战斗中不弹，避免挡住波次条与弹药；每次会话只提示一次，7 秒后自动消失。
+  let rotateTipShown = false;
+  function maybeShowRotateTip() {
+    if (rotateTipShown) return;
+    const tip = document.getElementById('rotate-tip');
+    if (!tip) return;
+    let touch = false;
+    try { touch = !!(PG.ui && PG.ui.isTouch && PG.ui.isTouch()); } catch (e) {}
+    if (!touch) {
+      try {
+        touch = (('ontouchstart' in window) || (navigator.maxTouchPoints > 0)) &&
+          !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+      } catch (e) {}
+    }
+    if (!touch || window.innerHeight <= window.innerWidth) return;
+    rotateTipShown = true;
+    tip.classList.add('on');
+    setTimeout(() => tip.classList.remove('on'), 7000);
+  }
+  function hideRotateTip() {
+    const tip = document.getElementById('rotate-tip');
+    if (tip) tip.classList.remove('on');
+  }
+
   function reportErr(err) {
     const msg = (err && (err.stack || err.message)) || String(err);
     E.err.push(msg);
-    const f = document.getElementById('fatal');
-    if (f) { f.textContent = '运行错误：\n' + E.err.slice(-3).join('\n\n'); f.style.display = 'block'; }
     if (window.console) console.error(err);
+    // 面向玩家只给一句可读提示：真机上弹一屏红色堆栈，审核侧会直接按「页面报错、打不开」处理。
+    // 完整堆栈仍保留在 console 与 E.err 中，?debug=1 时照常显示（playtest 读的就是 E.err）。
+    const f = document.getElementById('fatal');
+    if (!f) return;
+    f.textContent = Q.get('debug') === '1'
+      ? '运行错误：\n' + E.err.slice(-3).join('\n\n')
+      : '运行出现了一点问题，请刷新页面重试。';
+    f.style.display = 'block';
   }
 
   // ---------------- 启动 ----------------
@@ -13446,7 +13612,23 @@ PG.models = {
     window.addEventListener('error', (e) => reportErr(e.error || new Error(e.message)));
     window.addEventListener('unhandledrejection', (e) => reportErr(e.reason));
     try {
-      initEngine();
+      const unsupReload = document.getElementById('unsup-reload');
+      if (unsupReload) unsupReload.addEventListener('click', () => { try { location.reload(); } catch (e) {} });
+      // 没有 WebGL 直接给兜底页，别让它掉进 reportErr 变成一屏报错
+      if (!webglAvailable()) {
+        E.mode = 'unsupported';
+        showUnsupported();
+        return;
+      }
+      try {
+        initEngine();
+      } catch (e) {
+        // 探测通过但上下文创建失败（驱动 / 显存 / WebView 限制），同样按「不支持」处理
+        E.mode = 'unsupported';
+        showUnsupported();
+        if (window.console) console.warn('[main] WebGL 初始化失败', e);
+        return;
+      }
       // 世界
       try {
         E.world = PG.world.build(E.scene, THREE, { radius: 62, skipLights: true });
@@ -13473,6 +13655,8 @@ PG.models = {
           ui.style.setProperty('--ui-scale', s.toFixed(3));
           document.body.classList.toggle('is-small', w < 900);
         }
+        // 只在校外界面提示横屏；游戏内 HUD 占着顶部，不适合再叠一条提示
+        if (document.body.getAttribute('data-screen') === 'title') maybeShowRotateTip();
       };
       const onResize = () => applyLayout();
       window.addEventListener('resize', onResize);
