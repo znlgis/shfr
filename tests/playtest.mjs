@@ -670,7 +670,9 @@ async function main() {
     console.error('[playtest] 找不到 ' + PAGE + '，请先运行：node tests/playtest.mjs --build');
     process.exit(2);
   }
-  const targetUrl = customUrl || pathToFileURL(PAGE).href;
+  // 验收固定用「标准」难度：悠然档带复活，会干扰死亡结算阶段；挑战档数值偏硬
+  const baseUrl = customUrl || pathToFileURL(PAGE).href;
+  const targetUrl = baseUrl + (baseUrl.indexOf('?') >= 0 ? '&' : '?') + 'diff=normal';
   R.page = targetUrl;
 
   const browser = findBrowser();
@@ -824,11 +826,17 @@ async function main() {
     const ui = await uiStats();
     const scr = await evaluateJson('JSON.stringify(__PGT.visibleScreen("select"))');
     const selectVisible = !!(scr && scr.visible);
+    const diffInfo = await evaluateJson('JSON.stringify({ cards: document.querySelectorAll(".diff-card").length, diffs: Object.keys((PG.game && PG.game.DIFFS) || {}), id: (PG.game && PG.game.difficultyId) || "", switchable: (function(){ try { var b = PG.game.difficultyId; PG.game.setDifficulty("easy"); var e = PG.game.difficultyId; PG.game.setDifficulty("normal"); return { before: b, easy: e, back: PG.game.difficultyId }; } catch (err) { return { err: String((err && err.message) || err) }; } })() })');
+    R.metrics.diff = diffInfo;
     R.metrics.select = { snap: { mode: snap.mode }, ui, screen: scr, reachedByKey: reached, keyDiag, beforeScreen, selectVisible };
     check('select-reached', '可从标题进入选择行者（界面可见且状态同步）', snap.mode === 'select' && selectVisible, true,
       'mode=' + snap.mode + ' visible=' + selectVisible + ' ' + keyDiag);
     check('select-keyboard', 'Enter 键可从标题进入选角', reached, false, keyDiag);
     check('select-cards', '选角界面存在行者卡片 / 按钮', ui.cards >= 4 || ui.buttons >= 5, false, 'cards=' + ui.cards + ' buttons=' + ui.buttons);
+    check('diff-select', '选角界面提供三档难度可选', diffInfo.cards >= 3 && diffInfo.diffs.length >= 3, false, JSON.stringify(diffInfo));
+    check('diff-api', '运行时可切换难度（setDifficulty）',
+      !!(diffInfo.switchable && diffInfo.switchable.easy === 'easy' && diffInfo.switchable.back === 'normal'),
+      false, JSON.stringify(diffInfo.switchable));
     return { mode: snap.mode, ui, screenVisible: scr.visible };
   });
   await screenshot('select');
@@ -864,6 +872,11 @@ async function main() {
     }
     check('game-started', '进入战斗（E.mode=playing 且 game.state.mode=playing）',
       snap.mode === 'playing' && snap.gameMode === 'playing', true, 'E.mode=' + snap.mode + ' game=' + snap.gameMode);
+    const diffApplied = await evaluateJson('JSON.stringify({ id: PG.game.difficultyId, hpMax: PG.game.player ? PG.game.player.hpMax : 0, chip: (document.querySelector(".hud-diff") || {}).textContent || "" })');
+    R.metrics.diffApplied = diffApplied;
+    check('diff-applied', 'URL ?diff=normal 生效且 HUD 显示难度',
+      diffApplied.id === 'normal' && diffApplied.hpMax > 0 && diffApplied.chip.indexOf('标准') >= 0,
+      true, JSON.stringify(diffApplied));
     check('hud-visible', '战斗 HUD 可见且含文本', !!(hud && hud.found && hud.text && hud.text.length > 3), false, JSON.stringify(hud && hud.text || '').slice(0, 120));
     if (hud && hud.text && hud.text.indexOf('第 0 波') >= 0) {
       warn('HUD 在首波开始前显示「第 0 波 共 8 波」，建议开局把 wave 显示为 1（50-game.js 初始 state.wave=0）');
@@ -895,6 +908,10 @@ async function main() {
     }
     const after = last || before;
     const damaged = (after.hp || 0) < (before.hp || 0);
+    const cues = await evaluateJson('JSON.stringify({ auras: PG.game.enemies.filter(function (e) { return !!e.aura; }).length, bars: document.querySelectorAll(".hud-ebar.on").length, edges: document.querySelectorAll(".hud-edge.on").length, focus: !!PG.game.focusEnemy })');
+    R.metrics.cues = cues;
+    check('target-cues', '目标可见性提示工作（脚下光环 / 头顶血条 / 屏外指示）',
+      cues.auras > 0 || cues.bars > 0 || cues.edges > 0, false, JSON.stringify(cues));
     R.metrics.damage = { hpBefore: before.hp, hpAfter: after.hp, damaged, mode: after.mode, wave: after.wave };
     check('player-damaged', '玩家会被敌人攻击掉血', damaged || after.dead, true,
       'hp ' + before.hp + ' -> ' + after.hp);
@@ -1003,6 +1020,32 @@ async function main() {
       snap.mode === 'playing' && snap.wave <= 1 && (snap.score || 0) === 0 && (snap.hp || 0) > 0,
       true, 'mode=' + snap.mode + ' wave=' + snap.wave + ' score=' + snap.score + ' hp=' + snap.hp);
     return R.metrics.restart;
+  });
+
+  /* ------------------------- 阶段 8.5：悠然档灵兽护主复活 ------------------------- */
+  await step('easyRevive', async () => {
+    await evaluate('(function(){ try { PG.main.applyDiff("easy"); PG.main.restartGame(); } catch (e) {} return true; })()', 15000);
+    await sleep(700);
+    let snap = null;
+    let revived = false;
+    // 压到 1 血站桩，等第一只妖物靠近；悠然档受击应触发"灵兽护主"而不是死亡
+    await evaluate('(function(){ var p = PG.game.player; if (p) { p.hp = 1; p.invuln = 0; } return true; })()', 8000);
+    for (let i = 0; i < 30; i++) {
+      const r = await sim(2, { fire: false, aim: false });
+      snap = r.state;
+      const rv = await evaluateJson('JSON.stringify({ used: !!(PG.game.player && PG.game.player.reviveUsed), hp: PG.game.player ? Math.round(PG.game.player.hp) : 0, dead: !!(PG.game.player && PG.game.player.dead) })');
+      if (rv && rv.used) { revived = !rv.dead && rv.hp > 0; snap = (await stateSnap()); break; }
+      if (!snap || snap.mode !== 'playing') break;
+    }
+    const state = await evaluateJson('JSON.stringify({ id: PG.game.difficultyId, revive: !!(PG.game.difficulty && PG.game.difficulty.revive), used: !!(PG.game.player && PG.game.player.reviveUsed), hp: PG.game.player ? Math.round(PG.game.player.hp) : 0, dead: !!(PG.game.player && PG.game.player.dead), mode: PG.game.state.mode })');
+    R.metrics.easyRevive = state;
+    check('easy-revive', '悠然档护主复活生效（残血受击后回半血且不判负）',
+      state.id === 'easy' && state.revive === true && state.used === true && state.dead === false && state.hp > 1,
+      false, JSON.stringify(state) + ' revived=' + revived);
+    // 收尾：切回标准档并重开，避免影响后续通关阶段
+    await evaluate('(function(){ try { PG.main.applyDiff("normal"); PG.main.restartGame(); } catch (e) {} return true; })()', 15000);
+    await sleep(600);
+    return state;
   });
 
   /* ------------------------- 阶段 9：8 波通关 -> 胜利结算 ------------------------- */

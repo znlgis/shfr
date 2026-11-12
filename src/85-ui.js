@@ -60,6 +60,11 @@
   }
 
   const TYPE_CN = { lei: '雷', mu: '木', huo: '火', shui: '水', feng: '风', du: '毒', yan: '岩', shou: '兽', ling: '灵', gui: '鬼', yao: '妖' };
+  const DIFF_META = [
+    { id: 'easy', cn: '悠然', en: 'EASY', desc: '妖物更慢更轻 · 灵兽帮忙 · 护主复活一次', color: '#8ed36a' },
+    { id: 'normal', cn: '标准', en: 'NORMAL', desc: '节奏舒展 · 有挑战，但不会手忙脚乱', color: '#e8b33a' },
+    { id: 'hard', cn: '挑战', en: 'HARD', desc: '原版强度 · 妖物四面来袭，只靠走位与枪法', color: '#d0432e' },
+  ];
   const STATS = [['hp', '体力'], ['dmg', '伤害'], ['rate', '射速'], ['spd', '速度']];
 
   /* ================================= 状态 ================================= */
@@ -86,6 +91,13 @@
     listeners: {},
     hoverEl: null,
     hoverAt: 0,
+    diffId: 'easy',
+    diffEls: [],
+    pauseDiff: null,
+    pauseDiffEls: [],
+    sensRange: null,
+    sensVal: null,
+    sens: 1,
   };
 
   /* =============================== 事件总线 =============================== */
@@ -204,6 +216,27 @@
 
     D.grid = mk('div', 'char-grid', s);
 
+    // 难度三选一（默认悠然；选角页与暂停页都可切换）
+    const diffBox = mk('div', 'sel-diffs', s);
+    const dHead = mk('div', 'sel-diff-head', diffBox);
+    mk('b', 'sel-diff-t', dHead, '难度');
+    mk('span', 'sel-diff-s', dHead, '小朋友建议选「悠然」');
+    const dGrid = mk('div', 'sel-diff-grid', diffBox);
+    D.diffEls = [];
+    for (let i = 0; i < DIFF_META.length; i++) {
+      const d = DIFF_META[i];
+      const b = mk('button', 'diff-card', dGrid);
+      b.type = 'button';
+      b.style.setProperty('--dc', d.color);
+      const nm = mk('div', 'dc-head', b);
+      mk('b', 'dc-cn', nm, d.cn);
+      mk('span', 'dc-en', nm, d.en);
+      mk('p', 'dc-desc', b, d.desc);
+      b.addEventListener('click', () => { if (D.diffId !== d.id) { fx('ui_click'); setDifficulty(d.id, true); } });
+      D.diffEls.push({ id: d.id, el: b });
+    }
+    setDifficulty(D.diffId, false);
+
     const foot = mk('footer', 'sel-foot', s);
     const ult = mk('div', 'sel-ult', foot);
     mk('span', 'ult-tag', ult, '灵兽技');
@@ -317,6 +350,44 @@
     quit.type = 'button';
     quit.addEventListener('click', doQuit);
 
+    const diffRow = mk('div', 'pause-diff', card);
+    mk('span', 'pause-diff-l', diffRow, '难度');
+    D.pauseDiff = mk('b', 'pause-diff-v', diffRow, '悠然');
+    D.pauseDiffEls = [];
+    for (let i = 0; i < DIFF_META.length; i++) {
+      const d = DIFF_META[i];
+      const b = mk('button', 'pause-diff-btn', diffRow);
+      b.type = 'button';
+      b.textContent = d.cn;
+      b.style.setProperty('--dc', d.color);
+      b.addEventListener('click', () => { if (D.diffId !== d.id) { fx('ui_click'); setDifficulty(d.id, true); } });
+      D.pauseDiffEls.push({ id: d.id, el: b });
+    }
+
+    const sensRow = mk('div', 'pause-sens', card);
+    mk('span', 'st-lbl', sensRow, '视角灵敏度');
+    const sr = mk('input', 'ui-range pause-range', sensRow);
+    sr.type = 'range';
+    sr.min = '60';
+    sr.max = '160';
+    sr.step = '5';
+    sr.setAttribute('aria-label', '视角灵敏度');
+    const sv = mk('b', 'pause-sens-v', sensRow, '100%');
+    D.sensRange = sr;
+    D.sensVal = sv;
+    const syncSens = () => {
+      sr.value = String(Math.round(clamp(D.sens, 0.6, 1.6) * 100));
+      sv.textContent = sr.value + '%';
+      sr.style.setProperty('--vol', ((Number(sr.value) - 60) / 100).toFixed(3));
+    };
+    sr.addEventListener('input', () => {
+      D.sens = clamp(Number(sr.value) / 100, 0.6, 1.6);
+      syncSens();
+      emit('sens', D.sens);
+    });
+    sr.addEventListener('change', () => fx('ui_click'));
+    syncSens();
+
     const tips = mk('div', 'pause-tips', card);
     const TIPS = [['WASD', '移动'], ['鼠标', '瞄准'], ['左键', '射击'], ['R', '装填'], ['Shift', '冲刺'], ['Space', '跳跃'], ['Q', '灵兽技'], ['Esc', '暂停']];
     for (let i = 0; i < TIPS.length; i++) {
@@ -355,6 +426,7 @@
     const card = mk('div', 'ui-card result-card ' + kind, s);
     const kicker = mk('div', 'result-kicker', card);
     mk('h2', 'result-title', card, win ? '山泽安宁！' : '挑战失败');
+    const diffLine = mk('div', 'result-diff', card, '');
 
     let rank = null;
     if (win) {
@@ -385,8 +457,23 @@
     btnTitle.addEventListener('click', doQuit);
 
     mk('div', 'result-note', s, 'Enter 再战一局 · Esc 返回标题');
-    D.res[kind] = { kicker: kicker, rank: rank, who: qwho, text: qtext, refs: refs };
+    D.res[kind] = { kicker: kicker, rank: rank, who: qwho, text: qtext, refs: refs, diff: diffLine };
     return s;
+  }
+
+  function setDifficulty(id, user) {
+    if (!DIFF_META.some((d) => d.id === id)) id = 'easy';
+    const changed = id !== D.diffId;
+    D.diffId = id;
+    const meta = DIFF_META.find((d) => d.id === id) || DIFF_META[0];
+    for (const it of D.diffEls) it.el.classList.toggle('sel', it.id === id);
+    for (const it of D.pauseDiffEls) it.el.classList.toggle('sel', it.id === id);
+    if (D.pauseDiff) {
+      D.pauseDiff.textContent = meta.cn;
+      D.pauseDiff.style.setProperty('--dc', meta.color);
+    }
+    if (changed && user) emit('difficulty', id);
+    return id;
   }
 
   function partnerName() {
@@ -430,6 +517,9 @@
     R.refs.score.textContent = group(score);
     R.refs.combo.textContent = 'x' + combo;
     R.refs.time.textContent = fmtTime(time);
+    const diffId = (typeof r.diff === 'string' && r.diff) || D.diffId;
+    const diffMeta = DIFF_META.find((d) => d.id === diffId) || DIFF_META[0];
+    if (R.diff) R.diff.textContent = '难度 · ' + diffMeta.cn;
     R.who.textContent = '「' + partnerName() + '」';
     R.text.textContent = win
       ? '成功了！山泽的暗影散了——多谢你，行者！'
@@ -520,6 +610,9 @@
     if (name === 'select') {
       ensureCards(false);
       renderSelFoot();
+      setDifficulty(D.diffId, false);
+    } else if (name === 'pause') {
+      setDifficulty(D.diffId, false);
     } else if (name === 'dead' || name === 'win') {
       renderResult(name);
     }
@@ -713,6 +806,18 @@
   ui.setCharacters = setCharacters;
   ui.on = on;
   ui.setResult = setResult;
+  ui.setDifficulty = function (id) { return setDifficulty(id, false); };
+  ui.getDifficulty = function () { return D.diffId; };
+  ui.setSens = function (v) {
+    const n = Number(v);
+    D.sens = clamp(isFinite(n) && n > 0 ? n : 1, 0.6, 1.6);
+    if (D.sensRange) {
+      D.sensRange.value = String(Math.round(D.sens * 100));
+      D.sensRange.style.setProperty('--vol', ((Math.round(D.sens * 100) - 60) / 100).toFixed(3));
+      if (D.sensVal) D.sensVal.textContent = D.sensRange.value + '%';
+    }
+    return D.sens;
+  };
   if (!ui.getScreen) {
     ui.getScreen = function () {
       return D.screen;

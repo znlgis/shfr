@@ -1081,6 +1081,110 @@ body {
     transition-duration: .01ms !important;
   }
 }
+
+/* ============================ 难度分级 ============================ */
+.sel-diffs {
+  position: relative;
+  z-index: 1;
+  flex: none;
+  width: 100%;
+  max-width: 1460px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: clamp(10px, 1.4vw, 18px);
+}
+.sel-diff-head { flex: none; width: 116px; display: flex; flex-direction: column; gap: 2px; }
+.sel-diff-t { font-size: 15px; font-weight: 900; letter-spacing: .2em; color: #fff; text-shadow: 0 2px 6px rgba(16, 40, 60, .6); }
+.sel-diff-s { font-size: 10px; font-weight: 800; line-height: 1.35; color: rgba(255, 255, 255, .82); text-shadow: 0 1px 4px rgba(16, 40, 60, .55); }
+.sel-diff-grid { flex: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(8px, 1vw, 14px); }
+.diff-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 14px 9px;
+  border-radius: 16px;
+  border: 3px solid rgba(255, 255, 255, .7);
+  background: rgba(255, 255, 255, .94);
+  color: var(--sh-ink);
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 4px 0 rgba(36, 49, 63, .12), 0 10px 22px rgba(36, 49, 63, .16);
+  transition: transform .14s ease, box-shadow .16s ease, border-color .16s ease;
+}
+.diff-card:hover { transform: translateY(-2px); border-color: var(--dc); }
+.diff-card.sel {
+  border-color: var(--dc);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, .55), 0 6px 0 rgba(36, 49, 63, .14), 0 14px 26px rgba(36, 49, 63, .22);
+  transform: translateY(-2px);
+}
+.diff-card.sel::after {
+  content: '✓';
+  position: absolute; right: 9px; top: 7px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  background: var(--dc);
+  color: #fff;
+  font: 900 11px/18px var(--ui-font);
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(36, 49, 63, .25);
+}
+.dc-head { display: flex; align-items: baseline; gap: 7px; }
+.dc-cn { font-size: 15px; font-weight: 900; letter-spacing: .1em; }
+.dc-en { font-size: 9px; font-weight: 900; letter-spacing: .16em; color: rgba(36, 49, 63, .45); }
+.dc-desc { margin: 1px 0 0; font-size: 11px; font-weight: 700; line-height: 1.4; color: rgba(36, 49, 63, .68); }
+
+/* 暂停界面：难度 + 灵敏度 */
+.pause-diff { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; margin-top: 12px; justify-content: center; }
+.pause-diff-l { font-size: 10.5px; font-weight: 900; letter-spacing: .2em; color: rgba(36, 49, 63, .5); }
+.pause-diff-v { font-size: 14px; font-weight: 900; color: var(--dc, var(--sh-gold)); margin-right: 2px; }
+.pause-diff-btn {
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 2.5px solid rgba(36, 49, 63, .16);
+  background: #fff;
+  color: rgba(36, 49, 63, .7);
+  font: 900 11.5px/1 var(--ui-font);
+  cursor: pointer;
+  transition: transform .12s, border-color .15s, color .15s;
+}
+.pause-diff-btn:hover { transform: translateY(-1px); }
+.pause-diff-btn.sel { border-color: var(--dc); color: var(--sh-ink); background: #fff; box-shadow: 0 0 0 2px rgba(255, 255, 255, .7), 0 3px 10px rgba(36, 49, 63, .16); }
+.pause-sens { display: flex; align-items: center; gap: 10px; margin-top: 9px; }
+.pause-range { flex: 1; min-width: 90px; }
+.pause-sens-v { flex: none; width: 42px; text-align: right; font-size: 11.5px; font-weight: 900; color: rgba(36, 49, 63, .62); }
+
+/* 结算：难度记录 */
+.result-diff {
+  display: inline-block;
+  margin-top: 7px;
+  padding: 4px 14px 5px;
+  border-radius: 999px;
+  border: 2.5px solid var(--sh-gold);
+  background: rgba(255, 255, 255, .92);
+  color: var(--sh-ink);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .16em;
+  text-indent: .16em;
+  box-shadow: var(--ui-shadow-soft);
+}
+
+@media (max-width: 900px) {
+  .sel-diff-head { width: auto; }
+  .sel-diff-s { display: none; }
+  .sel-diffs { gap: 8px; }
+  .sel-diff-grid { gap: 6px; }
+  .diff-card { padding: 6px 10px 7px; border-radius: 13px; }
+  .dc-desc { display: none; }
+  .dc-cn { font-size: 13px; }
+}
+@media (max-height: 760px) {
+  .dc-desc { font-size: 10px; }
+  .sel-diffs { margin-top: -2px; }
+}
 /* ==== 75-hud.css ==== */
 /* 75-hud.css — 战斗 HUD 与触屏样式（Lead）
    明亮山海国风：白色卡片的半透明版本 + 鎏金描边 + 柔和投影 + 粗圆体字 */
@@ -1270,4 +1374,98 @@ body {
 @keyframes vig-pulse { from { opacity: .55; } to { opacity: 1; } }
 .hud-hurtfx { position: absolute; inset: 0; pointer-events: none; opacity: 0;
   background: radial-gradient(ellipse at center, rgba(255, 60, 40, 0) 30%, rgba(255, 60, 40, .55) 100%); }
+
+/* ---------------- 难度徽标 ---------------- */
+.hud-diff {
+  --dc: #8ed36a;
+  padding: 4px 14px 5px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 900;
+  letter-spacing: .18em;
+  text-indent: .18em;
+  color: var(--sh-ink);
+  background: var(--sh-white);
+  border: 2.5px solid var(--dc);
+  box-shadow: 0 3px 0 rgba(36, 49, 63, .12), 0 8px 18px rgba(36, 49, 63, .14);
+  opacity: 0;
+  transition: opacity .3s;
+}
+.hud-diff.on { opacity: 1; }
+
+/* ---------------- 敌人头顶血条 ---------------- */
+.hud-ebars { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.hud-ebar {
+  position: absolute; left: 0; top: 0;
+  width: 66px; height: 9px;
+  border-radius: 999px;
+  background: rgba(18, 26, 34, .55);
+  border: 2px solid rgba(255, 255, 255, .92);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .35);
+  opacity: 0;
+  transition: opacity .12s;
+  will-change: transform;
+}
+.hud-ebar.on { opacity: 1; }
+.hud-ebar-fill { display: block; width: 100%; height: 100%; border-radius: 999px; transform-origin: left center; background: linear-gradient(90deg, #a8f0b8, #4ec06a); }
+.hud-ebar.elite .hud-ebar-fill { background: linear-gradient(90deg, #ffe27a, #e8b33a); }
+.hud-ebar.boss .hud-ebar-fill { background: linear-gradient(90deg, #ffb04a, #d0432e); }
+.hud-ebar.focus { border-color: var(--sh-gold); box-shadow: 0 0 0 2px rgba(232, 179, 58, .85), 0 0 16px rgba(232, 179, 58, .8); }
+.hud-ebar.alert::before {
+  content: '!';
+  position: absolute; left: 50%; top: -19px;
+  width: 16px; height: 16px; margin-left: -8px;
+  border-radius: 50%;
+  background: var(--sh-cinnabar); color: #fff;
+  font: 900 11px/16px var(--hud-font);
+  text-align: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .35);
+}
+
+/* ---------------- 屏幕外敌人指示 ---------------- */
+.hud-edges { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+.hud-edge { position: absolute; left: 0; top: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; opacity: 0; transition: opacity .15s; }
+.hud-edge.on { opacity: 1; }
+.hud-edge-arrow {
+  width: 0; height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-bottom: 12px solid #8ef0b0;
+  filter: drop-shadow(0 0 6px rgba(120, 240, 170, .75));
+}
+.hud-edge-d { font: 900 10px/1 var(--hud-font); color: #fff; text-shadow: 0 1px 3px rgba(36, 49, 63, .9); }
+.hud-edge.alert .hud-edge-arrow { border-bottom-color: #ff6b5a; }
+.hud-edge.elite .hud-edge-arrow { border-bottom-color: #ffd66b; }
+.hud-edge.boss .hud-edge-arrow { border-bottom-color: #ff8a5a; }
+
+/* ---------------- 准星加粗 + 锁定角标 ---------------- */
+.hud-cross-t, .hud-cross-b { width: 3px; height: 11px; }
+.hud-cross-l, .hud-cross-r { width: 11px; height: 3px; }
+.hud-cross-dot { width: 4px; height: 4px; margin: -2px 0 0 -2px; }
+.hud-cross.lock > i { background: var(--sh-gold); }
+.hud-lock {
+  position: absolute; left: 0; top: 0;
+  width: 46px; height: 46px; margin: -23px 0 0 -23px;
+  opacity: 0;
+  transform: scale(1.3);
+  transition: opacity .1s, transform .12s;
+}
+.hud-cross.lock .hud-lock { opacity: 1; transform: scale(1); }
+.hud-lock i {
+  position: absolute;
+  width: 11px; height: 11px;
+  background: none;
+  border: 2.5px solid var(--sh-gold);
+  border-radius: 2px;
+  box-shadow: 0 0 10px rgba(232, 179, 58, .75);
+}
+.hud-lock-tl { left: 0; top: 0; border-right: none; border-bottom: none; }
+.hud-lock-tr { right: 0; top: 0; border-left: none; border-bottom: none; }
+.hud-lock-bl { left: 0; bottom: 0; border-right: none; border-top: none; }
+.hud-lock-br { right: 0; bottom: 0; border-left: none; border-top: none; }
+.hud-cross.alert .hud-lock i { border-color: var(--sh-cinnabar); box-shadow: 0 0 10px rgba(208, 67, 46, .8); }
+
+/* 更醒目的命中反馈 */
+.hud-hit { width: 34px; height: 34px; margin: -17px 0 0 -17px; }
+.hud-hit i { width: 3px; height: 12px; }
 

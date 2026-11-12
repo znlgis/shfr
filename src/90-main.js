@@ -9,9 +9,31 @@
     renderer: null, scene: null, camera: null, world: null, clock: 0, last: 0,
     mode: 'boot', titleT: 0, showcase: null, fpsAcc: 0, fpsFrames: 0, fps: 60,
     locked: false, started: false, bootT: 0, char: 't_bolt', canvas: null,
+    sens: 1, diff: 'easy', lockTries: 0,
     err: [],
   };
   const Q = new URLSearchParams(location.search);
+
+  function storeGet(k, fb) {
+    try { const v = localStorage.getItem(k); return v == null ? fb : v; } catch (e) { return fb; }
+  }
+  function storeSet(k, v) {
+    try { localStorage.setItem(k, String(v)); } catch (e) {}
+  }
+  // 难度：URL ?diff= 优先，其次本地记忆，默认悠然
+  function applyDiff(id) {
+    E.diff = (PG.game && PG.game.DIFFS && PG.game.DIFFS[id]) ? id : 'easy';
+    try { PG.game && PG.game.setDifficulty && PG.game.setDifficulty(E.diff); } catch (e) {}
+    try { PG.ui && PG.ui.setDifficulty && PG.ui.setDifficulty(E.diff); } catch (e) {}
+    return E.diff;
+  }
+  function applySens(v) {
+    const n = Number(v);
+    E.sens = clamp(isFinite(n) && n > 0 ? n : 1, 0.6, 1.6);
+    try { PG.game && PG.game.setSensitivity && PG.game.setSensitivity(E.sens); } catch (e) {}
+    try { PG.ui && PG.ui.setSens && PG.ui.setSens(E.sens); } catch (e) {}
+    return E.sens;
+  }
 
   // ---------------- 输入 ----------------
   const keys = Object.create(null);
@@ -42,10 +64,13 @@
 
     let dragLook = false;
     canvas.addEventListener('mousedown', (e) => {
-      if (e.button === 0) {
-        input.fire = true;
-        if (E.mode === 'playing' && !E.locked && !isTouch()) { requestLock(); dragLook = true; }
+      if (e.button !== 0) return;
+      if (E.mode === 'playing' && !E.locked && !isTouch()) {
+        // 第一次点击只用来锁定指针，避免"还没瞄准就先打空一发"
+        dragLook = true;
+        if (E.lockTries < 1) { E.lockTries++; requestLock(); return; }
       }
+      input.fire = true;
     });
     window.addEventListener('mouseup', () => { dragLook = false; });
     // 指针锁定不可用时的兜底：按住左键拖动也能转视角
@@ -66,6 +91,7 @@
 
     document.addEventListener('pointerlockchange', () => {
       E.locked = document.pointerLockElement === E.canvas;
+      if (E.locked) E.lockTries = 0;
       if (!E.locked && E.mode === 'playing' && !isTouch()) doPause();
     });
     canvas.addEventListener('click', () => {
@@ -97,7 +123,7 @@
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xbde6ff);
-    scene.fog = new THREE.Fog(0xcfeaff, 38, 132);
+    scene.fog = new THREE.Fog(0xcfeaff, 44, 140);
     E.scene = scene;
     const sky = skyGradient();
     scene.add(sky);
@@ -299,12 +325,15 @@
       try {
         const st = PG.game.state, pl = PG.game.player;
         const score = st.score || 0;
-        const rank = mode === 'win' ? (score > 16000 ? 'S' : score > 11000 ? 'A' : 'B') : (score > 8000 ? 'B' : score > 4000 ? 'C' : 'D');
+        const diff = PG.game.difficulty || { id: 'normal', cn: '标准' };
+        const rank = PG.game.rankFor ? PG.game.rankFor(score, mode === 'win')
+          : (mode === 'win' ? (score > 16000 ? 'S' : score > 11000 ? 'A' : 'B') : (score > 8000 ? 'B' : score > 4000 ? 'C' : 'D'));
         if (PG.ui && PG.ui.setResult) PG.ui.setResult({
           wave: st.wave, waveTotal: PG.game.WAVE_TOTAL, score: score,
           comboMax: st.comboMax, time: Math.round(st.time), kills: pl ? pl.kills : 0,
           hits: pl ? pl.hits : 0, shots: pl ? pl.shots : 0,
           rank: rank, win: mode === 'win',
+          diff: diff.id, diffCn: diff.cn,
         });
       } catch (e) {}
       PG.ui && PG.ui.hudVisible && PG.ui.hudVisible(false);
@@ -369,6 +398,15 @@
     PG.ui.on && PG.ui.on('start', () => { PG.audio && PG.audio.init && PG.audio.init(); toSelect(); });
     PG.ui.on && PG.ui.on('select', (id) => { E.char = id || E.char; });
     PG.ui.on && PG.ui.on('launch', (id) => startGame(id));
+    PG.ui.on && PG.ui.on('difficulty', (id) => {
+      applyDiff(id);
+      storeSet('shfr.diff', E.diff);
+      try { if (PG.ui.toast && PG.game.difficulty) PG.ui.toast('难度 · ' + PG.game.difficulty.cn, 1400); } catch (e) {}
+    });
+    PG.ui.on && PG.ui.on('sens', (v) => {
+      applySens(v);
+      storeSet('shfr.sens', E.sens);
+    });
     PG.ui.on && PG.ui.on('resume', () => doResume());
     PG.ui.on && PG.ui.on('restart', () => restartGame());
     PG.ui.on && PG.ui.on('quit', () => quitToTitle());
@@ -437,7 +475,11 @@
       const st = PG.game.state;
       if (E.mode === 'playing' && PG.ui && PG.ui.setCrosshair) {
         const pl = PG.game.player;
-        if (pl) PG.ui.setCrosshair(1, clamp(pl.bloom * 0.8 + (Math.hypot(pl.vel.x, pl.vel.z) / 40), 0, 1));
+        if (pl) {
+          const f = PG.game.focusEnemy || null;
+          PG.ui.setCrosshair(1, clamp(pl.bloom * 0.8 + (Math.hypot(pl.vel.x, pl.vel.z) / 40), 0, 1),
+            f ? { on: true, kind: f.kind, alert: f.alert > 0 } : null);
+        }
       }
     } catch (e) {}
 
@@ -476,6 +518,8 @@
       }
       bindInput();
       wireUI();
+      applyDiff(Q.get('diff') || storeGet('shfr.diff', 'easy'));
+      applySens(storeGet('shfr.sens', '1'));
       // 尺寸
       const applyLayout = () => {
         E.camera.aspect = window.innerWidth / window.innerHeight;
@@ -644,7 +688,7 @@
               enemiesLeft: 8, score: PG.game.state.score, combo: PG.game.state.combo, comboMax: PG.game.state.comboMax,
               ammo: PG.game.player.ammo, ammoMax: PG.game.char.gun.ammoMax, reserve: 0,
               weaponName: PG.game.char.weaponShort, weaponColor: PG.game.char.color,
-              reloading: false, reloadT: 1, dashCd: 0, dashMax: 1.15, ultCd: 0, ultMax: 13,
+              reloading: false, reloadT: 1, dashCd: 0, dashMax: 1.0, ultCd: 0, ultMax: 13,
               boss: null, charge: 0.6, time: PG.game.state.time,
             }); } catch (e) {}
           }
@@ -670,5 +714,5 @@
   else boot2();
 
   // 对外：便于 QA 直接调用
-  PG.main = { E, startGame, toTitle, doPause, doResume, restartGame, quitToTitle };
+  PG.main = { E, startGame, toTitle, doPause, doResume, restartGame, quitToTitle, applyDiff, applySens };
 })();

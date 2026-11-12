@@ -8348,7 +8348,7 @@ PG.models = {
       passive: '聚雷：命中累积雷气，满 5 层下一发必定暴击',
       ult: '天雷引：连锁闪电，劈中 8 米内最多 6 只妖物',
       hp: 100, speed: 1.06,
-      gun: { dmg: 15, rate: 0.115, pellets: 1, spread: 0.008, speed: 108, ammoMax: 30, reload: 1.05, splash: 0, pierce: 0, crit: 2.0, projColor: 0xffe66b },
+      gun: { dmg: 15, rate: 0.115, pellets: 1, spread: 0.005, speed: 108, ammoMax: 36, reload: 0.9, splash: 0, pierce: 0, crit: 2.0, projColor: 0xffe66b },
     },
     {
       id: 't_leaf', cn: '句芒', en: 'GOUMANG', type: 'mu', color: '#8ed36a', colorHex: 0x8ed36a,
@@ -8357,7 +8357,7 @@ PG.models = {
       passive: '春生：脱战 4 秒后缓慢回复体力',
       ult: '万物生：灵雨护体，回血并减速周围妖物',
       hp: 110, speed: 1.0,
-      gun: { dmg: 12, rate: 0.62, pellets: 5, spread: 0.075, speed: 62, ammoMax: 9, reload: 1.45, splash: 0, pierce: 1, crit: 1.8, projColor: 0x9ef06b },
+      gun: { dmg: 12, rate: 0.62, pellets: 5, spread: 0.05, speed: 62, ammoMax: 12, reload: 1.15, splash: 0, pierce: 1, crit: 1.8, projColor: 0x9ef06b },
     },
     {
       id: 't_ember', cn: '祝融', en: 'ZHURONG', type: 'huo', color: '#ff8a3d', colorHex: 0xff8a3d,
@@ -8366,7 +8366,7 @@ PG.models = {
       passive: '余烬：击杀后 2 秒内伤害 +40%',
       ult: '焚天业火：以自身为中心的爆炎新星，范围灼烧',
       hp: 120, speed: 0.94,
-      gun: { dmg: 46, rate: 0.44, pellets: 1, spread: 0.012, speed: 58, ammoMax: 8, reload: 1.7, splash: 2.8, pierce: 0, crit: 1.7, projColor: 0xff9a3c },
+      gun: { dmg: 46, rate: 0.44, pellets: 1, spread: 0.008, speed: 58, ammoMax: 10, reload: 1.3, splash: 2.8, pierce: 0, crit: 1.7, projColor: 0xff9a3c },
     },
     {
       id: 't_tide', cn: '玄冥', en: 'XUANMING', type: 'shui', color: '#5ab8f0', colorHex: 0x5ab8f0,
@@ -8375,7 +8375,7 @@ PG.models = {
       passive: '潮汐：每第 5 发伤害翻倍并回复 2 点体力',
       ult: '玄冥水盾：3 秒无敌，冲开周围所有敌人',
       hp: 105, speed: 1.03,
-      gun: { dmg: 19, rate: 0.155, pellets: 1, spread: 0.006, speed: 96, ammoMax: 36, reload: 1.25, splash: 0, pierce: 2, crit: 1.8, projColor: 0x6fd8ff },
+      gun: { dmg: 19, rate: 0.155, pellets: 1, spread: 0.004, speed: 96, ammoMax: 42, reload: 1.05, splash: 0, pierce: 2, crit: 1.8, projColor: 0x6fd8ff },
     },
   ];
 
@@ -8402,9 +8402,44 @@ PG.models = {
     chiru: '赤鱬', taotie: '饕餮', bashe: '巴蛇', hundun: '混沌',
   };
 
+  // ============================ 难度 ============================
+  // 三档：悠然（默认，小朋友 / 新手）、标准、挑战（原版强度）。
+  // 数值全部是「相对原版基准的倍率」，挑战档 = 原版手感，方便随时回退。
+  const DIFFS = {
+    easy: {
+      id: 'easy', cn: '悠然', en: 'EASY', color: '#8ed36a',
+      desc: '妖物更慢更轻 · 灵兽自动帮忙 · 护主复活一次',
+      enemyHp: 0.6, enemyDmg: 0.45, enemySpd: 0.85, enemyCd: 1.3, eProjSpd: 0.65,
+      maxAlive: 6, spawnNear: [12, 20], spawnArc: Math.PI,
+      playerHp: 1.35, invuln: 0.55, waveHeal: 0.35,
+      revive: true, aimAssist: 3.5, hitScale: 1.5, autoHelp: true,
+      bossHp: 0.6, bossFan: 5, scoreMul: 0.8,
+    },
+    normal: {
+      id: 'normal', cn: '标准', en: 'NORMAL', color: '#e8b33a',
+      desc: '节奏舒展 · 有挑战，但不会手忙脚乱',
+      enemyHp: 0.9, enemyDmg: 0.75, enemySpd: 0.95, enemyCd: 1.1, eProjSpd: 0.85,
+      maxAlive: 9, spawnNear: [15, 26], spawnArc: Math.PI * 4 / 3,
+      playerHp: 1.15, invuln: 0.4, waveHeal: 0.22,
+      revive: false, aimAssist: 1.2, hitScale: 1, autoHelp: false,
+      bossHp: 0.9, bossFan: 9, scoreMul: 1,
+    },
+    hard: {
+      id: 'hard', cn: '挑战', en: 'HARD', color: '#d0432e',
+      desc: '原版强度 · 妖物四面来袭，只靠走位与枪法',
+      enemyHp: 1.15, enemyDmg: 1.1, enemySpd: 1, enemyCd: 1, eProjSpd: 1,
+      maxAlive: 12, spawnNear: [18, 32], spawnArc: Math.PI * 2,
+      playerHp: 1, invuln: 0.28, waveHeal: 0,
+      revive: false, aimAssist: 0, hitScale: 1, autoHelp: false,
+      bossHp: 1, bossFan: 14, scoreMul: 1.15,
+    },
+  };
+  const DIFF_ORDER = ['easy', 'normal', 'hard'];
+  const DIFF_DEFAULT = 'easy';
+
   // ============================ 波次 ============================
   const WAVES = [
-    { name: '林间异动', tip: '山里的灵气乱了……有东西在盯着我们！', list: [['lushu', 5], ['wugong', 3]] },
+    { name: '林间异动', tip: '山里的灵气乱了……有东西在盯着我们！先瞄准脚下有光环的妖物！', list: [['lushu', 4], ['wugong', 2]] },
     { name: '妖群来袭', tip: '它们被混沌之气侵蚀了，别心软！', list: [['lushu', 4], ['wugong', 4], ['zhen', 3]] },
     { name: '古木伏击', tip: '左边的古木在动——树魅在聚气！', list: [['mumei', 4], ['zhen', 3], ['xuanfeng', 2]] },
     { name: '玄蜂之刺', tip: '混沌之气越来越浓，别停下！', list: [['xuanfeng', 5], ['jiuwei', 3], ['wugong', 4]] },
@@ -8421,6 +8456,8 @@ PG.models = {
     scene: null, camera: null, renderer: null, vmScene: null, vmCamera: null,
     player: null, char: null, view: null, world: null,
     waves: null, enemies: [], projectiles: [], eprojectiles: [], fx: [],
+    pending: [], focus: null,
+    diff: DIFFS[DIFF_DEFAULT], diffId: DIFF_DEFAULT, sens: 1,
     mats: {}, texes: {},
     onEnd: null,
   };
@@ -8470,7 +8507,7 @@ PG.models = {
       pos: new THREE.Vector3(0, 0, 22),
       vel: new THREE.Vector3(),
       yaw: 0, pitch: 0,
-      hp: char.hp, hpMax: char.hp,
+      hp: Math.round(char.hp * G.diff.playerHp), hpMax: Math.round(char.hp * G.diff.playerHp),
       speed: 5.4 * char.speed,
       eye: 1.62, onGround: true, vy: 0,
       fireCd: 0, ammo: char.gun.ammoMax, reloading: false, reloadT: 0,
@@ -8480,7 +8517,7 @@ PG.models = {
       charge: 0, emberT: 0, tideCount: 0, outT: 0,
       bobT: 0, bobAmt: 0, strafeLean: 0, hurtT: 0, dead: false,
       shieldT: 0, slowT: 0,
-      kills: 0, shots: 0, hits: 0,
+      kills: 0, shots: 0, hits: 0, reviveUsed: false, helpCd: 3.0,
     };
   }
 
@@ -8719,7 +8756,7 @@ PG.models = {
       let dead = false;
       for (const e of G.enemies) {
         if (!e.alive || p.hitSet.has(e.id)) continue;
-        const c = e.hitCenter, r = e.hitRadius;
+        const c = e.hitCenter, r = e.hitRadius * (G.diff.hitScale || 1);
         const abx = p.pos.x - p.prev.x, aby = p.pos.y - p.prev.y, abz = p.pos.z - p.prev.z;
         const acx = c.x - p.prev.x, acy = c.y - p.prev.y, acz = c.z - p.prev.z;
         const ab2 = abx * abx + aby * aby + abz * abz || 1e-6;
@@ -8754,7 +8791,7 @@ PG.models = {
       let dead = false;
       if (pl && !pl.dead) {
         const pc = new THREE.Vector3(pl.pos.x, pl.pos.y + 1.0, pl.pos.z);
-        if (p.pos.distanceTo(pc) < 0.62 + p.radius) {
+        if (p.pos.distanceTo(pc) < 0.55 + p.radius) {
           if (pl.invuln <= 0) {
             hurtPlayer(p.dmg, p.pos);
             spawnSpark(p.pos, 0xff6b5a, 8, 1.1, 0.4);
@@ -8795,6 +8832,43 @@ PG.models = {
     return { group: g, height: 1.0, radius: 0.5, update() {} };
   }
 
+  const AURA_COLOR = { enemy: 0x7fe0a0, elite: 0xffd66b, boss: 0xff6b4a };
+  // 脚下光环：让妖物在草丛 / 远处也能一眼看见（纯提示，不参与受击）
+  function makeAura(e) {
+    const col = AURA_COLOR[e.kind] || AURA_COLOR.enemy;
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: ringTexture(hexStr(col)), color: 0xffffff, transparent: true, opacity: 0.5,
+      blending: THREE.AdditiveBlending, depthWrite: false, fog: false,
+    }));
+    const s = e.kind === 'boss' ? 4.2 : e.kind === 'elite' ? 2.2 : 1.15;
+    sp.scale.set(s, s, 1);
+    sp.position.set(e.pos.x, 0.06, e.pos.z);
+    sp.renderOrder = 1;
+    G.scene.add(sp);
+    return sp;
+  }
+
+  // 受击闪白 / 准星聚焦呼吸光，统一走材质自发光，避免额外的描边 draw call
+  function updateEnemyGlow(e, t) {
+    const flash = e.flash > 0.02;
+    const focus = e.focus;
+    const pulse = 0.55 + Math.sin(t * 6 + e.id) * 0.35;
+    for (const m of e.mats) {
+      if (!m.emissive) continue;
+      if (flash) {
+        m.emissive.setHex(0xffffff);
+        if (m.emissiveIntensity !== undefined) m.emissiveIntensity = 1.6;
+      } else if (focus) {
+        m.emissive.setHex(0xffc94a);
+        if (m.emissiveIntensity !== undefined) m.emissiveIntensity = pulse;
+      } else {
+        const base = m.userData.baseEmissive;
+        if (base != null) m.emissive.setHex(base);
+        if (m.emissiveIntensity !== undefined) m.emissiveIntensity = m.userData.baseEmissiveI == null ? 1 : m.userData.baseEmissiveI;
+      }
+    }
+  }
+
   function makeEnemy(id, x, z, opt) {
     opt = opt || {};
     const def = ENEMIES[id] || ENEMIES.lushu;
@@ -8818,19 +8892,36 @@ PG.models = {
       else if (o.material) { const c = o.material.clone(); o.material = c; mats.push(c); }
     });
 
-    const hp = def.hp * (opt.hpMul || 1);
+    const d = G.diff;
+    const boss = def.kind === 'boss';
+    const hp = Math.max(1, Math.round(def.hp * (opt.hpMul || 1) * (boss ? d.bossHp : d.enemyHp)));
+    // 材质自发光基线：用于「受击闪白 / 准星聚焦呼吸光」
+    for (const m of mats) {
+      if (!m.emissive) continue;
+      m.userData.baseEmissive = m.emissive.getHex();
+      m.userData.baseEmissiveI = m.emissiveIntensity == null ? 1 : m.emissiveIntensity;
+    }
     const e = {
       id: enemyIdSeq++, type: id, def, group, model, mats,
       pos: new THREE.Vector3(x, def.y || 0, z),
       hp, hpMax: hp, alive: true, radius, height,
       hitRadius: Math.max(0.55, radius * 1.3),
       hitCenter: new THREE.Vector3(x, (def.y || 0) + height * 0.5, z),
-      cd: rand(0.6, 1.6), state: 'spawn', flash: 0,
+      // 难度生效后的实际数值（AI 一律读这些字段，不再直接读 def）
+      spd: def.spd * d.enemySpd,
+      cdMax: def.cd * d.enemyCd,
+      dmg: (def.dmg || 8) * d.enemyDmg,
+      range: def.range || 26,
+      projSpd: (def.projSpd || 20) * d.eProjSpd,
+      dashSpeed: 17 * d.enemySpd,
+      cd: rand(0.6, 1.6) * d.enemyCd, state: 'spawn', flash: 0,
       yOff: 0, anim: rand(0, 10), spawnT: 0, dying: 0, slow: 0,
       dashT: 0, dashCd: 0, dashDir: new THREE.Vector3(), teleT: 2.5,
+      windT: 0, alert: 0, focus: false, aura: null,
       kind: def.kind || 'enemy',
     };
     if (def.ghost) for (const m of mats) { if (m.transparent !== undefined) { m.transparent = true; m.opacity = 0.72; } }
+    e.aura = makeAura(e);
     spawnRing(new THREE.Vector3(x, 0.1, z), 0x8a6ac8, 1.4, 0.5);
     G.enemies.push(e);
     return e;
@@ -8875,6 +8966,7 @@ PG.models = {
 
   function killEnemy(e) {
     if (!e.alive) return;
+    if (G.focus === e) G.focus = null;
     e.alive = false;
     e.dying = 0.5;
     e.state = 'dying';
@@ -8891,6 +8983,7 @@ PG.models = {
     const col = e.kind === 'boss' ? 0xffb04a : e.kind === 'elite' ? 0xe8b33a : 0x9ef06b;
     spawnSpark(e.hitCenter.clone(), col, e.kind === 'boss' ? 60 : e.kind === 'elite' ? 26 : 12, e.kind === 'boss' ? 2.4 : 1.2, 0.9);
     spawnRing(e.pos.clone().setY(0.15), col, e.kind === 'boss' ? 4 : 1.6, 0.55);
+    if (PG.ui && PG.ui.hitmarker) PG.ui.hitmarker('kill');
     if (PG.audio) PG.audio.sfx('kill', { vol: e.kind === 'enemy' ? 0.5 : 0.85 });
     if (PG.ui && PG.ui.killfeed) PG.ui.killfeed('击败 ' + (CN[e.type] || e.type) + '  +' + gain, e.kind === 'boss' ? 'boss' : e.kind === 'elite' ? 'elite' : 'kill');
     if (e.kind === 'boss') {
@@ -8905,7 +8998,7 @@ PG.models = {
     const d = Math.hypot(pl.pos.x - e.pos.x, pl.pos.z - e.pos.z);
     if (d > 2.6 + e.radius) return;
     if (pl.invuln > 0 || pl.dashT > 0) return;
-    hurtPlayer((e.def.dmg || 8) * (mul || 1), e.pos.clone().setY(1.0));
+    hurtPlayer((e.dmg || e.def.dmg || 8) * (mul || 1), e.pos.clone().setY(1.0));
     spawnSpark(new THREE.Vector3(pl.pos.x, 1.1, pl.pos.z), 0xff6b5a, 8, 0.9, 0.35);
   }
 
@@ -8915,11 +9008,11 @@ PG.models = {
     const from = new THREE.Vector3(e.pos.x, e.pos.y + e.height * 0.6 + (e.yOff || 0), e.pos.z);
     const aim = new THREE.Vector3(pl.pos.x, pl.pos.y + 1.0, pl.pos.z);
     const d = from.distanceTo(aim);
-    const tt = d / (e.def.projSpd || 20);
+    const tt = d / (e.projSpd || 20);
     aim.x += pl.vel.x * tt * 0.6;
     aim.z += pl.vel.z * tt * 0.6;
     const dir = aim.sub(from).normalize();
-    fireProjectile(from, dir, { dmg: (e.def.dmg || 8) * (mul || 1), projSpd: e.def.projSpd || 20 }, 1, true, 0xff6a5a);
+    fireProjectile(from, dir, { dmg: (e.dmg || 8) * (mul || 1), projSpd: e.projSpd || 20 }, 1, true, 0xff6a5a);
     if (PG.audio) PG.audio.sfx('shot_alt', { vol: 0.2, rate: 0.7 });
   }
 
@@ -8939,7 +9032,7 @@ PG.models = {
     if (!pl) return;
     const phase2 = e.hp < e.hpMax * 0.5;
     e.cd -= dt;
-    const spd = e.def.spd * (phase2 ? 1.5 : 1);
+    const spd = e.spd * (phase2 ? 1.5 : 1);
     e.pos.y = 0.55 + Math.sin(t * 1.4) * 0.25;
     if (dist > 7) { e.pos.x += nx * spd * dt; e.pos.z += nz * spd * dt; }
     else if (dist < 4) { e.pos.x -= nx * spd * dt; e.pos.z -= nz * spd * dt; }
@@ -8951,16 +9044,16 @@ PG.models = {
         const base = aim.clone().sub(from).normalize();
         for (let i = -1; i <= 1; i++) {
           const dir = base.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), i * 0.13);
-          fireProjectile(from.clone(), dir, { dmg: 12, projSpd: 24 }, 1, true, 0xff9a4a);
+          fireProjectile(from.clone(), dir, { dmg: e.dmg * 0.6, projSpd: e.projSpd * 1.2 }, 1, true, 0xff9a4a);
         }
         if (PG.audio) PG.audio.sfx('boss_roar', { vol: 0.5, rate: 1.5 });
         e.cd = phase2 ? 1.5 : 2.2;
       } else if (mode === 1) {
-        const n = phase2 ? 14 : 9;
+        const n = phase2 ? G.diff.bossFan + 5 : G.diff.bossFan;
         const from = new THREE.Vector3(e.pos.x, e.pos.y + e.height * 0.7, e.pos.z);
         for (let i = 0; i < n; i++) {
           const a = (i / n) * TAU + t;
-          fireProjectile(from.clone(), new THREE.Vector3(Math.cos(a), rand(-0.05, 0.05), Math.sin(a)), { dmg: 9, projSpd: 16 }, 1, true, 0xffb04a);
+          fireProjectile(from.clone(), new THREE.Vector3(Math.cos(a), rand(-0.05, 0.05), Math.sin(a)), { dmg: e.dmg * 0.45, projSpd: e.projSpd * 0.8 }, 1, true, 0xffb04a);
         }
         spawnRing(e.pos.clone().setY(e.pos.y + 0.5), 0xffb04a, 3.2, 0.6);
         e.cd = phase2 ? 2.0 : 3.0;
@@ -8980,7 +9073,7 @@ PG.models = {
         e.cd = 4.0;
       }
     }
-    if (dist < 2.6 && Math.random() < dt * 1.6) hurtPlayer(e.def.dmg, e.pos.clone());
+    if (dist < 2.6 && Math.random() < dt * 1.6) hurtPlayer(e.dmg, e.pos.clone());
   }
 
   function updateEnemy(e, dt, t) {
@@ -9002,25 +9095,24 @@ PG.models = {
       const k = clamp(1 - e.dying / 0.5, 0, 1);
       e.group.scale.multiplyScalar(1 + dt * 1.8);
       for (const m of e.mats) { m.transparent = true; m.opacity = (1 - k) * 0.9; }
+      if (e.aura) e.aura.material.opacity = (1 - k) * 0.45;
       e.group.position.y += dt * 1.5;
       if (e.dying <= 0) {
         G.scene.remove(e.group);
         if (PG.util && PG.util.disposeTree) PG.util.disposeTree(e.group);
+        if (e.aura) { if (e.aura.parent) e.aura.parent.remove(e.aura); e.aura.material.dispose(); e.aura = null; }
         const idx = G.enemies.indexOf(e);
         if (idx >= 0) G.enemies.splice(idx, 1);
       }
       return;
     }
 
-    if (e.flash > 0) {
-      e.flash -= dt;
-      const on = e.flash > 0.02;
-      for (const m of e.mats) { if (m.emissive) { m.emissive.setHex(on ? 0xffffff : 0x000000); } }
-    }
+    if (e.flash > 0) e.flash -= dt;
+    updateEnemyGlow(e, t);
 
     e.slow = Math.max(0, e.slow - dt);
     const slowMul = e.slow > 0 ? 0.45 : 1;
-    const spd = e.def.spd * slowMul * (1 + (G.state.wave - 1) * 0.045);
+    const spd = e.spd * slowMul * (1 + (G.state.wave - 1) * 0.045);
     let mvx = 0, mvz = 0;
     const attackRange = 1.8 + e.radius;
 
@@ -9029,51 +9121,55 @@ PG.models = {
         case 'melee':
         case 'heavy':
           if (dist > attackRange) { mvx = nx * spd; mvz = nz * spd; }
-          else { e.cd -= dt; if (e.cd <= 0) { e.cd = e.def.cd; meleeAttack(e); } }
+          else { e.cd -= dt; if (e.cd <= 0) { e.cd = e.cdMax; meleeAttack(e); } }
           break;
         case 'strafe': {
           const side = Math.sin(t * 1.7 + e.id) > 0 ? 1 : -1;
           if (dist > 7) { mvx = nx * spd; mvz = nz * spd; }
           else { mvx = -nz * spd * 0.85 * side + nx * spd * 0.25; mvz = nx * spd * 0.85 * side + nz * spd * 0.25; }
           e.cd -= dt;
-          if (e.cd <= 0 && dist < 14) { e.cd = e.def.cd; rangedAttack(e, 1); }
+          if (e.cd <= 0 && dist < 14) { e.cd = e.cdMax; rangedAttack(e, 1); }
           break;
         }
         case 'ranged':
-          if (dist > (e.def.range || 26) * 0.75) { mvx = nx * spd; mvz = nz * spd; }
-          else if (dist < (e.def.range || 26) * 0.4) { mvx = -nx * spd * 0.7; mvz = -nz * spd * 0.7; }
+          if (dist > e.range * 0.75) { mvx = nx * spd; mvz = nz * spd; }
+          else if (dist < e.range * 0.4) { mvx = -nx * spd * 0.7; mvz = -nz * spd * 0.7; }
           e.cd -= dt;
-          if (e.cd <= 0) { e.cd = e.def.cd; rangedAttack(e, 1); }
+          if (e.cd <= 0) { e.cd = e.cdMax; rangedAttack(e, 1); }
           break;
         case 'flyer': {
           e.pos.y = 1.5 + Math.sin(t * 2.2 + e.id) * 0.35;
           if (dist > 2.2) { const dive = dist < 9 ? 1.7 : 1; mvx = nx * spd * dive; mvz = nz * spd * dive; }
-          else { e.cd -= dt; if (e.cd <= 0) { e.cd = e.def.cd; meleeAttack(e); } }
+          else { e.cd -= dt; if (e.cd <= 0) { e.cd = e.cdMax; meleeAttack(e); } }
           break;
         }
         case 'float':
           e.pos.y = 1.3 + Math.sin(t * 1.8 + e.id) * 0.25;
           if (dist > 3) { mvx = nx * spd; mvz = nz * spd; }
           e.cd -= dt;
-          if (e.cd <= 0 && dist < 16) { e.cd = e.def.cd; rangedAttack(e, 1); }
+          if (e.cd <= 0 && dist < 16) { e.cd = e.cdMax; rangedAttack(e, 1); }
           break;
         case 'sing':
           if (dist > 2.0) { mvx = nx * spd; mvz = nz * spd; }
-          else { e.cd -= dt; if (e.cd <= 0) { e.cd = e.def.cd; singAttack(e); } }
+          else { e.cd -= dt; if (e.cd <= 0) { e.cd = e.cdMax; singAttack(e); } }
           break;
         case 'dash':
           e.dashCd = Math.max(0, e.dashCd - dt);
           if (e.dashT > 0) {
             e.dashT -= dt;
-            mvx = e.dashDir.x * 17; mvz = e.dashDir.z * 17;
+            mvx = e.dashDir.x * e.dashSpeed; mvz = e.dashDir.z * e.dashSpeed;
             if (dist < attackRange) { meleeAttack(e, 1.6); e.dashT = 0; }
+          } else if (e.windT > 0) {
+            // 冲刺前摇：脚下黄环 + 头顶 "!"，给玩家反应时间
+            e.windT -= dt;
+            e.alert = 1;
+            if (e.windT <= 0) { e.dashT = 0.45; e.dashDir.set(nx, 0, nz); }
           } else {
             if (dist > 9) { mvx = nx * spd; mvz = nz * spd; }
             else { mvx = -nz * spd * 0.5; mvz = nx * spd * 0.5; }
             if (e.dashCd <= 0 && dist < 20) {
-              e.dashCd = e.def.cd; e.dashT = 0.45;
-              e.dashDir.set(nx, 0, nz);
-              spawnRing(e.pos.clone().setY(0.2), 0xffe066, 1.2, 0.3);
+              e.dashCd = e.cdMax; e.windT = 0.38;
+              spawnRing(e.pos.clone().setY(0.2), 0xffe066, 1.4, 0.38);
             }
           }
           break;
@@ -9089,7 +9185,7 @@ PG.models = {
           }
           if (dist > 3) { mvx = nx * spd; mvz = nz * spd; }
           e.cd -= dt;
-          if (e.cd <= 0 && dist < 18) { e.cd = e.def.cd; rangedAttack(e, 1.4); }
+          if (e.cd <= 0 && dist < 18) { e.cd = e.cdMax; rangedAttack(e, 1.4); }
           break;
         case 'boss':
           updateBoss(e, dt, t, dist, nx, nz);
@@ -9129,6 +9225,16 @@ PG.models = {
       }
     }
 
+    // 危险预警：即将攻击 / 正在蓄力
+    e.alert = Math.max(0, e.alert - dt * 2.5);
+    if (e.state === 'active' && (e.windT > 0 || (e.cd <= 0.4 && dist < 16))) e.alert = 1;
+    if (e.aura) {
+      const base = e.kind === 'boss' ? 4.2 : e.kind === 'elite' ? 2.2 : 1.15;
+      const s = base * (0.94 + Math.sin(t * 3 + e.id) * 0.07) * (e.focus ? 1.14 : 1);
+      e.aura.scale.set(s, s, 1);
+      e.aura.position.set(e.pos.x, 0.06, e.pos.z);
+      e.aura.material.opacity = Math.min(1, (e.focus ? 0.95 : 0.5) * (e.state === 'spawn' ? 0.35 : 1));
+    }
     e.group.position.set(e.pos.x, e.pos.y + (e.yOff || 0), e.pos.z);
     const targetFace = Math.atan2(dx, dz);
     const cur = e.group.rotation.y;
@@ -9145,8 +9251,8 @@ PG.models = {
     if (pl.shieldT > 0) { spawnSpark(fromPos || pl.pos.clone().setY(1), 0x6fd8ff, 8, 1, 0.3); return; }
     pl.hp -= dmg;
     pl.hurtT = 0.35;
-    pl.invuln = 0.28;
-    pl.camShake = Math.min(0.5, 0.16 + dmg * 0.006);
+    pl.invuln = G.diff.invuln;
+    pl.camShake = Math.min(0.35, 0.10 + dmg * 0.003);
     pl.outT = 0;
     if (PG.audio) PG.audio.sfx('hurt', { vol: 0.8 });
     if (PG.ui && PG.ui.hurtFlash) PG.ui.hurtFlash(Math.min(0.6, dmg / 30));
@@ -9155,6 +9261,21 @@ PG.models = {
       PG.ui.damageFrom(ang - (pl.yaw + Math.PI));
     }
     if (pl.hp <= 0) {
+      // 悠然档：灵兽护主，把玩家拉回来一次
+      if (G.diff.revive && !pl.reviveUsed) {
+        pl.reviveUsed = true;
+        pl.hp = Math.round(pl.hpMax * 0.5);
+        pl.invuln = 3.0;
+        pl.camShake = 0.5;
+        spawnRing(new THREE.Vector3(pl.pos.x, 0.2, pl.pos.z), 0x9ef06b, 6, 1.0);
+        spawnSpark(new THREE.Vector3(pl.pos.x, 1.1, pl.pos.z), 0x9ef06b, 40, 1.8, 0.9);
+        if (PG.audio) PG.audio.sfx('levelup', { vol: 0.9 });
+        if (PG.ui) {
+          if (PG.ui.banner) PG.ui.banner('灵兽护主', '你被灵兽拉了回来 · 体力恢复一半', 2200);
+          if (PG.ui.toast) PG.ui.toast('灵兽护主！接下来小心一点', 2000);
+        }
+        return;
+      }
       pl.hp = 0;
       pl.dead = true;
       G.state.mode = 'dead';
@@ -9177,7 +9298,7 @@ PG.models = {
     const gun = G.char.gun;
     pl.fireCd = gun.rate;
     pl.bloom = Math.min(1, pl.bloom + (gun.pellets > 1 ? 0.3 : 0.12));
-    pl.recoil = Math.min(1, pl.recoil + 0.55);
+    pl.recoil = Math.min(1, pl.recoil + 0.30);
     pl.camShake = Math.min(0.35, pl.camShake + 0.045);
     pl.shots++;
     if (PG.audio) PG.audio.sfx(pl.bloom > 0.5 ? 'shot_alt' : 'shot', { vol: 0.55, rate: rand(0.94, 1.06), weapon: G.char.type });
@@ -9195,11 +9316,13 @@ PG.models = {
     G.camera.getWorldPosition(origin);
     const dir = new THREE.Vector3();
     G.camera.getWorldDirection(dir);
+    // 瞄准辅助：射线往准星附近的目标轻拉一点（难度可调，挑战档为 0 = 关闭）
+    if (G.diff.aimAssist > 0) aimAssistDir(origin, dir);
 
     const count = gun.pellets || 1;
     for (let i = 0; i < count; i++) {
       const d = dir.clone();
-      const spread = gun.spread * (1 + pl.bloom * 1.8);
+      const spread = gun.spread * (1 + pl.bloom * 1.15);
       const a = rand(0, TAU), r = Math.sqrt(Math.random()) * spread;
       const right = new THREE.Vector3().crossVectors(d, new THREE.Vector3(0, 1, 0)).normalize();
       const up = new THREE.Vector3().crossVectors(right, d).normalize();
@@ -9267,6 +9390,43 @@ PG.models = {
     if (G.state.combo > 0 && G.state.combo % 10 === 0 && PG.audio) PG.audio.sfx('combo', { vol: 0.5 });
   }
 
+  // 准星附近的软吸附（不改命中判定本身，只把射线方向拉向目标）
+  function aimAssistDir(origin, dir) {
+    const maxAng = G.diff.aimAssist * Math.PI / 180;
+    let best = null, bestAng = maxAng;
+    for (const e of G.enemies) {
+      if (!e.alive || e.state === 'dying') continue;
+      const to = e.hitCenter.clone().sub(origin);
+      const d = to.length();
+      if (d > 60 || d < 0.5) continue;
+      to.multiplyScalar(1 / d);
+      const ang = dir.angleTo(to);
+      if (ang < bestAng) { bestAng = ang; best = to; }
+    }
+    if (!best) return false;
+    const k = 0.55 + 0.35 * (1 - bestAng / maxAng);
+    dir.lerp(best, k).normalize();
+    return true;
+  }
+
+  // 灵兽自动协助：一道绿色灵光 + 低额伤害，给小朋友一个"伙伴在帮忙"的反馈
+  function spiritHelp() {
+    const pl = G.player;
+    if (!pl || pl.dead) return;
+    let best = null, bd = 20;
+    for (const e of G.enemies) {
+      if (!e.alive || e.state === 'spawn' || e.state === 'dying') continue;
+      const d = e.pos.distanceTo(pl.pos);
+      if (d < bd) { bd = d; best = e; }
+    }
+    if (!best) { pl.helpCd = 1.0; return; }
+    const from = new THREE.Vector3(pl.pos.x - 0.6, pl.pos.y + 1.2, pl.pos.z - 0.6);
+    spawnBeamFX(from, best.hitCenter.clone(), 0x8ed36a, 0.22);
+    damageEnemy(best, 10, best.hitCenter.clone(), 'hit');
+    spawnSpark(best.hitCenter.clone(), 0x8ed36a, 6, 0.9, 0.3);
+    pl.helpCd = 4.0;
+  }
+
   function updatePlayer(dt, input) {
     const pl = G.player;
     if (!pl || pl.dead) return;
@@ -9282,8 +9442,9 @@ PG.models = {
 
     if (G.char.id === 't_leaf' && pl.outT > 4 && pl.hp < pl.hpMax) pl.hp = Math.min(pl.hpMax, pl.hp + 4 * dt);
 
-    pl.yaw -= (input.dx || 0) * 0.0023;
-    pl.pitch -= (input.dy || 0) * 0.0023;
+    const look = 0.0030 * (G.sens || 1);
+    pl.yaw -= (input.dx || 0) * look;
+    pl.pitch -= (input.dy || 0) * look;
     pl.pitch = clamp(pl.pitch, -1.35, 1.35);
 
     let mx = input.mx || 0, mz = input.mz || 0;
@@ -9299,9 +9460,9 @@ PG.models = {
     pl.vel.z = lerp(pl.vel.z, wz * spd, clamp(accel * dt, 0, 1));
 
     if (input.dash && pl.dashCd <= 0) {
-      pl.dashCd = 1.15;
+      pl.dashCd = 1.0;
       pl.dashT = 0.2;
-      pl.invuln = Math.max(pl.invuln, 0.26);
+      pl.invuln = Math.max(pl.invuln, 0.32);
       const dl = Math.hypot(wx, wz);
       pl.dashDir.set(dl > 0.01 ? wx / dl : -sin, 0, dl > 0.01 ? wz / dl : -cos);
       if (PG.audio) PG.audio.sfx('dash', { vol: 0.6 });
@@ -9337,6 +9498,12 @@ PG.models = {
       }
     }
 
+    // 悠然档：灵兽每 4 秒自动帮你打一下最近的妖物
+    if (G.diff.autoHelp) {
+      pl.helpCd = Math.max(0, pl.helpCd - dt);
+      if (pl.helpCd <= 0 && !pl.reloading) spiritHelp();
+    }
+
     if (pl.reloading) {
       pl.reloadT -= dt;
       if (pl.reloadT <= 0) {
@@ -9350,7 +9517,7 @@ PG.models = {
     if (input.fire && !pl.reloading && pl.fireCd <= 0) fireWeapon();
     if (input.ult && pl.ultCd <= 0) doUlt();
 
-    pl.recoil = Math.max(0, pl.recoil - dt * 6);
+    pl.recoil = Math.max(0, pl.recoil - dt * 9);
     pl.bloom = Math.max(0, pl.bloom - dt * 1.6);
     pl.camShake = Math.max(0, pl.camShake - dt * 1.8);
     pl.strafeLean = lerp(pl.strafeLean, mx * 0.045, clamp(dt * 7, 0, 1));
@@ -9380,6 +9547,7 @@ PG.models = {
 
   // ============================ 波次 ============================
   function startWaves() {
+    G.focus = null;
     G.waves = { index: -1, queue: [], spawnT: 0, drip: 0.6, between: 2.0, cleared: false, totalSpawned: 0 };
   }
 
@@ -9411,8 +9579,16 @@ PG.models = {
     }
     if (PG.audio) PG.audio.sfx('wave', { vol: 0.8 });
     if (w.boss) {
+      const pl = G.player;
+      if (pl) {
+        pl.hp = pl.hpMax;
+        pl.ammo = G.char.gun.ammoMax;
+        pl.reloading = false;
+        if (PG.ui && PG.ui.toast) PG.ui.toast('山灵馈赠：体力与能量已充满', 2400);
+      }
+      const bossHp = Math.round(ENEMIES.hundun.hp * G.diff.bossHp);
       spawnEnemyAt('hundun', 0, -24);
-      G.state.boss = { name: '混沌', hp: 1500, hpMax: 1500 };
+      G.state.boss = { name: '混沌', hp: bossHp, hpMax: bossHp };
     }
   }
 
@@ -9425,8 +9601,36 @@ PG.models = {
     return e;
   }
 
+  // 刷怪预警：先出现地面涟漪，0.8 秒后妖物才钻出来，避免"凭空冒出来"
+  function queueSpawn(id, x, z) {
+    const ring = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: ringTexture('#b46bff'), color: 0xffffff, transparent: true, opacity: 0.85,
+      blending: THREE.AdditiveBlending, depthWrite: false, fog: false,
+    }));
+    ring.position.set(x, 0.12, z);
+    ring.scale.setScalar(1.0);
+    G.scene.add(ring);
+    G.pending.push({ id, x, z, t: 0.8, dur: 0.8, ring });
+  }
+
+  function updatePending(dt) {
+    for (let i = G.pending.length - 1; i >= 0; i--) {
+      const p = G.pending[i];
+      p.t -= dt;
+      const k = clamp(1 - Math.max(0, p.t) / p.dur, 0, 1);
+      p.ring.scale.setScalar(1.0 + k * 1.4);
+      p.ring.material.opacity = 0.14 + (1 - k) * 0.5;
+      if (p.t <= 0) {
+        if (p.ring.parent) p.ring.parent.remove(p.ring);
+        p.ring.material.dispose();
+        G.pending.splice(i, 1);
+        spawnEnemyAt(p.id, p.x, p.z);
+      }
+    }
+  }
+
   function aliveCount() {
-    let n = 0;
+    let n = G.pending.length;
     for (const e of G.enemies) if (e.alive && e.state !== 'dying') n++;
     return n;
   }
@@ -9448,18 +9652,21 @@ PG.models = {
     // 滴灌式刷怪
     if (w.queue.length > 0) {
       w.spawnT -= dt;
-      const maxAlive = Math.min(12, 6 + Math.floor(w.index * 1.2));
+      const maxAlive = Math.min(G.diff.maxAlive, 4 + Math.ceil(w.index * 1.1));
       if (w.spawnT <= 0 && alive < maxAlive) {
         const id = w.queue.pop();
-        const ang = rand(0, TAU);
-        const near = rand(18, 32) - Math.min(6, w.index * 1.2);
+        // 从玩家正前方扇区刷怪：悠然 180° / 标准 240° / 挑战 360°
+        const fwd = Math.atan2(-Math.cos(G.player.yaw), -Math.sin(G.player.yaw));
+        const arc = G.diff.spawnArc;
+        const ang = fwd + rand(-arc / 2, arc / 2);
+        const near = rand(G.diff.spawnNear[0], G.diff.spawnNear[1]) - Math.min(4, w.index * 0.8);
         const px = G.player.pos.x + Math.cos(ang) * near;
         const pz = G.player.pos.z + Math.sin(ang) * near;
         const R = (G.world ? G.world.radius : 60) - 3;
         const dl = Math.hypot(px, pz) || 1;
         const sx = dl > R ? (px / dl) * R : px;
         const sz = dl > R ? (pz / dl) * R : pz;
-        spawnEnemyAt(id, sx, sz);
+        queueSpawn(id, sx, sz);
         w.spawnT = w.drip * (id === 'hundun' ? 1 : rand(0.75, 1.25));
         w.totalSpawned++;
       }
@@ -9472,13 +9679,14 @@ PG.models = {
       if (w.index >= WAVES.length - 1) return; // BOSS 波由 winGame 接管
       if (G.state.boss) return;
       const pl = G.player;
-      pl.hp = Math.min(pl.hpMax, pl.hp + pl.hpMax * 0.22);
+      const heal = G.diff.waveHeal;
+      if (heal > 0) pl.hp = Math.min(pl.hpMax, pl.hp + pl.hpMax * heal);
       pl.ammo = G.char.gun.ammoMax;
       pl.reloading = false;
       if (PG.audio) PG.audio.sfx('heal', { vol: 0.7 });
       if (PG.ui) {
-        if (PG.ui.banner) PG.ui.banner('第 ' + (w.index + 1) + ' 波 · 清除', '体力与能量已补充', 2000);
-        if (PG.ui.toast) PG.ui.toast('体力已恢复，能量充满！', 1800);
+        if (PG.ui.banner) PG.ui.banner('第 ' + (w.index + 1) + ' 波 · 清除', heal > 0 ? '体力与能量已补充' : '没有补给，靠你自己了', 2000);
+        if (PG.ui.toast && heal > 0) PG.ui.toast('体力已恢复，能量充满！', 1800);
       }
       w.between = 4.0;
       return;
@@ -9489,6 +9697,71 @@ PG.models = {
       w.between -= dt;
       if (w.between <= 0) beginWave(w.index + 1);
     }
+  }
+
+  // ============================ 准星聚焦 / 目标提示 ============================
+  const _fv = new THREE.Vector3(), _tv = new THREE.Vector3(), _cv = new THREE.Vector3();
+  let focusT = 0;
+  function updateFocus(dt) {
+    focusT += dt;
+    if (focusT < 1 / 20) return;
+    focusT = 0;
+    const cam = G.camera;
+    if (!cam) return;
+    cam.getWorldPosition(_fv);
+    cam.getWorldDirection(_cv);
+    let best = null, bestAng = 0.12; // 约 7°：准星附近才算"锁定"
+    for (const e of G.enemies) {
+      if (!e.alive || e.state === 'dying') continue;
+      _tv.copy(e.hitCenter).sub(_fv);
+      const d = _tv.length();
+      if (d > 55 || d < 0.4) continue;
+      _tv.multiplyScalar(1 / d);
+      const ang = _cv.angleTo(_tv);
+      if (ang < bestAng) { bestAng = ang; best = e; }
+    }
+    if (G.focus && G.focus !== best) G.focus.focus = false;
+    G.focus = best;
+    if (best) best.focus = true;
+  }
+
+  // 头顶血条数据：受伤 / 被锁定 / 悠然档近距离时显示
+  function collectBars() {
+    const cam = G.camera, w = window.innerWidth, h = window.innerHeight;
+    if (!cam || !G.player) return [];
+    const out = [];
+    for (const e of G.enemies) {
+      if (!e.alive || e.state === 'spawn' || e.state === 'dying') continue;
+      const damaged = e.hp < e.hpMax - 0.01;
+      const near = G.diff.id === 'easy' && e.pos.distanceTo(G.player.pos) < 26;
+      if (!damaged && !e.focus && !near && e.alert <= 0) continue;
+      const p = PG.util.project(new THREE.Vector3(e.pos.x, e.pos.y + e.height + 0.35, e.pos.z), cam, w, h);
+      if (!p || p.x < -60 || p.x > w + 60 || p.y < -60 || p.y > h + 60) continue;
+      out.push({ x: p.x, y: p.y, ratio: clamp(e.hp / e.hpMax, 0, 1), kind: e.kind, focus: !!e.focus, alert: e.alert > 0 });
+    }
+    out.sort((a, b) => (a.focus ? 0 : 1) - (b.focus ? 0 : 1));
+    return out.slice(0, 8);
+  }
+
+  // 屏幕外指示：告诉玩家"敌人在哪个方向、多远"
+  function collectEdges() {
+    const cam = G.camera, w = window.innerWidth, h = window.innerHeight;
+    if (!cam || !G.player) return [];
+    const out = [];
+    const rightX = Math.cos(G.player.yaw), rightZ = -Math.sin(G.player.yaw);
+    const fwdX = -Math.sin(G.player.yaw), fwdZ = -Math.cos(G.player.yaw);
+    for (const e of G.enemies) {
+      if (!e.alive || e.state === 'dying') continue;
+      const dx = e.pos.x - G.player.pos.x, dz = e.pos.z - G.player.pos.z;
+      const dist = Math.hypot(dx, dz);
+      if (dist < 5 || dist > 50) continue;
+      const p = PG.util.project(new THREE.Vector3(e.pos.x, e.pos.y + e.height * 0.5, e.pos.z), cam, w, h);
+      if (p && p.x > 40 && p.x < w - 40 && p.y > 40 && p.y < h - 40) continue;
+      const th = Math.atan2(dx * rightX + dz * rightZ, dx * fwdX + dz * fwdZ);
+      out.push({ angle: th, dist, kind: e.kind, alert: e.alert > 0 });
+    }
+    out.sort((a, b) => a.dist - b.dist);
+    return out.slice(0, 6);
   }
 
   // ============================ HUD ============================
@@ -9511,19 +9784,32 @@ PG.models = {
       ammo: pl.ammo, ammoMax: G.char.gun.ammoMax, reserve: 0,
       weaponName: G.char.weaponShort, weaponColor: G.char.color,
       reloading: pl.reloading, reloadT: pl.reloading ? 1 - pl.reloadT / G.char.gun.reload : 1,
-      dashCd: pl.dashCd, dashMax: 1.15,
+      dashCd: pl.dashCd, dashMax: 1.0,
       ultCd: pl.ultCd, ultMax: pl.ultMax,
       boss: G.state.boss ? { name: G.state.boss.name, hp: Math.max(0, G.state.boss.hp), hpMax: G.state.boss.hpMax } : null,
       charge: G.char.id === 't_bolt' ? pl.charge / 5 : (G.char.id === 't_tide' ? pl.tideCount / 5 : 0),
       time: G.state.time,
+      diff: { id: G.diff.id, cn: G.diff.cn, color: G.diff.color },
     });
+    if (PG.ui.enemyBars) PG.ui.enemyBars(collectBars());
+    if (PG.ui.edgeMarkers) PG.ui.edgeMarkers(collectEdges());
   }
 
   // ============================ 生命周期 ============================
   function clearSession() {
     for (let i = G.projectiles.length - 1; i >= 0; i--) killProj(G.projectiles[i], i, G.projectiles);
     for (let i = G.eprojectiles.length - 1; i >= 0; i--) killProj(G.eprojectiles[i], i, G.eprojectiles);
-    for (const e of G.enemies) { if (e.group.parent) e.group.parent.remove(e.group); if (PG.util && PG.util.disposeTree) PG.util.disposeTree(e.group); }
+    for (const e of G.enemies) {
+      if (e.aura) { if (e.aura.parent) e.aura.parent.remove(e.aura); e.aura.material.dispose(); e.aura = null; }
+      if (e.group.parent) e.group.parent.remove(e.group);
+      if (PG.util && PG.util.disposeTree) PG.util.disposeTree(e.group);
+    }
+    for (const p of G.pending) {
+      if (p.ring.parent) p.ring.parent.remove(p.ring);
+      p.ring.material.dispose();
+    }
+    G.pending.length = 0;
+    G.focus = null;
     for (const f of G.fx) {
       if (f.obj.parent) f.obj.parent.remove(f.obj);
       if (f.obj.geometry) f.obj.geometry.dispose();
@@ -9638,11 +9924,36 @@ PG.models = {
     updatePlayer(dt, input || {});
     updateProjectiles(dt);
     for (const e of G.enemies.slice()) updateEnemy(e, dt, G.state.time);
+    updatePending(dt);
     updateWaves(dt);
+    updateFocus(dt);
     updateFx(dt);
     applyCamera(dt);
     updateViewmodel(dt);
     pushHud(dt);
+  }
+
+  function setDifficulty(id) {
+    if (!DIFFS[id]) id = DIFF_DEFAULT;
+    G.diffId = id;
+    G.diff = DIFFS[id];
+    const pl = G.player;
+    if (pl && G.char) {
+      const ratio = pl.hpMax > 0 ? pl.hp / pl.hpMax : 1;
+      pl.hpMax = Math.round(G.char.hp * G.diff.playerHp);
+      pl.hp = clamp(ratio * pl.hpMax, 1, pl.hpMax);
+    }
+    return G.diff;
+  }
+  function setSensitivity(v) {
+    const n = Number(v);
+    G.sens = clamp(isFinite(n) && n > 0 ? n : 1, 0.4, 2);
+    return G.sens;
+  }
+  function rankFor(score, win) {
+    const mul = G.diff.scoreMul;
+    if (!win) return score > 8000 * mul ? 'B' : score > 4000 * mul ? 'C' : 'D';
+    return score > 16000 * mul ? 'S' : score > 11000 * mul ? 'A' : 'B';
   }
 
   function winGame() {
@@ -9654,14 +9965,16 @@ PG.models = {
 
   PG.game = {
     CHARS, ENEMIES, WAVES, WAVE_TOTAL,
+    DIFFS, DIFF_ORDER, DIFF_DEFAULT,
     init, start, pause, resume, stop, update, winGame,
+    setDifficulty, setSensitivity, rankFor,
     // 调试/QA 用（仅通过 URL 参数或控制台开启，不影响正常玩法）
     setGod(v) { G.god = !!v; },
     setDmgMul(v) { G.dmgMul = v || 1; },
     getDebug() {
       const pl = G.player;
       return {
-        god: !!G.god, dmgMul: G.dmgMul || 1, wave: G.state.wave, enemies: aliveCount(),
+        god: !!G.god, dmgMul: G.dmgMul || 1, diff: G.diffId, wave: G.state.wave, enemies: aliveCount(),
         queue: G.waves ? G.waves.queue.length : -1,
         shots: pl ? pl.shots : -1, kills: pl ? pl.kills : -1, hits: pl ? pl.hits : -1,
         ammo: pl ? pl.ammo : -1, reloading: pl ? pl.reloading : null,
@@ -9676,6 +9989,10 @@ PG.models = {
     get char() { return G.char; },
     get world() { return G.world; },
     get enemies() { return G.enemies; },
+    get difficulty() { return G.diff; },
+    get difficultyId() { return G.diffId; },
+    get sensitivity() { return G.sens; },
+    get focusEnemy() { return G.focus; },
     set onEnd(fn) { G.onEnd = fn; },
   };
   PG.enemyCN = CN;
@@ -9715,6 +10032,7 @@ PG.models = {
     const waveMeta = $('div', 'hud-wave-meta', waveBox);
     D.el.waveName = $('span', 'hud-wave-label', waveMeta);
     D.el.waveLeft = $('span', 'hud-wave-left', waveMeta);
+    D.el.diff = $('div', 'hud-diff', top);
 
     // BOSS 血条
     const boss = $('div', 'hud-boss', hud);
@@ -9766,11 +10084,18 @@ PG.models = {
     D.el.reloadBar = $('i', '', D.el.reload);
     D.el.ammoWarn = $('div', 'hud-ammowarn', ammo);
 
-    // ---- 中央：准星 / 命中 / 受击弧 ----
+    // ---- 敌人头顶血条 / 屏外方向指示 ----
+    D.el.ebars = $('div', 'hud-ebars', hud);
+    D.el.edges = $('div', 'hud-edges', hud);
+
+    // ---- 中央：准星 / 锁定角标 / 命中 / 受击弧 ----
     const cross = $('div', 'hud-cross', hud);
     D.el.cross = cross;
     ['t', 'r', 'b', 'l'].forEach((k) => { D.el['cross' + k] = $('i', 'hud-cross-' + k, cross); });
     D.el.crossDot = $('i', 'hud-cross-dot', cross);
+    const lockEl = $('div', 'hud-lock', cross);
+    D.el.lock = lockEl;
+    ['tl', 'tr', 'bl', 'br'].forEach((k) => { $('i', 'hud-lock-' + k, lockEl); });
     D.el.hit = $('div', 'hud-hit', hud);
     ['a', 'b', 'c', 'd'].forEach((k) => $('i', k, D.el.hit));
     D.el.arcs = $('div', 'hud-arcs', hud);
@@ -9969,6 +10294,13 @@ PG.models = {
       L.left = s.enemiesLeft;
       D.el.waveLeft.textContent = s.enemiesLeft > 0 ? '剩余 ' + s.enemiesLeft : '已清空';
     }
+    // 难度徽标
+    if (s.diff && L.diffId !== s.diff.id) {
+      L.diffId = s.diff.id;
+      D.el.diff.textContent = s.diff.cn;
+      D.el.diff.style.setProperty('--dc', s.diff.color || '#e8b33a');
+      D.el.diff.classList.add('on');
+    }
     if (L.score !== s.score) {
       L.score = s.score;
       D.el.scoreV.textContent = String(s.score).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -10044,16 +10376,85 @@ PG.models = {
     D.el.pips.innerHTML = html;
   }
 
-  ui.setCrosshair = function (mode, spread) {
+  ui.setCrosshair = function (mode, spread, lock) {
     ensureDom();
     if (!D.ready) return;
     const el = D.el.cross;
     el.classList.toggle('off', mode === 0);
+    const on = !!(lock && lock.on);
+    el.classList.toggle('lock', on);
+    el.classList.toggle('alert', !!(on && lock.alert));
     const s = 5 + (spread || 0) * 12;
     D.el.crosst.style.transform = 'translate(-50%,-50%) translateY(' + (-s) + 'px)';
     D.el.crossb.style.transform = 'translate(-50%,-50%) translateY(' + s + 'px)';
     D.el.crossl.style.transform = 'translate(-50%,-50%) translateX(' + (-s) + 'px)';
     D.el.crossr.style.transform = 'translate(-50%,-50%) translateX(' + s + 'px)';
+  };
+
+  const barPool = [];
+  function ensureBarPool() {
+    while (barPool.length < 8) {
+      const el = $('div', 'hud-ebar', D.el.ebars);
+      const fill = $('i', 'hud-ebar-fill', el);
+      barPool.push({ el, fill, on: false });
+    }
+  }
+  ui.enemyBars = function (list) {
+    ensureDom();
+    if (!D.ready || !D.el.ebars) return;
+    ensureBarPool();
+    list = list || [];
+    for (let i = 0; i < barPool.length; i++) {
+      const b = barPool[i];
+      const it = list[i];
+      if (!it) {
+        if (b.on) { b.el.className = 'hud-ebar'; b.on = false; }
+        continue;
+      }
+      if (!b.on) { b.el.className = 'hud-ebar on'; b.on = true; }
+      b.el.classList.toggle('focus', !!it.focus);
+      b.el.classList.toggle('alert', !!it.alert);
+      b.el.classList.toggle('elite', it.kind === 'elite');
+      b.el.classList.toggle('boss', it.kind === 'boss');
+      b.el.style.transform = 'translate(-50%,-50%) translate(' + Math.round(it.x) + 'px,' + Math.round(it.y) + 'px)';
+      b.fill.style.transform = 'scaleX(' + clamp(it.ratio, 0, 1).toFixed(3) + ')';
+    }
+  };
+
+  const edgePool = [];
+  function ensureEdgePool() {
+    while (edgePool.length < 6) {
+      const el = $('div', 'hud-edge', D.el.edges);
+      const arrow = $('i', 'hud-edge-arrow', el);
+      const dist = $('span', 'hud-edge-d', el);
+      edgePool.push({ el, arrow, dist, on: false });
+    }
+  }
+  ui.edgeMarkers = function (list) {
+    ensureDom();
+    if (!D.ready || !D.el.edges) return;
+    ensureEdgePool();
+    list = list || [];
+    const w = window.innerWidth, h = window.innerHeight;
+    const cx = w / 2, cy = h / 2;
+    const rx = Math.min(w * 0.41, 520), ry = Math.min(h * 0.36, 285);
+    for (let i = 0; i < edgePool.length; i++) {
+      const m = edgePool[i];
+      const it = list[i];
+      if (!it) {
+        if (m.on) { m.el.className = 'hud-edge'; m.on = false; }
+        continue;
+      }
+      if (!m.on) { m.el.className = 'hud-edge on'; m.on = true; }
+      const x = cx + Math.sin(it.angle) * rx;
+      const y = cy - Math.cos(it.angle) * ry;
+      m.el.style.transform = 'translate(-50%,-50%) translate(' + Math.round(x) + 'px,' + Math.round(y) + 'px)';
+      m.arrow.style.transform = 'rotate(' + Math.round(it.angle * 180 / Math.PI) + 'deg)';
+      m.dist.textContent = Math.max(1, Math.round(it.dist)) + 'm';
+      m.el.classList.toggle('alert', !!it.alert);
+      m.el.classList.toggle('boss', it.kind === 'boss');
+      m.el.classList.toggle('elite', it.kind === 'elite');
+    }
   };
 
   ui.setAmmoWarn = function (on) {
@@ -10267,6 +10668,11 @@ PG.models = {
   }
 
   const TYPE_CN = { lei: '雷', mu: '木', huo: '火', shui: '水', feng: '风', du: '毒', yan: '岩', shou: '兽', ling: '灵', gui: '鬼', yao: '妖' };
+  const DIFF_META = [
+    { id: 'easy', cn: '悠然', en: 'EASY', desc: '妖物更慢更轻 · 灵兽帮忙 · 护主复活一次', color: '#8ed36a' },
+    { id: 'normal', cn: '标准', en: 'NORMAL', desc: '节奏舒展 · 有挑战，但不会手忙脚乱', color: '#e8b33a' },
+    { id: 'hard', cn: '挑战', en: 'HARD', desc: '原版强度 · 妖物四面来袭，只靠走位与枪法', color: '#d0432e' },
+  ];
   const STATS = [['hp', '体力'], ['dmg', '伤害'], ['rate', '射速'], ['spd', '速度']];
 
   /* ================================= 状态 ================================= */
@@ -10293,6 +10699,13 @@ PG.models = {
     listeners: {},
     hoverEl: null,
     hoverAt: 0,
+    diffId: 'easy',
+    diffEls: [],
+    pauseDiff: null,
+    pauseDiffEls: [],
+    sensRange: null,
+    sensVal: null,
+    sens: 1,
   };
 
   /* =============================== 事件总线 =============================== */
@@ -10411,6 +10824,27 @@ PG.models = {
 
     D.grid = mk('div', 'char-grid', s);
 
+    // 难度三选一（默认悠然；选角页与暂停页都可切换）
+    const diffBox = mk('div', 'sel-diffs', s);
+    const dHead = mk('div', 'sel-diff-head', diffBox);
+    mk('b', 'sel-diff-t', dHead, '难度');
+    mk('span', 'sel-diff-s', dHead, '小朋友建议选「悠然」');
+    const dGrid = mk('div', 'sel-diff-grid', diffBox);
+    D.diffEls = [];
+    for (let i = 0; i < DIFF_META.length; i++) {
+      const d = DIFF_META[i];
+      const b = mk('button', 'diff-card', dGrid);
+      b.type = 'button';
+      b.style.setProperty('--dc', d.color);
+      const nm = mk('div', 'dc-head', b);
+      mk('b', 'dc-cn', nm, d.cn);
+      mk('span', 'dc-en', nm, d.en);
+      mk('p', 'dc-desc', b, d.desc);
+      b.addEventListener('click', () => { if (D.diffId !== d.id) { fx('ui_click'); setDifficulty(d.id, true); } });
+      D.diffEls.push({ id: d.id, el: b });
+    }
+    setDifficulty(D.diffId, false);
+
     const foot = mk('footer', 'sel-foot', s);
     const ult = mk('div', 'sel-ult', foot);
     mk('span', 'ult-tag', ult, '灵兽技');
@@ -10524,6 +10958,44 @@ PG.models = {
     quit.type = 'button';
     quit.addEventListener('click', doQuit);
 
+    const diffRow = mk('div', 'pause-diff', card);
+    mk('span', 'pause-diff-l', diffRow, '难度');
+    D.pauseDiff = mk('b', 'pause-diff-v', diffRow, '悠然');
+    D.pauseDiffEls = [];
+    for (let i = 0; i < DIFF_META.length; i++) {
+      const d = DIFF_META[i];
+      const b = mk('button', 'pause-diff-btn', diffRow);
+      b.type = 'button';
+      b.textContent = d.cn;
+      b.style.setProperty('--dc', d.color);
+      b.addEventListener('click', () => { if (D.diffId !== d.id) { fx('ui_click'); setDifficulty(d.id, true); } });
+      D.pauseDiffEls.push({ id: d.id, el: b });
+    }
+
+    const sensRow = mk('div', 'pause-sens', card);
+    mk('span', 'st-lbl', sensRow, '视角灵敏度');
+    const sr = mk('input', 'ui-range pause-range', sensRow);
+    sr.type = 'range';
+    sr.min = '60';
+    sr.max = '160';
+    sr.step = '5';
+    sr.setAttribute('aria-label', '视角灵敏度');
+    const sv = mk('b', 'pause-sens-v', sensRow, '100%');
+    D.sensRange = sr;
+    D.sensVal = sv;
+    const syncSens = () => {
+      sr.value = String(Math.round(clamp(D.sens, 0.6, 1.6) * 100));
+      sv.textContent = sr.value + '%';
+      sr.style.setProperty('--vol', ((Number(sr.value) - 60) / 100).toFixed(3));
+    };
+    sr.addEventListener('input', () => {
+      D.sens = clamp(Number(sr.value) / 100, 0.6, 1.6);
+      syncSens();
+      emit('sens', D.sens);
+    });
+    sr.addEventListener('change', () => fx('ui_click'));
+    syncSens();
+
     const tips = mk('div', 'pause-tips', card);
     const TIPS = [['WASD', '移动'], ['鼠标', '瞄准'], ['左键', '射击'], ['R', '装填'], ['Shift', '冲刺'], ['Space', '跳跃'], ['Q', '灵兽技'], ['Esc', '暂停']];
     for (let i = 0; i < TIPS.length; i++) {
@@ -10562,6 +11034,7 @@ PG.models = {
     const card = mk('div', 'ui-card result-card ' + kind, s);
     const kicker = mk('div', 'result-kicker', card);
     mk('h2', 'result-title', card, win ? '山泽安宁！' : '挑战失败');
+    const diffLine = mk('div', 'result-diff', card, '');
 
     let rank = null;
     if (win) {
@@ -10592,8 +11065,23 @@ PG.models = {
     btnTitle.addEventListener('click', doQuit);
 
     mk('div', 'result-note', s, 'Enter 再战一局 · Esc 返回标题');
-    D.res[kind] = { kicker: kicker, rank: rank, who: qwho, text: qtext, refs: refs };
+    D.res[kind] = { kicker: kicker, rank: rank, who: qwho, text: qtext, refs: refs, diff: diffLine };
     return s;
+  }
+
+  function setDifficulty(id, user) {
+    if (!DIFF_META.some((d) => d.id === id)) id = 'easy';
+    const changed = id !== D.diffId;
+    D.diffId = id;
+    const meta = DIFF_META.find((d) => d.id === id) || DIFF_META[0];
+    for (const it of D.diffEls) it.el.classList.toggle('sel', it.id === id);
+    for (const it of D.pauseDiffEls) it.el.classList.toggle('sel', it.id === id);
+    if (D.pauseDiff) {
+      D.pauseDiff.textContent = meta.cn;
+      D.pauseDiff.style.setProperty('--dc', meta.color);
+    }
+    if (changed && user) emit('difficulty', id);
+    return id;
   }
 
   function partnerName() {
@@ -10637,6 +11125,9 @@ PG.models = {
     R.refs.score.textContent = group(score);
     R.refs.combo.textContent = 'x' + combo;
     R.refs.time.textContent = fmtTime(time);
+    const diffId = (typeof r.diff === 'string' && r.diff) || D.diffId;
+    const diffMeta = DIFF_META.find((d) => d.id === diffId) || DIFF_META[0];
+    if (R.diff) R.diff.textContent = '难度 · ' + diffMeta.cn;
     R.who.textContent = '「' + partnerName() + '」';
     R.text.textContent = win
       ? '成功了！山泽的暗影散了——多谢你，行者！'
@@ -10727,6 +11218,9 @@ PG.models = {
     if (name === 'select') {
       ensureCards(false);
       renderSelFoot();
+      setDifficulty(D.diffId, false);
+    } else if (name === 'pause') {
+      setDifficulty(D.diffId, false);
     } else if (name === 'dead' || name === 'win') {
       renderResult(name);
     }
@@ -10920,6 +11414,18 @@ PG.models = {
   ui.setCharacters = setCharacters;
   ui.on = on;
   ui.setResult = setResult;
+  ui.setDifficulty = function (id) { return setDifficulty(id, false); };
+  ui.getDifficulty = function () { return D.diffId; };
+  ui.setSens = function (v) {
+    const n = Number(v);
+    D.sens = clamp(isFinite(n) && n > 0 ? n : 1, 0.6, 1.6);
+    if (D.sensRange) {
+      D.sensRange.value = String(Math.round(D.sens * 100));
+      D.sensRange.style.setProperty('--vol', ((Math.round(D.sens * 100) - 60) / 100).toFixed(3));
+      if (D.sensVal) D.sensVal.textContent = D.sensRange.value + '%';
+    }
+    return D.sens;
+  };
   if (!ui.getScreen) {
     ui.getScreen = function () {
       return D.screen;
@@ -10939,9 +11445,31 @@ PG.models = {
     renderer: null, scene: null, camera: null, world: null, clock: 0, last: 0,
     mode: 'boot', titleT: 0, showcase: null, fpsAcc: 0, fpsFrames: 0, fps: 60,
     locked: false, started: false, bootT: 0, char: 't_bolt', canvas: null,
+    sens: 1, diff: 'easy', lockTries: 0,
     err: [],
   };
   const Q = new URLSearchParams(location.search);
+
+  function storeGet(k, fb) {
+    try { const v = localStorage.getItem(k); return v == null ? fb : v; } catch (e) { return fb; }
+  }
+  function storeSet(k, v) {
+    try { localStorage.setItem(k, String(v)); } catch (e) {}
+  }
+  // 难度：URL ?diff= 优先，其次本地记忆，默认悠然
+  function applyDiff(id) {
+    E.diff = (PG.game && PG.game.DIFFS && PG.game.DIFFS[id]) ? id : 'easy';
+    try { PG.game && PG.game.setDifficulty && PG.game.setDifficulty(E.diff); } catch (e) {}
+    try { PG.ui && PG.ui.setDifficulty && PG.ui.setDifficulty(E.diff); } catch (e) {}
+    return E.diff;
+  }
+  function applySens(v) {
+    const n = Number(v);
+    E.sens = clamp(isFinite(n) && n > 0 ? n : 1, 0.6, 1.6);
+    try { PG.game && PG.game.setSensitivity && PG.game.setSensitivity(E.sens); } catch (e) {}
+    try { PG.ui && PG.ui.setSens && PG.ui.setSens(E.sens); } catch (e) {}
+    return E.sens;
+  }
 
   // ---------------- 输入 ----------------
   const keys = Object.create(null);
@@ -10972,10 +11500,13 @@ PG.models = {
 
     let dragLook = false;
     canvas.addEventListener('mousedown', (e) => {
-      if (e.button === 0) {
-        input.fire = true;
-        if (E.mode === 'playing' && !E.locked && !isTouch()) { requestLock(); dragLook = true; }
+      if (e.button !== 0) return;
+      if (E.mode === 'playing' && !E.locked && !isTouch()) {
+        // 第一次点击只用来锁定指针，避免"还没瞄准就先打空一发"
+        dragLook = true;
+        if (E.lockTries < 1) { E.lockTries++; requestLock(); return; }
       }
+      input.fire = true;
     });
     window.addEventListener('mouseup', () => { dragLook = false; });
     // 指针锁定不可用时的兜底：按住左键拖动也能转视角
@@ -10996,6 +11527,7 @@ PG.models = {
 
     document.addEventListener('pointerlockchange', () => {
       E.locked = document.pointerLockElement === E.canvas;
+      if (E.locked) E.lockTries = 0;
       if (!E.locked && E.mode === 'playing' && !isTouch()) doPause();
     });
     canvas.addEventListener('click', () => {
@@ -11027,7 +11559,7 @@ PG.models = {
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xbde6ff);
-    scene.fog = new THREE.Fog(0xcfeaff, 38, 132);
+    scene.fog = new THREE.Fog(0xcfeaff, 44, 140);
     E.scene = scene;
     const sky = skyGradient();
     scene.add(sky);
@@ -11229,12 +11761,15 @@ PG.models = {
       try {
         const st = PG.game.state, pl = PG.game.player;
         const score = st.score || 0;
-        const rank = mode === 'win' ? (score > 16000 ? 'S' : score > 11000 ? 'A' : 'B') : (score > 8000 ? 'B' : score > 4000 ? 'C' : 'D');
+        const diff = PG.game.difficulty || { id: 'normal', cn: '标准' };
+        const rank = PG.game.rankFor ? PG.game.rankFor(score, mode === 'win')
+          : (mode === 'win' ? (score > 16000 ? 'S' : score > 11000 ? 'A' : 'B') : (score > 8000 ? 'B' : score > 4000 ? 'C' : 'D'));
         if (PG.ui && PG.ui.setResult) PG.ui.setResult({
           wave: st.wave, waveTotal: PG.game.WAVE_TOTAL, score: score,
           comboMax: st.comboMax, time: Math.round(st.time), kills: pl ? pl.kills : 0,
           hits: pl ? pl.hits : 0, shots: pl ? pl.shots : 0,
           rank: rank, win: mode === 'win',
+          diff: diff.id, diffCn: diff.cn,
         });
       } catch (e) {}
       PG.ui && PG.ui.hudVisible && PG.ui.hudVisible(false);
@@ -11299,6 +11834,15 @@ PG.models = {
     PG.ui.on && PG.ui.on('start', () => { PG.audio && PG.audio.init && PG.audio.init(); toSelect(); });
     PG.ui.on && PG.ui.on('select', (id) => { E.char = id || E.char; });
     PG.ui.on && PG.ui.on('launch', (id) => startGame(id));
+    PG.ui.on && PG.ui.on('difficulty', (id) => {
+      applyDiff(id);
+      storeSet('shfr.diff', E.diff);
+      try { if (PG.ui.toast && PG.game.difficulty) PG.ui.toast('难度 · ' + PG.game.difficulty.cn, 1400); } catch (e) {}
+    });
+    PG.ui.on && PG.ui.on('sens', (v) => {
+      applySens(v);
+      storeSet('shfr.sens', E.sens);
+    });
     PG.ui.on && PG.ui.on('resume', () => doResume());
     PG.ui.on && PG.ui.on('restart', () => restartGame());
     PG.ui.on && PG.ui.on('quit', () => quitToTitle());
@@ -11367,7 +11911,11 @@ PG.models = {
       const st = PG.game.state;
       if (E.mode === 'playing' && PG.ui && PG.ui.setCrosshair) {
         const pl = PG.game.player;
-        if (pl) PG.ui.setCrosshair(1, clamp(pl.bloom * 0.8 + (Math.hypot(pl.vel.x, pl.vel.z) / 40), 0, 1));
+        if (pl) {
+          const f = PG.game.focusEnemy || null;
+          PG.ui.setCrosshair(1, clamp(pl.bloom * 0.8 + (Math.hypot(pl.vel.x, pl.vel.z) / 40), 0, 1),
+            f ? { on: true, kind: f.kind, alert: f.alert > 0 } : null);
+        }
       }
     } catch (e) {}
 
@@ -11406,6 +11954,8 @@ PG.models = {
       }
       bindInput();
       wireUI();
+      applyDiff(Q.get('diff') || storeGet('shfr.diff', 'easy'));
+      applySens(storeGet('shfr.sens', '1'));
       // 尺寸
       const applyLayout = () => {
         E.camera.aspect = window.innerWidth / window.innerHeight;
@@ -11574,7 +12124,7 @@ PG.models = {
               enemiesLeft: 8, score: PG.game.state.score, combo: PG.game.state.combo, comboMax: PG.game.state.comboMax,
               ammo: PG.game.player.ammo, ammoMax: PG.game.char.gun.ammoMax, reserve: 0,
               weaponName: PG.game.char.weaponShort, weaponColor: PG.game.char.color,
-              reloading: false, reloadT: 1, dashCd: 0, dashMax: 1.15, ultCd: 0, ultMax: 13,
+              reloading: false, reloadT: 1, dashCd: 0, dashMax: 1.0, ultCd: 0, ultMax: 13,
               boss: null, charge: 0.6, time: PG.game.state.time,
             }); } catch (e) {}
           }
@@ -11600,5 +12150,5 @@ PG.models = {
   else boot2();
 
   // 对外：便于 QA 直接调用
-  PG.main = { E, startGame, toTitle, doPause, doResume, restartGame, quitToTitle };
+  PG.main = { E, startGame, toTitle, doPause, doResume, restartGame, quitToTitle, applyDiff, applySens };
 })();

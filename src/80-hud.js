@@ -31,6 +31,7 @@
     const waveMeta = $('div', 'hud-wave-meta', waveBox);
     D.el.waveName = $('span', 'hud-wave-label', waveMeta);
     D.el.waveLeft = $('span', 'hud-wave-left', waveMeta);
+    D.el.diff = $('div', 'hud-diff', top);
 
     // BOSS 血条
     const boss = $('div', 'hud-boss', hud);
@@ -82,11 +83,18 @@
     D.el.reloadBar = $('i', '', D.el.reload);
     D.el.ammoWarn = $('div', 'hud-ammowarn', ammo);
 
-    // ---- 中央：准星 / 命中 / 受击弧 ----
+    // ---- 敌人头顶血条 / 屏外方向指示 ----
+    D.el.ebars = $('div', 'hud-ebars', hud);
+    D.el.edges = $('div', 'hud-edges', hud);
+
+    // ---- 中央：准星 / 锁定角标 / 命中 / 受击弧 ----
     const cross = $('div', 'hud-cross', hud);
     D.el.cross = cross;
     ['t', 'r', 'b', 'l'].forEach((k) => { D.el['cross' + k] = $('i', 'hud-cross-' + k, cross); });
     D.el.crossDot = $('i', 'hud-cross-dot', cross);
+    const lockEl = $('div', 'hud-lock', cross);
+    D.el.lock = lockEl;
+    ['tl', 'tr', 'bl', 'br'].forEach((k) => { $('i', 'hud-lock-' + k, lockEl); });
     D.el.hit = $('div', 'hud-hit', hud);
     ['a', 'b', 'c', 'd'].forEach((k) => $('i', k, D.el.hit));
     D.el.arcs = $('div', 'hud-arcs', hud);
@@ -285,6 +293,13 @@
       L.left = s.enemiesLeft;
       D.el.waveLeft.textContent = s.enemiesLeft > 0 ? '剩余 ' + s.enemiesLeft : '已清空';
     }
+    // 难度徽标
+    if (s.diff && L.diffId !== s.diff.id) {
+      L.diffId = s.diff.id;
+      D.el.diff.textContent = s.diff.cn;
+      D.el.diff.style.setProperty('--dc', s.diff.color || '#e8b33a');
+      D.el.diff.classList.add('on');
+    }
     if (L.score !== s.score) {
       L.score = s.score;
       D.el.scoreV.textContent = String(s.score).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -360,16 +375,85 @@
     D.el.pips.innerHTML = html;
   }
 
-  ui.setCrosshair = function (mode, spread) {
+  ui.setCrosshair = function (mode, spread, lock) {
     ensureDom();
     if (!D.ready) return;
     const el = D.el.cross;
     el.classList.toggle('off', mode === 0);
+    const on = !!(lock && lock.on);
+    el.classList.toggle('lock', on);
+    el.classList.toggle('alert', !!(on && lock.alert));
     const s = 5 + (spread || 0) * 12;
     D.el.crosst.style.transform = 'translate(-50%,-50%) translateY(' + (-s) + 'px)';
     D.el.crossb.style.transform = 'translate(-50%,-50%) translateY(' + s + 'px)';
     D.el.crossl.style.transform = 'translate(-50%,-50%) translateX(' + (-s) + 'px)';
     D.el.crossr.style.transform = 'translate(-50%,-50%) translateX(' + s + 'px)';
+  };
+
+  const barPool = [];
+  function ensureBarPool() {
+    while (barPool.length < 8) {
+      const el = $('div', 'hud-ebar', D.el.ebars);
+      const fill = $('i', 'hud-ebar-fill', el);
+      barPool.push({ el, fill, on: false });
+    }
+  }
+  ui.enemyBars = function (list) {
+    ensureDom();
+    if (!D.ready || !D.el.ebars) return;
+    ensureBarPool();
+    list = list || [];
+    for (let i = 0; i < barPool.length; i++) {
+      const b = barPool[i];
+      const it = list[i];
+      if (!it) {
+        if (b.on) { b.el.className = 'hud-ebar'; b.on = false; }
+        continue;
+      }
+      if (!b.on) { b.el.className = 'hud-ebar on'; b.on = true; }
+      b.el.classList.toggle('focus', !!it.focus);
+      b.el.classList.toggle('alert', !!it.alert);
+      b.el.classList.toggle('elite', it.kind === 'elite');
+      b.el.classList.toggle('boss', it.kind === 'boss');
+      b.el.style.transform = 'translate(-50%,-50%) translate(' + Math.round(it.x) + 'px,' + Math.round(it.y) + 'px)';
+      b.fill.style.transform = 'scaleX(' + clamp(it.ratio, 0, 1).toFixed(3) + ')';
+    }
+  };
+
+  const edgePool = [];
+  function ensureEdgePool() {
+    while (edgePool.length < 6) {
+      const el = $('div', 'hud-edge', D.el.edges);
+      const arrow = $('i', 'hud-edge-arrow', el);
+      const dist = $('span', 'hud-edge-d', el);
+      edgePool.push({ el, arrow, dist, on: false });
+    }
+  }
+  ui.edgeMarkers = function (list) {
+    ensureDom();
+    if (!D.ready || !D.el.edges) return;
+    ensureEdgePool();
+    list = list || [];
+    const w = window.innerWidth, h = window.innerHeight;
+    const cx = w / 2, cy = h / 2;
+    const rx = Math.min(w * 0.41, 520), ry = Math.min(h * 0.36, 285);
+    for (let i = 0; i < edgePool.length; i++) {
+      const m = edgePool[i];
+      const it = list[i];
+      if (!it) {
+        if (m.on) { m.el.className = 'hud-edge'; m.on = false; }
+        continue;
+      }
+      if (!m.on) { m.el.className = 'hud-edge on'; m.on = true; }
+      const x = cx + Math.sin(it.angle) * rx;
+      const y = cy - Math.cos(it.angle) * ry;
+      m.el.style.transform = 'translate(-50%,-50%) translate(' + Math.round(x) + 'px,' + Math.round(y) + 'px)';
+      m.arrow.style.transform = 'rotate(' + Math.round(it.angle * 180 / Math.PI) + 'deg)';
+      m.dist.textContent = Math.max(1, Math.round(it.dist)) + 'm';
+      m.el.classList.toggle('alert', !!it.alert);
+      m.el.classList.toggle('boss', it.kind === 'boss');
+      m.el.classList.toggle('elite', it.kind === 'elite');
+    }
   };
 
   ui.setAmmoWarn = function (on) {
