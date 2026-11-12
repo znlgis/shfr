@@ -11,4 +11,6 @@ node_modules/
 Thumbs.db
 *.log
 
-# 说明：dist/ 下的成品会被提交，仓库开箱即玩：单文件版（约 1.2MB）、目录版 dist/web/ 与 Toy 上传包 dist/toy.zip（各约 1.3MB）。
+# 构建产物不入库：需要时跑 npm run build / build:dir / build:toy 生成
+# （单文件版 dist/山海森之突袭_V1.html、目录版 dist/web/、Toy 上传包 dist/toy.zip）
+dist/

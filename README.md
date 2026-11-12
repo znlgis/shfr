@@ -9,7 +9,11 @@
 
 ## 直接游玩
 
-双击打开 **[dist/山海森之突袭_V1.html](dist/山海森之突袭_V1.html)** 即可（约 1.2 MB，浏览器需支持 WebGL）。
+构建产物不入库，先跑一次构建（Node 22+，无第三方依赖），再双击打开 **`dist/山海森之突袭_V1.html`** 即可（约 1.2 MB，浏览器需支持 WebGL）：
+
+```bash
+npm run build:all   # 一次产出单文件版 + 目录版 + Toy 上传包
+```
 
 仓库同时提供**目录版**（常规静态站点结构，`index.html` + `assets/`，同样可双击 `index.html` 直接玩，也可以直接丢到任意静态服务器 / 对象存储 / 内网目录里托管）：
 
@@ -114,7 +118,7 @@ dist/web/
 │   ├── MYTHOLOGY.md       中国神话设计规格（id / 命名 / 配色 / 文案）
 │   ├── CONTRACT.md        模块契约（API / 分工 / 美术规范）
 │   └── screenshots/       验收截图
-└── dist/
+└── dist/                  构建产物（不入库，由 npm run build* 生成）
     ├── 山海森之突袭_V1.html  单文件成品（双击即玩）
     ├── web/                目录版成品（index.html + assets/，静态托管用）
     ├── toy/                Toy 上传包目录（包根即 index.html）
